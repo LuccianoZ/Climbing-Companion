@@ -1,0 +1,7 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Docker: Up (PostGIS)", "type": "shell", "command": "docker compose up -d" },
+    { "label": "Dev: web + api", "type": "shell", "command": "npm run dev", "problemMatcher": [] }
+  ]
+}
