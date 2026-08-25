@@ -1,12 +1,14 @@
+name: climbing-companion
+
 services:
   postgres:
     image: postgis/postgis:16-3.4
-    container_name: climb-companion-db
+    container_name: climbing-companion-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: climb
-      POSTGRES_PASSWORD: climb_dev_password
-      POSTGRES_DB: climb_companion
+      POSTGRES_PASSWORD: climbing_dev_password
+      POSTGRES_DB: climbing_companion
     ports:
       - "5432:5432"
     volumes:
@@ -14,3 +16,4 @@ services:
 
 volumes:
   pgdata:
+    name: climbing-companion_pgdata
