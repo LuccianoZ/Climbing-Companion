@@ -5,6 +5,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health/health.controller';
 import { AuthModule } from './auth/auth.module';
+import { RoutesModule } from './routes/routes.module';
+import { GymsModule } from './gyms/gyms.module';
+import { MediaModule } from './media/media.module';
 import { TestBypassModule } from './auth/test-bypass.module';
 
 @Module({
@@ -27,6 +30,9 @@ import { TestBypassModule } from './auth/test-bypass.module';
       }),
     }),
     AuthModule,
+    RoutesModule,
+    GymsModule,
+    MediaModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and

@@ -5,11 +5,17 @@ import { AuthWorld } from './world';
 Before(async function (this: AuthWorld) {
   await this.initApp();
   // Truncate before, not after -- keeps the suite self-healing if a previous
-  // run crashed mid-scenario without reaching its After hook. Scoped to
-  // `users` only; extend this list as later epics add tables scenarios need
-  // reset between runs.
+  // run crashed mid-scenario without reaching its After hook. `crags`,
+  // `routes` (BL-006), `gyms` (BL-007), and `media_assets` (BL-008) are
+  // listed explicitly even though TRUNCATE...CASCADE on `users` alone would
+  // already sweep them up via their created_by/submitted_by/owner_user_id
+  // FKs -- being explicit keeps this list an accurate map of "tables
+  // scenarios touch" rather than relying on FK topology to be remembered
+  // later. Extend as later epics add more.
   const dataSource = this.app.get(DataSource);
-  await dataSource.query('TRUNCATE TABLE "users" CASCADE');
+  await dataSource.query(
+    'TRUNCATE TABLE "users", "crags", "routes", "gyms", "media_assets" CASCADE',
+  );
 });
 
 After(async function (this: AuthWorld) {

@@ -17,6 +17,21 @@ export class AuthWorld extends World {
   // BL-004: holds the raw single-use token pulled out of the stubbed
   // password-reset email so a later step can redeem it.
   resetToken?: string;
+  // BL-006: holds the result of a direct RoutesService.findVisibleCrags()
+  // call -- there's no map-query HTTP endpoint yet (that's Epic 4, Sprint
+  // 2), so this reaches the service in-process rather than over HTTP. See
+  // Architecture.md AR-14.
+  visibleCrags?: unknown[];
+  // BL-008: the raw bytes sent in the most recent media upload, kept
+  // around so a later step can assert the streaming GET returns the exact
+  // same bytes back rather than just "some bytes".
+  uploadedBuffer?: Buffer;
+  // BL-008: the id returned by a successful POST /api/media, and the most
+  // recent response from streaming GET /api/media/:id -- kept separate
+  // from `response` since a scenario issues both an upload and one or more
+  // streaming requests and needs to assert on each independently.
+  uploadedMediaId?: string;
+  mediaResponse?: request.Response;
 
   constructor(options: IWorldOptions) {
     super(options);

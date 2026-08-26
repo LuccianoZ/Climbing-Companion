@@ -21,9 +21,8 @@ export enum GradeDisplayPref {
 // migration and Architecture is schema source of truth -- cheaper to create
 // them once than to bolt them on piecemeal across Epic 1's four other stories.
 //
-// NOT included yet: `profile_photo_media_id` (FK -> media_assets.id).
-// media_assets doesn't exist until BL-008; added via its own ALTER TABLE
-// migration when the media gateway ships rather than forward-declared now.
+// `profile_photo_media_id` was deferred until media_assets existed
+// (BL-008) -- it lands via that migration's own ALTER TABLE, not here.
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -74,6 +73,14 @@ export class User {
   // citext for the same case-insensitive reason as `email` (§15 two-step email change).
   @Column({ name: 'pending_email', type: 'citext', nullable: true })
   pendingEmail: string | null;
+
+  // BL-008 / Architecture.md §2: added via CreateMediaAssets's ALTER TABLE
+  // once media_assets existed to point at. No inverse relation declared on
+  // MediaAsset -- media_assets is intentionally never joined outside its
+  // own streaming endpoint (§19.1), so this stays a plain FK column, not a
+  // TypeORM @ManyToOne/@OneToOne relation.
+  @Column({ name: 'profile_photo_media_id', type: 'uuid', nullable: true })
+  profilePhotoMediaId: string | null;
 
   // BL-002 / Architecture.md AR-10: one active login session per user,
   // stored directly on `users` rather than a separate sessions table (see
