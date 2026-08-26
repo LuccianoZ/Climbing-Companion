@@ -1,6 +1,7 @@
 import { APP_GUARD } from '@nestjs/core';
 import { TestBypassModule } from './test-bypass.module';
 import { MockAuthGuard } from './mock-auth.guard';
+import { MockGpsGuard } from './mock-gps.guard';
 
 // BL-005 / Architecture.md AR-13: Foundation §19.3.3 requires that in
 // production the bypass guard is "never registered in the DI container --
@@ -12,6 +13,10 @@ import { MockAuthGuard } from './mock-auth.guard';
 // register() reads process.env directly (resolved once at "bootstrap" --
 // i.e. at module-graph-construction time, not per request), so these tests
 // manipulate process.env directly rather than going through ConfigService.
+//
+// BL-009 / Architecture.md AR-16 extended this module to also register
+// MockGpsGuard under the same gate -- covered below alongside the existing
+// MockAuthGuard assertions.
 describe('TestBypassModule.register', () => {
   const originalEnv = { ...process.env };
 
@@ -55,9 +60,31 @@ describe('TestBypassModule.register', () => {
 
     expect(dynamicModule.providers).toContain(MockAuthGuard);
     const globalGuardProvider = dynamicModule.providers!.find(
-      (p) => typeof p === 'object' && p !== null && 'provide' in p,
+      (p) =>
+        typeof p === 'object' &&
+        p !== null &&
+        'useExisting' in p &&
+        (p as { useExisting?: unknown }).useExisting === MockAuthGuard,
     ) as { provide: unknown; useExisting: unknown } | undefined;
     expect(globalGuardProvider?.provide).toBe(APP_GUARD);
     expect(globalGuardProvider?.useExisting).toBe(MockAuthGuard);
+  });
+
+  it('registers MockGpsGuard as the global APP_GUARD when both bypass conditions hold', () => {
+    process.env.NODE_ENV = 'test';
+    process.env.ENABLE_TEST_BYPASS_HEADERS = 'true';
+
+    const dynamicModule = TestBypassModule.register();
+
+    expect(dynamicModule.providers).toContain(MockGpsGuard);
+    const globalGuardProvider = dynamicModule.providers!.find(
+      (p) =>
+        typeof p === 'object' &&
+        p !== null &&
+        'useExisting' in p &&
+        (p as { useExisting?: unknown }).useExisting === MockGpsGuard,
+    ) as { provide: unknown; useExisting: unknown } | undefined;
+    expect(globalGuardProvider?.provide).toBe(APP_GUARD);
+    expect(globalGuardProvider?.useExisting).toBe(MockGpsGuard);
   });
 });
