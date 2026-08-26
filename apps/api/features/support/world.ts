@@ -32,6 +32,22 @@ export class AuthWorld extends World {
   // streaming requests and needs to assert on each independently.
   uploadedMediaId?: string;
   mediaResponse?: request.Response;
+  // BL-013: the id of the crag most recently created by an
+  // archival.steps.ts fixture step, so a later step in the same scenario
+  // ("sibling route ... under the same crag") can attach a second route to
+  // it without re-deriving which crag "the same crag" refers to.
+  lastCragId?: string;
+  // BL-013: the return value of a direct
+  // ArchivalService.archiveExpiredUnverifiedItems() call -- there's no
+  // HTTP endpoint for the archival job (it's a directly-callable service
+  // method, Architecture §9/§19.5), so this reaches the service
+  // in-process the same way BL-006's `visibleCrags` does for
+  // RoutesService.findVisibleCrags().
+  archivalResult?: {
+    routesArchived: number;
+    gymsArchived: number;
+    cragsArchived: number;
+  };
 
   constructor(options: IWorldOptions) {
     super(options);

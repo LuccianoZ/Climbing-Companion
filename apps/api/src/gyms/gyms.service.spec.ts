@@ -1,8 +1,10 @@
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { SubmitGymDto } from './dto/submit-gym.dto';
+import { AdminVerifyGymDto } from './dto/admin-verify-gym.dto';
 import { GymsService } from './gyms.service';
-import { Gym } from './entities/gym.entity';
+import { Gym, GymDiscipline } from './entities/gym.entity';
 import { LifecycleStatus } from '../common/enums/lifecycle-status.enum';
 import type { Repository } from 'typeorm';
 
@@ -72,5 +74,74 @@ describe('GymsService.submitGym', () => {
 
     expect(gymRepo.save).toHaveBeenCalledTimes(1);
     expect(result.id).toBe('gym-1');
+  });
+});
+
+describe('GymsService.adminVerifyGym', () => {
+  let gymRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let service: GymsService;
+
+  const gymId = 'gym-1';
+  const dto: AdminVerifyGymDto = plainToInstance(AdminVerifyGymDto, {
+    disciplinesOffered: [GymDiscipline.TOP_ROPE, GymDiscipline.LEAD],
+  });
+
+  function baseGym(overrides: Partial<Gym> = {}): Gym {
+    return {
+      id: gymId,
+      name: 'Vertical Edge Climbing Gym',
+      location: { type: 'Point', coordinates: [-78.8712, 42.8901] },
+      status: LifecycleStatus.UNVERIFIED,
+      disciplinesOffered: [],
+      submittedBy: 'submitter-1',
+      verifiedDirectlyByAdmin: false,
+      verifiedAt: null,
+      archivedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    gymRepo = {
+      findOne: vi.fn(),
+      save: vi.fn((g: Gym) => g),
+    };
+    service = new GymsService(gymRepo as unknown as Repository<Gym>);
+  });
+
+  it('rejects when the gym is not found', async () => {
+    gymRepo.findOne.mockResolvedValue(null);
+
+    await expect(service.adminVerifyGym(gymId, dto)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('rejects re-verifying an already-VERIFIED gym', async () => {
+    gymRepo.findOne.mockResolvedValue(
+      baseGym({ status: LifecycleStatus.VERIFIED }),
+    );
+
+    await expect(service.adminVerifyGym(gymId, dto)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+    expect(gymRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('bypasses the 4-verifier gate: sets VERIFIED, verified_directly_by_admin, and disciplines straight from the DTO', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym());
+
+    const result = await service.adminVerifyGym(gymId, dto);
+
+    expect(result.status).toBe(LifecycleStatus.VERIFIED);
+    expect(result.verifiedDirectlyByAdmin).toBe(true);
+    expect(result.verifiedAt).toBeInstanceOf(Date);
+    expect(result.disciplinesOffered).toEqual(dto.disciplinesOffered);
+    expect(gymRepo.save).toHaveBeenCalledTimes(1);
   });
 });

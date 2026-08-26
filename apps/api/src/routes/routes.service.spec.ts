@@ -14,6 +14,7 @@ import type { DataSource } from 'typeorm';
 function createQueryBuilderStub(result: unknown) {
   const qb: Record<string, ReturnType<typeof vi.fn>> = {};
   qb.where = vi.fn().mockReturnValue(qb);
+  qb.andWhere = vi.fn().mockReturnValue(qb);
   qb.orderBy = vi.fn().mockReturnValue(qb);
   qb.getOne = vi.fn().mockResolvedValue(result);
   qb.getMany = vi.fn().mockResolvedValue(Array.isArray(result) ? result : []);

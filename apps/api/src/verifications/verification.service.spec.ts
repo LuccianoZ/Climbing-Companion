@@ -7,10 +7,13 @@ import type { DataSource } from 'typeorm';
 import { VerificationService } from './verification.service';
 import { Route, OutdoorDiscipline } from '../routes/entities/route.entity';
 import { Crag } from '../crags/entities/crag.entity';
+import { Gym, GymDiscipline } from '../gyms/entities/gym.entity';
 import { RouteVerification } from './entities/route-verification.entity';
 import { RouteGradeVote } from './entities/route-grade-vote.entity';
+import { GymVerification } from './entities/gym-verification.entity';
 import { LifecycleStatus } from '../common/enums/lifecycle-status.enum';
 import type { SubmitRouteVerificationDto } from './dto/submit-route-verification.dto';
+import type { SubmitGymVerificationDto } from './dto/submit-gym-verification.dto';
 
 function uniqueViolation(): Error & { code: string } {
   const err = new Error(
@@ -249,5 +252,178 @@ describe('VerificationService.submitRouteVerification', () => {
     expect(cragRepo.save).not.toHaveBeenCalled();
     expect(result.routeNewlyVerified).toBe(true);
     expect(result.cragNewlyVerified).toBe(false);
+  });
+});
+
+describe('VerificationService.submitGymVerification', () => {
+  let gymRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let verificationRepo: {
+    create: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
+  };
+  let manager: {
+    getRepository: ReturnType<typeof vi.fn>;
+    query: ReturnType<typeof vi.fn>;
+  };
+  let dataSource: { transaction: ReturnType<typeof vi.fn> };
+  let service: VerificationService;
+
+  const gymId = 'gym-1';
+  const verifierId = 'verifier-1';
+  const submitterId = 'submitter-1';
+  const dto: SubmitGymVerificationDto = {
+    mediaAssetId: 'media-1',
+    disciplinesSubmitted: [GymDiscipline.TOP_ROPE],
+  };
+  const location = { latitude: 42.8901, longitude: -78.8712 };
+
+  function baseGym(overrides: Partial<Gym> = {}): Gym {
+    return {
+      id: gymId,
+      name: 'Vertical Edge Climbing Gym',
+      location: { type: 'Point', coordinates: [-78.8712, 42.8901] },
+      status: LifecycleStatus.UNVERIFIED,
+      disciplinesOffered: [],
+      submittedBy: submitterId,
+      verifiedDirectlyByAdmin: false,
+      verifiedAt: null,
+      archivedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  }
+
+  beforeEach(() => {
+    gymRepo = {
+      findOne: vi.fn(),
+      save: vi.fn(),
+    };
+    verificationRepo = {
+      create: vi.fn(
+        (data: Partial<GymVerification>) => ({ ...data }) as GymVerification,
+      ),
+      save: vi.fn((v: GymVerification) => ({ ...v, id: 'gym-verification-1' })),
+      count: vi.fn().mockResolvedValue(1),
+    };
+    manager = {
+      getRepository: vi.fn((entity: unknown) => {
+        if (entity === Gym) return gymRepo;
+        if (entity === GymVerification) return verificationRepo;
+        throw new Error('unexpected repository requested');
+      }),
+      query: vi.fn().mockResolvedValue([{ within: true }]),
+    };
+    dataSource = {
+      transaction: vi.fn((cb: (m: typeof manager) => unknown) => cb(manager)),
+    };
+    service = new VerificationService(dataSource as unknown as DataSource);
+  });
+
+  it('rejects the original submitter verifying their own gym', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym({ submittedBy: verifierId }));
+
+    await expect(
+      service.submitGymVerification(gymId, verifierId, dto, location),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(verificationRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects when the gym is not found', async () => {
+    gymRepo.findOne.mockResolvedValue(null);
+
+    await expect(
+      service.submitGymVerification(gymId, verifierId, dto, location),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects verification on an already-VERIFIED gym', async () => {
+    gymRepo.findOne.mockResolvedValue(
+      baseGym({ status: LifecycleStatus.VERIFIED }),
+    );
+
+    await expect(
+      service.submitGymVerification(gymId, verifierId, dto, location),
+    ).rejects.toBeInstanceOf(ConflictException);
+    expect(verificationRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('rejects a verifier outside the 300m proximity boundary, writing no row', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym());
+    manager.query.mockResolvedValue([{ within: false }]);
+
+    await expect(
+      service.submitGymVerification(gymId, verifierId, dto, location),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(verificationRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('surfaces a duplicate verification as a clean 4xx, not a raw constraint violation', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym());
+    verificationRepo.save.mockRejectedValue(uniqueViolation());
+
+    await expect(
+      service.submitGymVerification(gymId, verifierId, dto, location),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('writes the verification row without flipping status below the 4th verification', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym());
+    verificationRepo.count.mockResolvedValue(2);
+
+    const result = await service.submitGymVerification(
+      gymId,
+      verifierId,
+      dto,
+      location,
+    );
+
+    expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+    expect(verificationRepo.save).toHaveBeenCalledTimes(1);
+    const createArg = verificationRepo.create.mock
+      .calls[0][0] as GymVerification;
+    expect(createArg.gymId).toBe(gymId);
+    expect(createArg.verifierUserId).toBe(verifierId);
+    expect(createArg.mediaAssetId).toBe(dto.mediaAssetId);
+    expect(createArg.disciplinesSubmitted).toEqual(dto.disciplinesSubmitted);
+
+    expect(gymRepo.save).not.toHaveBeenCalled();
+    expect(result.gymNewlyVerified).toBe(false);
+  });
+
+  it("flips the gym to VERIFIED and unions all four submissions' disciplines on the 4th unique verification", async () => {
+    const gym = baseGym();
+    gymRepo.findOne.mockResolvedValue(gym);
+    verificationRepo.count.mockResolvedValue(4);
+    manager.query
+      .mockResolvedValueOnce([{ within: true }])
+      .mockResolvedValueOnce([
+        { discipline: GymDiscipline.TOP_ROPE },
+        { discipline: GymDiscipline.LEAD },
+        { discipline: GymDiscipline.BOULDERING },
+      ]);
+
+    const result = await service.submitGymVerification(
+      gymId,
+      verifierId,
+      dto,
+      location,
+    );
+
+    expect(gymRepo.save).toHaveBeenCalledTimes(1);
+    const savedGym = gymRepo.save.mock.calls[0][0] as Gym;
+    expect(savedGym.status).toBe(LifecycleStatus.VERIFIED);
+    expect(savedGym.verifiedAt).toBeInstanceOf(Date);
+    expect(savedGym.disciplinesOffered).toEqual([
+      GymDiscipline.TOP_ROPE,
+      GymDiscipline.LEAD,
+      GymDiscipline.BOULDERING,
+    ]);
+
+    expect(result.gymNewlyVerified).toBe(true);
   });
 });

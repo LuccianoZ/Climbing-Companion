@@ -89,11 +89,27 @@ export class RoutesService {
   // BL-006's own AC requires: a crag with zero non-archived routes must
   // never surface. Expected to be superseded/absorbed by a fuller map
   // query service once Epic 4 lands.
+  //
+  // AR-17 / BL-013: the crag.status <> ARCHIVED clause was added alongside
+  // the archival job. Without it, a crag the archival job has explicitly
+  // cascaded to ARCHIVED (its founding route archived) could still surface
+  // here if a non-founding sibling route under it happens to remain
+  // VERIFIED/UNVERIFIED (the documented edge case, Foundation §4/§21 risk
+  // 8, TestInventory §3.3's 4th scenario) -- the EXISTS clause alone only
+  // ever looks at child route statuses, never the crag's own. Both
+  // conditions are needed for different cases: EXISTS catches a crag whose
+  // status never itself transitioned but whose routes were archived one by
+  // one (BL-006's original case); crag.status <> ARCHIVED catches a crag
+  // explicitly cascaded to ARCHIVED even while a sibling route stays
+  // reachable in its own right.
   async findVisibleCrags(): Promise<Crag[]> {
     return this.dataSource
       .getRepository(Crag)
       .createQueryBuilder('crag')
-      .where(
+      .where('"crag"."status" <> :archived', {
+        archived: LifecycleStatus.ARCHIVED,
+      })
+      .andWhere(
         `EXISTS (SELECT 1 FROM "routes" r WHERE r."crag_id" = "crag"."id" AND r."status" <> :archived)`,
         { archived: LifecycleStatus.ARCHIVED },
       )
