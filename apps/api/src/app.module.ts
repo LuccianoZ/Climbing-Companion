@@ -11,6 +11,8 @@ import { GymsModule } from './gyms/gyms.module';
 import { MediaModule } from './media/media.module';
 import { VerificationsModule } from './verifications/verifications.module';
 import { ArchivalModule } from './archival/archival.module';
+import { GradeVotesModule } from './grade-votes/grade-votes.module';
+import { ClimbLogsModule } from './climb-logs/climb-logs.module';
 import { TestBypassModule } from './auth/test-bypass.module';
 
 @Module({
@@ -46,6 +48,11 @@ import { TestBypassModule } from './auth/test-bypass.module';
     MediaModule,
     VerificationsModule,
     ArchivalModule,
+    // Epic 3 (Sprint 2, BL-015-018) / Architecture.md AR-18: grade voting
+    // and climb logging, following every prior epic's plain top-level
+    // module registration.
+    GradeVotesModule,
+    ClimbLogsModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and
