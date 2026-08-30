@@ -111,10 +111,12 @@ describe('GradeVoteService', () => {
 
     it('returns CONSENSUS once 4 votes exist, using the plurality winner', async () => {
       routeRepo.findOne.mockResolvedValue(baseRoute());
-      manager.query.mockResolvedValueOnce([{ within: true }]).mockResolvedValueOnce([
-        { grade_ordinal: 10, vote_count: '3' },
-        { grade_ordinal: 9, vote_count: '1' },
-      ]);
+      manager.query
+        .mockResolvedValueOnce([{ within: true }])
+        .mockResolvedValueOnce([
+          { grade_ordinal: 10, vote_count: '3' },
+          { grade_ordinal: 9, vote_count: '1' },
+        ]);
 
       const result = await service.voteOnGrade(routeId, voterId, dto, location);
 
@@ -137,7 +139,9 @@ describe('GradeVoteService', () => {
     });
 
     it('returns PROPOSED with zero votes cast', async () => {
-      routeRepo.findOne.mockResolvedValue(baseRoute({ proposedGradeOrdinal: 6 }));
+      routeRepo.findOne.mockResolvedValue(
+        baseRoute({ proposedGradeOrdinal: 6 }),
+      );
       manager.query.mockResolvedValueOnce([]);
 
       const result = await service.getGradeConsensus(routeId);

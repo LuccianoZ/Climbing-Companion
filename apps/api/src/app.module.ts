@@ -13,6 +13,7 @@ import { VerificationsModule } from './verifications/verifications.module';
 import { ArchivalModule } from './archival/archival.module';
 import { GradeVotesModule } from './grade-votes/grade-votes.module';
 import { ClimbLogsModule } from './climb-logs/climb-logs.module';
+import { MapModule } from './map/map.module';
 import { TestBypassModule } from './auth/test-bypass.module';
 
 @Module({
@@ -53,6 +54,11 @@ import { TestBypassModule } from './auth/test-bypass.module';
     // module registration.
     GradeVotesModule,
     ClimbLogsModule,
+    // Epic 4 (Sprint 2, BL-019-022) / Architecture.md AR-19: the map's
+    // read-only query surface -- the first HTTP-level read API in the
+    // codebase. Registered plainly like every other epic's module; it
+    // imports GradeVotesModule itself for consensus reuse.
+    MapModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and

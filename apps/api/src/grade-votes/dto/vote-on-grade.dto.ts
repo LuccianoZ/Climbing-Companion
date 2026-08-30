@@ -1,4 +1,11 @@
-import { IsInt, IsLatitude, IsLongitude, IsOptional, Max, Min } from 'class-validator';
+import {
+  IsInt,
+  IsLatitude,
+  IsLongitude,
+  IsOptional,
+  Max,
+  Min,
+} from 'class-validator';
 
 // BL-015: mirrors SubmitRouteVerificationDto.gradeOrdinal's validation
 // convention exactly (0-31, the shared V-scale/rope-scale ordinal range --

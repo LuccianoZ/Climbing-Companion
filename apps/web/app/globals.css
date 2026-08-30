@@ -1,26 +1,100 @@
 @import "tailwindcss";
+/* Leaflet ships its own stylesheet as a package asset. CSS requires every
+   @import to precede other rules, so it sits here beside Tailwind rather
+   than next to the .leaflet-* overrides further down that it pairs with. */
+@import "leaflet/dist/leaflet.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Climb Companion design tokens (Epic 4, BL-019-022).
+ *
+ * Lifted from the approved mockups: a warm paper ground rather than white,
+ * hard-edged cards outlined in near-black with an offset shadow, black as
+ * the primary action color, terracotta as the accent/attention color, and
+ * mint for "you're good to go" affirmations. Foundation §17's DoD calls for
+ * mobile-first on climber-facing surfaces, so every size here is tuned for
+ * a phone first and simply centers itself on wider screens.
+ *
+ * Deliberately NOT theme-reactive: the mockups are a single committed light
+ * design, and a half-derived dark palette would make the translucent-grey
+ * UNVERIFIED pin treatment (BL-020) ambiguous against a dark map. Revisit
+ * as its own story if dark mode is ever scoped.
+ */
+
+@theme {
+  --color-paper: #f5f1e8;
+  --color-surface: #ffffff;
+  --color-ink: #14110f;
+  --color-ink-soft: #5c554e;
+  --color-ink-faint: #8d857c;
+  --color-line: #14110f;
+  --color-line-soft: #ded6c8;
+
+  /* Accent -- active tab, primary submit, check-in, attention states. */
+  --color-clay: #e2896b;
+  --color-clay-deep: #a4432f;
+  --color-clay-wash: #f7ded4;
+
+  /* Affirmative -- verified, in-range, unlocked. */
+  --color-moss: #7fdba0;
+  --color-moss-deep: #1f7a45;
+  --color-moss-wash: #dff5e7;
+
+  /* The translucent-grey treatment BL-020 requires for UNVERIFIED pins. */
+  --color-dormant: #9b968f;
+
+  --font-sans: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 14px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  /* The phone frame is the design; on a desktop viewport the app centers
+     rather than stretching a mobile-first layout across 1600px. */
+  overscroll-behavior: none;
+}
+
+@utility card {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-card);
+}
+
+@utility card-raised {
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-card);
+  box-shadow: 3px 3px 0 var(--color-line);
+}
+
+@utility label-caps {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 700;
+}
+
+/* Leaflet paints its own white ground and grey attribution bar; both fight
+   the paper palette above, so they are restated once rather than fought
+   inline on every map instance. */
+.leaflet-container {
+  background: var(--color-paper);
+  font-family: var(--font-sans);
+}
+
+.leaflet-control-attribution {
+  background: rgba(245, 241, 232, 0.85) !important;
+  color: var(--color-ink-faint) !important;
+  font-size: 10px !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-ink-soft) !important;
 }

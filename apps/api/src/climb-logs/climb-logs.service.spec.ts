@@ -4,12 +4,18 @@ import { ClimbLogsService } from './climb-logs.service';
 import { ClimbLog, ClimbOutcome } from './entities/climb-log.entity';
 import { Route, OutdoorDiscipline } from '../routes/entities/route.entity';
 import { LifecycleStatus } from '../common/enums/lifecycle-status.enum';
-import type { GradeVoteService, GradeConsensusResult } from '../grade-votes/grade-vote.service';
+import type {
+  GradeVoteService,
+  GradeConsensusResult,
+} from '../grade-votes/grade-vote.service';
 import type { LogClimbDto } from './dto/log-climb.dto';
 
 describe('ClimbLogsService', () => {
   let routeRepo: { findOne: ReturnType<typeof vi.fn> };
-  let logRepo: { create: ReturnType<typeof vi.fn>; save: ReturnType<typeof vi.fn> };
+  let logRepo: {
+    create: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
   let manager: {
     getRepository: ReturnType<typeof vi.fn>;
     query: ReturnType<typeof vi.fn>;
@@ -44,7 +50,9 @@ describe('ClimbLogsService', () => {
     };
   }
 
-  function consensusResult(overrides: Partial<GradeConsensusResult> = {}): GradeConsensusResult {
+  function consensusResult(
+    overrides: Partial<GradeConsensusResult> = {},
+  ): GradeConsensusResult {
     return {
       source: 'PROPOSED',
       gradeOrdinal: 7,
@@ -58,7 +66,11 @@ describe('ClimbLogsService', () => {
     routeRepo = { findOne: vi.fn() };
     logRepo = {
       create: vi.fn((data: Partial<ClimbLog>) => ({ ...data }) as ClimbLog),
-      save: vi.fn((log: ClimbLog) => ({ ...log, id: 'log-1', loggedAt: new Date() })),
+      save: vi.fn((log: ClimbLog) => ({
+        ...log,
+        id: 'log-1',
+        loggedAt: new Date(),
+      })),
     };
     manager = {
       getRepository: vi.fn((entity: unknown) => {
@@ -84,17 +96,17 @@ describe('ClimbLogsService', () => {
 
   it('throws NotFoundException when the route does not exist', async () => {
     routeRepo.findOne.mockResolvedValue(undefined);
-    await expect(service.logClimb(routeId, userId, dto, location)).rejects.toThrow(
-      NotFoundException,
-    );
+    await expect(
+      service.logClimb(routeId, userId, dto, location),
+    ).rejects.toThrow(NotFoundException);
   });
 
   it('throws ForbiddenException when the climber is outside 300m', async () => {
     routeRepo.findOne.mockResolvedValue(baseRoute());
     manager.query.mockResolvedValueOnce([{ within: false }]);
-    await expect(service.logClimb(routeId, userId, dto, location)).rejects.toThrow(
-      ForbiddenException,
-    );
+    await expect(
+      service.logClimb(routeId, userId, dto, location),
+    ).rejects.toThrow(ForbiddenException);
     expect(gradeVoteService.computeConsensus).not.toHaveBeenCalled();
     expect(logRepo.save).not.toHaveBeenCalled();
   });
@@ -102,7 +114,9 @@ describe('ClimbLogsService', () => {
   it('writes a climb_logs row snapshotting the current consensus grade for COMPLETED', async () => {
     routeRepo.findOne.mockResolvedValue(baseRoute());
     manager.query.mockResolvedValueOnce([{ within: true }]);
-    gradeVoteService.computeConsensus.mockResolvedValue(consensusResult({ gradeOrdinal: 7 }));
+    gradeVoteService.computeConsensus.mockResolvedValue(
+      consensusResult({ gradeOrdinal: 7 }),
+    );
 
     const result = await service.logClimb(routeId, userId, dto, location);
 
