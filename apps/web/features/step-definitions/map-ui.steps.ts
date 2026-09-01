@@ -310,10 +310,14 @@ Then('the in-range action buttons are visible', async function (this: MapUiWorld
     .waitFor({ timeout: 10_000 });
 });
 
+// Three, not four. Check-in writes gym_checkins, which has a gym_id and no
+// crag equivalent anywhere in the schema, so it is absent from a crag panel --
+// see AR-36 and components/actions/UnbuiltActionSheet.tsx. The gym panel's
+// check-in button has its own scenario in verification-ui.feature.
 Then(
-  'the climber can verify, vote, log a climb and check in',
+  'the climber can verify, vote and log a climb',
   async function (this: MapUiWorld) {
-    for (const action of ['verify', 'vote', 'log', 'check-in']) {
+    for (const action of ['verify', 'vote', 'log']) {
       await this.page
         .locator(`[data-testid="action-${action}"]`)
         .waitFor({ state: 'visible', timeout: 10_000 });

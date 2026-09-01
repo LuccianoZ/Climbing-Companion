@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import type { MapPin } from '@/lib/types';
@@ -37,6 +37,9 @@ export interface MapCanvasProps {
 const DEFAULT_CENTER: [number, number] = [37.7338, -119.5676];
 const DEFAULT_ZOOM = 12;
 const FLY_TO_ZOOM = 16;
+// Deliberately wider than FLY_TO_ZOOM: opening the app asks "what is
+// around me", where tapping a search result asks "show me that one".
+const FIRST_FIX_ZOOM = 14;
 
 function FlyToController({ target }: { target: FlyToTarget | null }) {
   const map = useMap();
@@ -51,6 +54,40 @@ function FlyToController({ target }: { target: FlyToTarget | null }) {
       duration: 0.85,
     });
   }, [map, target]);
+
+  return null;
+}
+
+// AR-32. The map has to render before geolocation resolves -- hence the
+// Yosemite default above -- so it opens somewhere arbitrary and then moves
+// once, on the first fix, to wherever the climber actually is.
+//
+// Imperative rather than MapScreen state: a one-shot camera move routed
+// through setState in an effect is exactly what React 19's
+// set-state-in-effect rule rejects (the same constraint AR-27 works around
+// in the location picker). A ref makes it fire at most once per mount, so
+// later position updates cannot yank the viewport back while someone is
+// panning, and any directed target -- a deep link, a tapped pin, a search
+// result -- suppresses it entirely rather than racing it.
+function FirstFixController({
+  viewer,
+  suppressed,
+}: {
+  viewer: { latitude: number; longitude: number } | null;
+  suppressed: boolean;
+}) {
+  const map = useMap();
+  const flown = useRef(false);
+
+  useEffect(() => {
+    if (flown.current || suppressed || !viewer) {
+      return;
+    }
+    flown.current = true;
+    map.flyTo([viewer.latitude, viewer.longitude], FIRST_FIX_ZOOM, {
+      duration: 0.9,
+    });
+  }, [map, viewer, suppressed]);
 
   return null;
 }
@@ -159,6 +196,7 @@ export default function MapCanvas({
       />
 
       <FlyToController target={flyTo} />
+      <FirstFixController viewer={viewer} suppressed={flyTo !== null} />
       <ResizeObserverBridge />
       <MapStatePublisher />
 

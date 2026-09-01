@@ -72,3 +72,37 @@ export const GRADE_SCALE_LABELS: Record<GradeScale, string> = {
   YOSEMITE: 'YDS',
   FRENCH: 'FRA',
 };
+
+// --- grade pickers (Sprint 1/2 frontend backfill) --------------------------
+
+export interface GradeOption {
+  ordinal: number;
+  label: string;
+}
+
+// The set of ordinals a *form* should offer, which is narrower than what the
+// DTOs accept. SubmitRouteDto, SubmitRouteVerificationDto and VoteOnGradeDto
+// all validate a flat 0-31 regardless of discipline (AR-18 records that as a
+// deliberate, accepted convention on the API side, since neither DTO is
+// discipline-aware). A dropdown is: it knows the route's discipline, so
+// offering V19-V31 on a boulder problem -- ordinals the V-scale has no label
+// for, which formatGrade renders as "?" -- would be offering nonsense the
+// server would happily store.
+//
+// So the picker is clamped to the real scale: 0-18 for bouldering, 0-31 for
+// rope. Recorded as AR-35 rather than left implicit, because it is a place
+// where the client is deliberately stricter than the API.
+export function gradeOptions(
+  discipline: OutdoorDiscipline,
+  scale: GradeScale,
+): GradeOption[] {
+  const count = isBoulderDiscipline(discipline) ? BOULDER_V.length : ROPE_YOSEMITE.length;
+  return Array.from({ length: count }, (_, ordinal) => ({
+    ordinal,
+    label: formatGrade(ordinal, discipline, scale),
+  }));
+}
+
+export function maxGradeOrdinal(discipline: OutdoorDiscipline): number {
+  return (isBoulderDiscipline(discipline) ? BOULDER_V.length : ROPE_YOSEMITE.length) - 1;
+}

@@ -69,7 +69,7 @@ Feature: The map, its pins, its detail panel and its search box
     And the climber opens the map
     When the climber clicks the pin for "The Great Wall"
     Then the in-range action buttons are visible
-    And the climber can verify, vote, log a climb and check in
+    And the climber can verify, vote and log a climb
 
   Scenario: In-range action buttons are hidden when the climber is beyond 300m
     Given the climber is standing 350 meters from "The Great Wall"

@@ -1,34 +1,35 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { LogClimbSheet } from '@/components/actions/LogClimbSheet';
+import { UnbuiltActionSheet } from '@/components/actions/UnbuiltActionSheet';
+import { VerifyGymSheet } from '@/components/actions/VerifyGymSheet';
+import { VerifyRouteSheet } from '@/components/actions/VerifyRouteSheet';
+import { VoteOnGradeSheet } from '@/components/actions/VoteOnGradeSheet';
 import { CrosshairIcon } from '@/components/shell/icons';
 import { fetchMapPins, fetchPinDetail } from '@/lib/api';
+import type { GradeScale } from '@/lib/grades';
+import { useSession } from '@/lib/session';
 import { useViewerLocation } from '@/lib/use-viewer-location';
 import type { MapPin, MapSearchResult } from '@/lib/types';
 import { DetailSheet, type DetailSheetState } from './DetailSheet';
+import type { InRangeAction } from './InRangeActions';
 import type { FlyToTarget } from './MapCanvas';
 import { MapView } from './MapView';
 import { SearchBar } from './SearchBar';
+import { SubmitFab } from './SubmitFab';
 
-// Tab 1's read path: BL-019 (the map), BL-020 (pin styling, delegated to
-// pin-icons.ts), BL-021 (the detail sheet) and BL-022 (search + fly-to)
-// composed into the one screen the mockups show. This component owns the
-// state those four stories share -- which pin is open, where the map should
-// fly next, and where the viewer is -- and nothing else.
+// Tab 1. BL-019 (the map), BL-020 (pin styling, delegated to pin-icons.ts),
+// BL-021 (the detail sheet) and BL-022 (search + fly-to) composed into the one
+// screen the mockups show -- and, since the Sprint 1/2 backfill, the host for
+// the four action sheets those in-range buttons now open.
 //
 // It renders *inside* AppShell's <main> rather than rendering the shell
 // itself: reading useSearchParams() puts this component behind a Suspense
-// boundary, and if the shell were inside that boundary too the header and
-// tab bar would be excluded from the server-rendered HTML along with it --
-// costing a first paint of app chrome that has no reason to wait on a
-// query string.
+// boundary, and if the shell were inside that boundary too the header and tab
+// bar would be excluded from the server-rendered HTML along with it.
 
-// Which entity's panel to load. Held separately from the panel's own state
-// so the fetch lives in an effect keyed on the target (cancelled cleanly on
-// change) while the panel's loading frame is set in the click handler that
-// caused it -- rather than synchronously inside the effect, which React
-// 19's react-hooks/set-state-in-effect rightly rejects.
 interface DetailTarget {
   kind: 'CRAG' | 'GYM';
   id: string;
@@ -37,8 +38,7 @@ interface DetailTarget {
 
 // The Search tab hands a chosen result over as query params rather than
 // through a shared store: the map instance that has to fly lives on this
-// route, and a URL is shareable and survives the back button. Read once at
-// mount -- navigating in from /search mounts this screen fresh.
+// route, and a URL is shareable and survives the back button.
 function readDeepLink(params: URLSearchParams): {
   target: DetailTarget | null;
   fly: FlyToTarget | null;
@@ -74,6 +74,8 @@ function readDeepLink(params: URLSearchParams): {
 export function MapScreen() {
   const searchParams = useSearchParams();
   const deepLink = searchParams.toString();
+  const router = useRouter();
+  const { status: sessionStatus } = useSession();
 
   const [pins, setPins] = useState<MapPin[]>([]);
   const [pinsFailed, setPinsFailed] = useState(false);
@@ -88,9 +90,17 @@ export function MapScreen() {
     () => readDeepLink(new URLSearchParams(deepLink)).fly,
   );
 
+  // AR-25: owned here rather than inside DetailSheet so the action sheets
+  // render grades in the scale already on screen.
+  const [scale, setScale] = useState<GradeScale>('YOSEMITE');
+  const [action, setAction] = useState<InRangeAction | null>(null);
+  // Bumped after a successful action so the panel re-reads its own detail --
+  // a verification changes the count, a vote changes the consensus, and
+  // leaving stale numbers on screen makes a successful action look like it
+  // did nothing.
+  const [detailNonce, setDetailNonce] = useState(0);
+
   const viewerState = useViewerLocation();
-  // Memoised so the callbacks below don't get a fresh dependency on every
-  // render (and so the map's viewer marker doesn't churn on each tick).
   const viewer = useMemo(
     () =>
       viewerState.status === 'ready'
@@ -112,8 +122,8 @@ export function MapScreen() {
     return () => controller.abort();
   }, []);
 
-  // One fetch per open panel. The cleanup is what prevents a slow response
-  // for pin A landing after the climber has already opened pin B.
+  // One fetch per open panel. The cleanup is what prevents a slow response for
+  // pin A landing after the climber has already opened pin B.
   useEffect(() => {
     if (!target) {
       return;
@@ -133,11 +143,12 @@ export function MapScreen() {
     return () => {
       live = false;
     };
-  }, [target]);
+  }, [target, detailNonce]);
 
   const openDetail = useCallback((next: DetailTarget) => {
     setTarget(next);
     setSheet({ status: 'loading', name: next.name });
+    setAction(null);
   }, []);
 
   // BL-021: clicking a pin opens the panel for that pin's own type.
@@ -175,6 +186,21 @@ export function MapScreen() {
     [openDetail],
   );
 
+  // AR-25. A visitor sees the in-range buttons -- they are the reason to sign
+  // up, and they sit inside a panel that visitor opened deliberately -- but
+  // tapping one routes to login rather than opening a sheet that would 401 on
+  // submit. ?next= brings them back to the map afterwards.
+  const handleAction = useCallback(
+    (next: InRangeAction) => {
+      if (sessionStatus !== 'authenticated') {
+        router.push('/login?next=%2F');
+        return;
+      }
+      setAction(next);
+    },
+    [router, sessionStatus],
+  );
+
   const recentreOnViewer = useCallback(() => {
     if (!viewer) {
       return;
@@ -185,7 +211,16 @@ export function MapScreen() {
   const closeSheet = useCallback(() => {
     setSheet(null);
     setTarget(null);
+    setAction(null);
   }, []);
+
+  const closeAction = useCallback(() => setAction(null), []);
+  const onActionCompleted = useCallback(
+    () => setDetailNonce((current) => current + 1),
+    [],
+  );
+
+  const detail = sheet?.status === 'ready' ? sheet.detail : null;
 
   return (
     <>
@@ -232,8 +267,73 @@ export function MapScreen() {
         <CrosshairIcon className="h-5 w-5" />
       </button>
 
+      {/* AR-29. Hidden entirely when signed out -- see SubmitFab. */}
+      <SubmitFab raised={sheet !== null} />
+
       {sheet ? (
-        <DetailSheet state={sheet} viewer={viewer} onClose={closeSheet} />
+        <DetailSheet
+          state={sheet}
+          viewer={viewer}
+          scale={scale}
+          onScaleChange={setScale}
+          onAction={handleAction}
+          onClose={closeSheet}
+        />
+      ) : null}
+
+      {/* The seam Epic 4 left open. `viewer` is non-null by construction here:
+          the buttons that set `action` only render inside 300m, which requires
+          a fix. Checked anyway so a lost fix mid-action cannot crash. */}
+      {action && detail && viewer ? (
+        <>
+          {action === 'VERIFY' && detail.kind === 'CRAG' ? (
+            <VerifyRouteSheet
+              crag={detail}
+              viewer={viewer}
+              scale={scale}
+              onClose={closeAction}
+              onCompleted={onActionCompleted}
+            />
+          ) : null}
+
+          {action === 'VERIFY' && detail.kind === 'GYM' ? (
+            <VerifyGymSheet
+              gym={detail}
+              viewer={viewer}
+              onClose={closeAction}
+              onCompleted={onActionCompleted}
+            />
+          ) : null}
+
+          {action === 'VOTE' && detail.kind === 'CRAG' ? (
+            <VoteOnGradeSheet
+              crag={detail}
+              viewer={viewer}
+              scale={scale}
+              onClose={closeAction}
+              onCompleted={onActionCompleted}
+            />
+          ) : null}
+
+          {action === 'LOG' && detail.kind === 'CRAG' ? (
+            <LogClimbSheet
+              crag={detail}
+              viewer={viewer}
+              scale={scale}
+              onClose={closeAction}
+              onCompleted={onActionCompleted}
+            />
+          ) : null}
+
+          {action === 'CHECK_IN' ? (
+            <UnbuiltActionSheet
+              title="Check in"
+              owningStory="BL-024 — Epic 5, Sprint 3"
+              description="Checking in at a gym is not built yet. When it lands it will record your visit here, gated on the same 300m radius as everything else."
+              onClose={closeAction}
+            />
+          ) : null}
+        </>
       ) : null}
     </>
   );

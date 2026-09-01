@@ -1,24 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { CloseIcon } from '@/components/shell/icons';
 import { formatGrade, type GradeScale } from '@/lib/grades';
 import { distanceMeters, formatDistance, isWithinProximity } from '@/lib/geo';
 import {
   DISCIPLINE_LABELS,
+  GEAR_REQUIREMENT_LABELS,
   GYM_DISCIPLINE_LABELS,
   type GymDiscipline,
   type MapRouteSummary,
   type PinDetail,
 } from '@/lib/types';
 import { GradeScaleToggle } from './GradeScaleToggle';
-import { InRangeActions } from './InRangeActions';
+import { InRangeActions, type InRangeAction } from './InRangeActions';
 import { VoteDistribution } from './VoteDistribution';
 
 // BL-021. A bottom sheet rather than a popup anchored to the pin: the panel
-// carries a route list, a distribution chart and four action buttons, which
-// a Leaflet popup on a 390px-wide phone cannot hold without covering the
-// pin it describes.
+// carries a route list, a distribution chart and the action buttons, which a
+// Leaflet popup on a 390px-wide phone cannot hold without covering the pin it
+// describes.
 
 export type DetailSheetState =
   | { status: 'loading'; name: string }
@@ -28,16 +29,22 @@ export type DetailSheetState =
 export function DetailSheet({
   state,
   viewer,
+  scale,
+  onScaleChange,
+  onAction,
   onClose,
 }: {
   state: DetailSheetState;
   viewer: { latitude: number; longitude: number } | null;
+  // AR-25: the grade scale is owned by MapScreen rather than by this sheet, so
+  // an action sheet opened from here renders grades in the same scale the
+  // climber is already reading. Two components showing "5.11a" and "7a" for
+  // the same route at the same moment is worse than either choice.
+  scale: GradeScale;
+  onScaleChange: (next: GradeScale) => void;
+  onAction: (action: InRangeAction) => void;
   onClose: () => void;
 }) {
-  // Scale lives at sheet level, not per route: a climber comparing routes at
-  // one crag reads them all in the same scale (AR-20).
-  const [scale, setScale] = useState<GradeScale>('YOSEMITE');
-
   // Escape closes the sheet. The map underneath keeps keyboard focus
   // behaviour of its own, so this is registered on the document rather than
   // relying on focus being inside the panel.
@@ -67,6 +74,18 @@ export function DetailSheet({
       longitude: detail.longitude,
     });
 
+  // AR-25. A crag is verifiable while any of its routes still is -- crags are
+  // never verified directly, only cascaded from their founding route
+  // (Foundation section 4) -- whereas a gym's own status is the answer.
+  const canVerify =
+    detail === null
+      ? false
+      : detail.kind === 'CRAG'
+        ? detail.routes.some((route) => route.status !== 'VERIFIED')
+        : detail.status !== 'VERIFIED';
+
+  const hasRoutes = detail?.kind === 'CRAG' ? detail.routes.length > 0 : false;
+
   return (
     <section
       role="dialog"
@@ -92,7 +111,7 @@ export function DetailSheet({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {detail?.kind === 'CRAG' ? (
-              <GradeScaleToggle scale={scale} onChange={setScale} />
+              <GradeScaleToggle scale={scale} onChange={onScaleChange} />
             ) : null}
             <button
               type="button"
@@ -123,7 +142,13 @@ export function DetailSheet({
         {detail ? (
           <>
             <StatusBadge status={detail.status} />
-            <InRangeActions inRange={inRange} />
+            <InRangeActions
+              inRange={inRange}
+              kind={detail.kind}
+              canVerify={canVerify}
+              hasRoutes={hasRoutes}
+              onAction={onAction}
+            />
 
             {detail.kind === 'GYM' ? (
               <GymBody disciplines={detail.disciplinesOffered} />
@@ -161,7 +186,7 @@ function StatusBadge({ status }: { status: PinDetail['status'] }) {
   );
 }
 
-// Foundation §4: a gym is a standalone pin with no child routes and no
+// Foundation section 4: a gym is a standalone pin with no child routes and no
 // grade, so its panel shows the disciplines its verifiers reported.
 function GymBody({ disciplines }: { disciplines: GymDiscipline[] }) {
   return (
@@ -232,6 +257,7 @@ function RouteCard({
     <article
       data-testid="route-card"
       data-route-name={route.name}
+      data-route-status={route.status}
       className="card space-y-3 p-3"
     >
       <header className="flex items-start justify-between gap-3">
@@ -261,10 +287,34 @@ function RouteCard({
 
       <p className="text-[11.5px] leading-relaxed text-ink-soft">{route.summary}</p>
 
-      {/* BL-023 (gear-requirement icons) is intentionally not rendered:
-          its icon artwork does not exist yet, and placeholder glyphs would
-          have to be replaced rather than extended. The API already returns
-          `gearRequirements`, so that story is a rendering change only. */}
+      {/* BL-023, AR-33: gear as named text chips, deliberately not icons --
+          "Trad Gear" is unambiguous where a glyph for it would need a legend,
+          and the icon artwork was dropped from scope rather than deferred.
+          The treatment matches the gym-discipline chips above so both panels
+          read as one design.
+
+          Rendered only when non-empty. AR-14 established that gear is
+          genuinely optional (gear_requirements defaults to '{}'), so an empty
+          list means "nobody said" rather than "bring nothing" -- and an empty
+          "Gear" heading would make the weaker claim look like the stronger
+          one. */}
+      {route.gearRequirements.length > 0 ? (
+        <div data-testid="route-gear">
+          <p className="label-caps text-[9px] text-ink-faint">Gear</p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
+            {route.gearRequirements.map((item) => (
+              <li
+                key={item}
+                data-testid="gear-chip"
+                data-gear={item}
+                className="rounded-full border border-line bg-paper px-2.5 py-1 text-[11px] font-medium text-ink"
+              >
+                {GEAR_REQUIREMENT_LABELS[item] ?? item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {route.discipline !== 'BOULDERING' &&
       (route.boltCount !== null || route.minRopeLengthM !== null) ? (

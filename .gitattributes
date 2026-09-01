@@ -1,0 +1,10 @@
+# Normalise line endings so the working tree stops showing CRLF-only diffs
+# across 34 files, which masks real changes in git status/diff.
+* text=auto
+
+# Binary/lockfile-ish things git should never try to normalise.
+*.png binary
+*.jpg binary
+*.ico binary
+*.pem binary
+*.docx binary
