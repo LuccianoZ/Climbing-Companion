@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { CheckInSheet } from '@/components/actions/CheckInSheet';
 import { LogClimbSheet } from '@/components/actions/LogClimbSheet';
-import { UnbuiltActionSheet } from '@/components/actions/UnbuiltActionSheet';
 import { VerifyGymSheet } from '@/components/actions/VerifyGymSheet';
 import { VerifyRouteSheet } from '@/components/actions/VerifyRouteSheet';
 import { VoteOnGradeSheet } from '@/components/actions/VoteOnGradeSheet';
@@ -22,8 +22,9 @@ import { SubmitFab } from './SubmitFab';
 
 // Tab 1. BL-019 (the map), BL-020 (pin styling, delegated to pin-icons.ts),
 // BL-021 (the detail sheet) and BL-022 (search + fly-to) composed into the one
-// screen the mockups show -- and, since the Sprint 1/2 backfill, the host for
-// the four action sheets those in-range buttons now open.
+// screen the mockups show -- and, since the Sprint 1/2 backfill plus Epic 5's
+// check-in (BL-024), the host for the five action sheets those in-range
+// buttons now open.
 //
 // It renders *inside* AppShell's <main> rather than rendering the shell
 // itself: reading useSearchParams() puts this component behind a Suspense
@@ -325,12 +326,12 @@ export function MapScreen() {
             />
           ) : null}
 
-          {action === 'CHECK_IN' ? (
-            <UnbuiltActionSheet
-              title="Check in"
-              owningStory="BL-024 — Epic 5, Sprint 3"
-              description="Checking in at a gym is not built yet. When it lands it will record your visit here, gated on the same 300m radius as everything else."
+          {action === 'CHECK_IN' && detail.kind === 'GYM' ? (
+            <CheckInSheet
+              gym={detail}
+              viewer={viewer}
               onClose={closeAction}
+              onCompleted={onActionCompleted}
             />
           ) : null}
         </>

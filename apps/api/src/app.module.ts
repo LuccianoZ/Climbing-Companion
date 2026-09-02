@@ -14,6 +14,7 @@ import { ArchivalModule } from './archival/archival.module';
 import { GradeVotesModule } from './grade-votes/grade-votes.module';
 import { ClimbLogsModule } from './climb-logs/climb-logs.module';
 import { MapModule } from './map/map.module';
+import { GymCheckinsModule } from './gym-checkins/gym-checkins.module';
 import { TestBypassModule } from './auth/test-bypass.module';
 
 @Module({
@@ -59,6 +60,11 @@ import { TestBypassModule } from './auth/test-bypass.module';
     // codebase. Registered plainly like every other epic's module; it
     // imports GradeVotesModule itself for consensus reuse.
     MapModule,
+    // Epic 5 (Sprint 3, BL-024) / Architecture.md AR-39: gym check-in, gated
+    // on the same 300m proximity helper as everything else. BL-025 (a
+    // sibling self-recorded grade tier) was cut from scope before
+    // implementation began -- this module is Epic 5's only one.
+    GymCheckinsModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and

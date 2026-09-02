@@ -1,5 +1,7 @@
 import type {
   AdminVerifyGymInput,
+  CheckInInput,
+  CheckInResult,
   ClimbLogResult,
   CragDetail,
   GradeConsensus,
@@ -296,6 +298,15 @@ export function logClimb(
     `/api/routes/${routeId}/climb-logs`,
     input,
   );
+}
+
+// BL-024, Epic 5. Gym-scoped rather than route-scoped, mirroring
+// submitGymVerification's URL shape.
+export function checkInAtGym(
+  gymId: string,
+  input: CheckInInput,
+): Promise<CheckInResult> {
+  return sendJson<CheckInResult>('POST', `/api/gyms/${gymId}/check-ins`, input);
 }
 
 // ---------------------------------------------------------------------------

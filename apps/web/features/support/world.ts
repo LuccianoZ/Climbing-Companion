@@ -17,6 +17,7 @@ import {
 } from 'playwright';
 import {
   ADMIN,
+  CHECK_IN_RESULT,
   CLIMB_LOG_RESULT,
   CLIMBER,
   CRAG_DETAIL,
@@ -237,6 +238,8 @@ export class MapUiWorld extends World {
         return { status: 201, body: VOTE_CONSENSUS };
       case 'climb-log':
         return { status: 201, body: CLIMB_LOG_RESULT };
+      case 'gym-check-in':
+        return { status: 201, body: CHECK_IN_RESULT };
       case 'admin-verify':
         return {
           status: 200,
@@ -332,6 +335,7 @@ export class MapUiWorld extends World {
     await on('**/api/gyms/*/verifications', 'gym-verification');
     await on('**/api/routes/*/grade-votes', 'grade-vote');
     await on('**/api/routes/*/climb-logs', 'climb-log');
+    await on('**/api/gyms/*/check-ins', 'gym-check-in');
     await on('**/api/gyms/*/admin-verify', 'admin-verify');
 
     await on('**/api/map/pins', 'map-pins');

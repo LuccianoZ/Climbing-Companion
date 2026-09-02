@@ -236,6 +236,15 @@ export interface LogClimbInput extends ViewerLocationInput {
   outcome: ClimbOutcome;
 }
 
+// BL-024. A check-in carries no data of its own beyond "I am here" --
+// gym_checkins has no column this input would populate besides the FKs and
+// timestamp, both resolved server-side (Architecture.md §5) -- so this is a
+// bare alias rather than an interface with its own fields. AR-39: BL-025 (a
+// sibling self-recorded grade tier) was cut from Sprint 3 scope before
+// implementation began, so there is no CheckInInput field for it and none
+// is planned.
+export type CheckInInput = ViewerLocationInput;
+
 export interface SubmitRouteVerificationResult {
   route: { id: string; status: LifecycleStatus };
   routeNewlyVerified: boolean;
@@ -256,6 +265,15 @@ export interface ClimbLogResult {
   outcome: ClimbOutcome;
   gradeSnapshotOrdinal: number;
   loggedAt: string;
+}
+
+// GymCheckinsController's POST response -- the saved GymCheckin entity.
+// Only the fields the UI actually reads are declared (AR-19's convention
+// for these hand-mirrored types); gymId/userId come back too but nothing
+// here needs them.
+export interface CheckInResult {
+  id: string;
+  checkedInAt: string;
 }
 
 export interface AdminVerifyGymInput {

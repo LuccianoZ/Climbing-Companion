@@ -127,11 +127,9 @@ Feature: Verifying a route and verifying a gym from the map
     Then a POST request reached "/verifications"
     And the body sent to "/verifications" has "disciplinesSubmitted" set to '["BOULDERING"]'
 
-  Scenario: Check-in on a gym names the story that owns it
-    Given the map also shows a gym waiting for verification
-    And the climber is standing within range of "Chalk Line Bouldering"
-    And the climber opens the map
-    When the climber clicks the pin for "Chalk Line Bouldering"
-    And the climber taps "action-check-in"
-    Then "unbuilt-action-sheet" is on screen
-    And "owning-story" reads "BL-024"
+  # MOVED -- Epic 5 (BL-024) now owns this button's real behaviour; see
+  # gym-checkin-ui.feature. This scenario used to assert that tapping
+  # "action-check-in" opened UnbuiltActionSheet naming BL-024 as unbuilt.
+  # That placeholder is gone from MapScreen now that check-in is
+  # implemented (AR-39), so the scenario asserting it is gone too rather
+  # than left to fail.

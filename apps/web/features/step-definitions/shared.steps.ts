@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { MapUiWorld } from '../support/world';
 import {
   GYM_IN_RANGE_LOCATION,
+  GYM_OUT_OF_RANGE_LOCATION,
   IN_RANGE_LOCATION,
   MULTI_ROUTE_CRAG_DETAIL,
   OUT_OF_RANGE_LOCATION,
@@ -93,6 +94,12 @@ const IN_RANGE_OF: Record<string, { latitude: number; longitude: number }> = {
   'Chalk Line Bouldering': GYM_IN_RANGE_LOCATION,
 };
 
+// Same reasoning, mirrored for the "well outside range" step below.
+const OUT_OF_RANGE_OF: Record<string, { latitude: number; longitude: number }> = {
+  'The Great Wall': OUT_OF_RANGE_LOCATION,
+  'Chalk Line Bouldering': GYM_OUT_OF_RANGE_LOCATION,
+};
+
 Given(
   'the climber is standing within range of {string}',
   function (this: MapUiWorld, name: string) {
@@ -116,8 +123,15 @@ Given(
 
 Given(
   'the climber is standing well outside range of {string}',
-  function (this: MapUiWorld, _name: string) {
-    this.geolocation = OUT_OF_RANGE_LOCATION;
+  function (this: MapUiWorld, name: string) {
+    // Name-aware for the same reason IN_RANGE_OF is above: the crag's own
+    // OUT_OF_RANGE_LOCATION is only ~350m away *from the crag*, and the
+    // waiting gym sits ~5.5km from there (fixtures.ts). Reusing it for the
+    // gym is "out of range" in the proximity sense but leaves the gym's pin
+    // outside the zoom-14 viewport MapCanvas.tsx's FirstFixController flies
+    // to on first load -- unclickable, not just locked (see
+    // GYM_OUT_OF_RANGE_LOCATION's own comment).
+    this.geolocation = OUT_OF_RANGE_OF[name] ?? OUT_OF_RANGE_LOCATION;
   },
 );
 

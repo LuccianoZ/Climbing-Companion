@@ -147,6 +147,7 @@ export const SEARCH_TARGET: MapSearchResult = {
 // ---------------------------------------------------------------------------
 
 import type {
+  CheckInResult,
   ClimbLogResult,
   GradeConsensus,
   MediaAsset,
@@ -241,6 +242,22 @@ export const GYM_IN_RANGE_LOCATION = {
   longitude: UNVERIFIED_GYM_LOCATION.longitude,
 };
 
+// 350m south of that gym: outside its 300m radius. Deliberately gym-relative
+// rather than reusing the crag's OUT_OF_RANGE_LOCATION (~5.5km from this
+// gym) -- MapCanvas.tsx's FirstFixController flies the map to the viewer's
+// own geolocation at zoom 14 on first load, and at that zoom ~5.5km away is
+// outside the rendered viewport entirely. A pin outside the viewport still
+// exists in the DOM (Leaflet does not virtualize markers), but Playwright
+// cannot scroll a page to reach a marker positioned via an internal Leaflet
+// transform, so a click on it hangs until the step's own timeout -- the same
+// failure mode ARCHITECTURE.md already documents for GYM_LOCATION once being
+// too close (a pixel-overlap problem); this is the opposite fixture bug, too
+// far for the same zoom-14 fly-to to still show it.
+export const GYM_OUT_OF_RANGE_LOCATION = {
+  latitude: UNVERIFIED_GYM_LOCATION.latitude - 350 / 111_320,
+  longitude: UNVERIFIED_GYM_LOCATION.longitude,
+};
+
 export const UNVERIFIED_GYM_DETAIL: GymDetail = {
   id: UNVERIFIED_GYM_ID,
   kind: 'GYM',
@@ -284,4 +301,12 @@ export const CLIMB_LOG_RESULT: ClimbLogResult = {
   outcome: 'COMPLETED',
   gradeSnapshotOrdinal: 14,
   loggedAt: '2026-09-01T12:00:00.000Z',
+};
+
+// BL-024, Epic 5. GymCheckinsController's POST response -- only the fields
+// CheckInResult declares (id, checkedInAt) matter to the fixture; gymId/
+// userId would also be on the real response but nothing here reads them.
+export const CHECK_IN_RESULT: CheckInResult = {
+  id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
+  checkedInAt: '2026-09-01T12:05:00.000Z',
 };

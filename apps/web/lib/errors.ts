@@ -34,6 +34,7 @@ export type ApiAction =
   | 'VERIFY_GYM'
   | 'VOTE'
   | 'LOG_CLIMB'
+  | 'CHECK_IN'
   | 'ADMIN_VERIFY_GYM';
 
 // A request that never reached the server at all: fetch rejects with a
@@ -114,6 +115,11 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
   LOG_CLIMB: {
     403: TOO_FAR,
     404: 'This route no longer exists. It may have been archived.',
+    401: SESSION_EXPIRED,
+  },
+  CHECK_IN: {
+    403: TOO_FAR,
+    404: 'This gym no longer exists. It may have been archived.',
     401: SESSION_EXPIRED,
   },
   ADMIN_VERIFY_GYM: {
