@@ -34,6 +34,7 @@ Feature: The admin dashboard and direct gym verification
 
   Scenario: The queue lists gyms still waiting, and only those
     Given the climber is signed in as an administrator
+    And the map also shows a gym waiting for verification
     When an admin opens "/admin/gyms"
     Then "admin-gym-queue" is on screen
     And the queue lists exactly 1 gym waiting
@@ -53,8 +54,8 @@ Feature: The admin dashboard and direct gym verification
   Scenario: The form will not submit with no discipline chosen
     Given the climber is signed in as an administrator
     And an admin has opened the direct-verify page for the waiting gym
-    When the climber taps "admin-verify-submit"
-    Then no request reached "/admin-verify"
+    Then "admin-verify-submit" is disabled
+    And no request reached "/admin-verify"
 
   Scenario: A gym that is already verified cannot be verified again
     Given the climber is signed in as an administrator
@@ -74,13 +75,11 @@ Feature: The admin dashboard and direct gym verification
 
   Scenario: The admin entry point is hidden from a climber who is not one
     Given the climber is signed in
-    And the climber has opened "/"
-    When the climber taps "header-menu-button"
-    Then "menu-admin" is not on screen
-    And "menu-submit-route" is on screen
+    When the climber opens "/"
+    Then "admin-entry" is not on screen
+    And "submit-fab" is on screen
 
-  Scenario: An admin reaches the dashboard from the map's menu
+  Scenario: An admin reaches the dashboard from the header
     Given the climber is signed in as an administrator
-    And the climber has opened "/"
-    When the climber taps "header-menu-button"
-    Then "menu-admin" is on screen
+    When the climber opens "/"
+    Then "admin-entry" is on screen

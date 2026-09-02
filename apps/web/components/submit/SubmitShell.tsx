@@ -37,7 +37,7 @@ export function SubmitShell({
           <ArrowLeftIcon className="h-5 w-5" />
         </button>
         <span className="label-caps flex-1 text-center text-[15px] text-ink">
-          Climb Companion
+          Climbing Companion
         </span>
         <span className="h-5 w-5" aria-hidden />
       </header>

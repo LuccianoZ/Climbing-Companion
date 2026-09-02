@@ -26,7 +26,28 @@ import type {
 } from '@/lib/types';
 
 export const CRAG_LOCATION = { latitude: 37.7338, longitude: -119.5676 };
-export const GYM_LOCATION = { latitude: 37.7351, longitude: -119.5702 };
+
+// Fixture pins have to be separated in *pixels*, not in metres, and the
+// margin needed is far larger than it looks. pin-icons.ts builds each marker
+// at `iconSize: [140, 52]` -- the icon is not just the pin glyph, it carries
+// BL-020's "Unverified by Community" badge beside it -- so two markers less
+// than ~140px apart overlap, and Leaflet z-orders markers by latitude, which
+// means the southern one silently covers the northern one.
+//
+// Playwright will not click an obstructed element: it waits for the hit
+// target to be the element it was asked for and then times out, which reads
+// as a mysteriously slow page rather than as an overlap. At the map's default
+// zoom 12 (~30m per pixel at this latitude) 140px is ~4.2km, so the fixture
+// pins sit ~5.5km apart -- ~184px, comfortably clear, and still well inside
+// the 390x844 viewport these scenarios run at.
+//
+// This gym was originally ~270m from the crag, or about 9 pixels. It has
+// never been clickable; the scenario that clicks it had simply never been
+// executed (see the note on `--dry-run` in ARCHITECTURE.md).
+export const GYM_LOCATION = {
+  latitude: CRAG_LOCATION.latitude - 0.05,
+  longitude: CRAG_LOCATION.longitude + 0.01,
+};
 
 export const CRAG_ID = '11111111-1111-4111-8111-111111111111';
 export const GYM_ID = '22222222-2222-4222-8222-222222222222';
@@ -194,23 +215,37 @@ export const MULTI_ROUTE_CRAG_DETAIL: CragDetail = {
 // verify sheet has something to act on. VERIFIED_GYM_PIN above is deliberately
 // verified, and BL-020's "a verified pin looks different" scenario depends on
 // that, so this is a second gym rather than a mutation of the first.
+//
+// ~5.5km north of the crag, for the pixel-separation reason spelled out on
+// GYM_LOCATION above: a 140px-wide marker needs ~4.2km of clearance at zoom 12
+// before it stops covering its neighbour.
 export const UNVERIFIED_GYM_ID = '88888888-8888-4888-8888-888888888888';
+
+const UNVERIFIED_GYM_LOCATION = {
+  latitude: CRAG_LOCATION.latitude + 0.05,
+  longitude: CRAG_LOCATION.longitude,
+};
 
 export const UNVERIFIED_GYM_PIN: MapPin = {
   id: UNVERIFIED_GYM_ID,
   kind: 'GYM',
   name: 'Chalk Line Bouldering',
-  latitude: CRAG_LOCATION.latitude + 0.0004,
-  longitude: CRAG_LOCATION.longitude + 0.0004,
+  ...UNVERIFIED_GYM_LOCATION,
   status: 'UNVERIFIED',
+};
+
+// 250m south of that gym: inside its 300m radius, and ~1.4km from the crag, so
+// a scenario standing here is in range of the gym and of nothing else.
+export const GYM_IN_RANGE_LOCATION = {
+  latitude: UNVERIFIED_GYM_LOCATION.latitude - 250 / 111_320,
+  longitude: UNVERIFIED_GYM_LOCATION.longitude,
 };
 
 export const UNVERIFIED_GYM_DETAIL: GymDetail = {
   id: UNVERIFIED_GYM_ID,
   kind: 'GYM',
   name: 'Chalk Line Bouldering',
-  latitude: UNVERIFIED_GYM_PIN.latitude,
-  longitude: UNVERIFIED_GYM_PIN.longitude,
+  ...UNVERIFIED_GYM_LOCATION,
   status: 'UNVERIFIED',
   disciplinesOffered: [],
 };

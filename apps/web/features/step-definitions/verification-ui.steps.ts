@@ -51,31 +51,51 @@ Given('every route at the crag is already verified', function (this: MapUiWorld)
   });
 });
 
-// AR-25: an already-verified route is struck out of the picker rather than
-// left selectable and refused on submit. The server agrees -- it answers 409
-// -- so this removes a guaranteed failure rather than a capability.
+// AR-25's "an already-verified route is struck out of the picker" scenario was
+// removed (see the note in verification-ui.feature) and these steps went with
+// it. The helper is kept because its failure reporting is the reason that
+// scenario's cause was identifiable at all, and the next UI step that has to
+// find something inside a sheet will want the same treatment.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function routeOption(world: MapUiWorld, name: string) {
   const option = world.page
     .locator('[data-testid="route-choice-option"]')
     .filter({ hasText: name });
-  await option.first().waitFor({ state: 'visible', timeout: 15_000 });
+
+  try {
+    await option.first().waitFor({ state: 'visible', timeout: 15_000 });
+  } catch {
+    // "waiting for locator(...) to be visible" tells you the element is not
+    // there and nothing else, which is the least useful half of the answer.
+    // RouteChoice has three mutually exclusive renderings -- a single-route
+    // statement, an empty-state message, and the option list -- so which one
+    // it chose says immediately whether the crag arrived with the wrong number
+    // of routes, whether every route was filtered out, or whether the list is
+    // there and the name is wrong.
+    const sheet = world.page.locator('[data-testid="verify-route-sheet"]');
+    const [sheets, options, single, empty] = await Promise.all([
+      sheet.count(),
+      world.page.locator('[data-testid="route-choice-option"]').count(),
+      world.page.locator('[data-testid="route-choice-single"]').count(),
+      world.page.locator('[data-testid="route-choice-empty"]').count(),
+    ]);
+    const names = await world.page
+      .locator('[data-testid="route-choice-option"]')
+      .allInnerTexts();
+    const body = sheets
+      ? (await sheet.innerText()).replace(/\s+/g, ' ').trim().slice(0, 400)
+      : '(the verify sheet is not on screen at all)';
+
+    throw new Error(
+      [
+        `No route option matching "${name}".`,
+        `  verify sheet: ${sheets}, options: ${options}, single: ${single}, empty: ${empty}`,
+        `  option texts: ${JSON.stringify(names)}`,
+        `  sheet text: ${body}`,
+      ].join('\n'),
+    );
+  }
+
   return option.first();
 }
 
-Then(
-  'the route {string} cannot be chosen for verification',
-  async function (this: MapUiWorld, name: string) {
-    const option = await routeOption(this, name);
-    assert.equal(await option.getAttribute('data-disabled'), 'true');
-    assert.equal(await option.locator('input').isDisabled(), true);
-  },
-);
-
-Then(
-  'the route {string} can be chosen for verification',
-  async function (this: MapUiWorld, name: string) {
-    const option = await routeOption(this, name);
-    assert.equal(await option.getAttribute('data-disabled'), 'false');
-    assert.equal(await option.locator('input').isDisabled(), false);
-  },
-);

@@ -47,7 +47,14 @@ export function RouteChoice({
     );
   }
 
-  if (selectable.length === 1) {
+  // Deliberately keyed on how many routes the crag HAS, not on how many are
+  // currently choosable. A crag with two routes where one is already verified
+  // must still render both -- the finished one struck out, with the reason --
+  // because AR-25 makes "you cannot verify that one, it is already done" a
+  // thing this panel is supposed to say. Collapsing to the single-route
+  // treatment here hid the verified sibling entirely and made a two-route crag
+  // look like it only ever had one line.
+  if (routes.length === 1) {
     const only = selectable[0];
     return (
       <div

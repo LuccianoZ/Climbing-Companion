@@ -1,11 +1,9 @@
-import { TabPlaceholder } from '@/components/shell/AppShell';
+import { ProfileScreen } from '@/components/profile/ProfileScreen';
 
+// Tab 4. Not wrapped in RequireSession: this tab is reachable from the always
+// visible tab bar, so a signed-out visitor tapping it is doing the ordinary
+// thing rather than trying a door they should not have found. ProfileScreen
+// sends them to /login?next=/profile itself.
 export default function ProfilePage() {
-  return (
-    <TabPlaceholder title="Profile" owningStory="Epic 5 — Profiles & Logbook">
-      Your logbook, favourite routes and privacy controls. Signing in and out
-      already works from the menu in the top-left; what lands here is the
-      profile itself.
-    </TabPlaceholder>
-  );
+  return <ProfileScreen />;
 }

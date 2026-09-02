@@ -24,7 +24,6 @@ import {
   GYM_DETAIL,
   GYM_ID,
   MEDIA_ASSET,
-  MULTI_ROUTE_CRAG_DETAIL,
   SEARCH_TARGET,
   SUBMIT_GYM_RESULT,
   SUBMIT_ROUTE_RESULT,
@@ -120,8 +119,15 @@ export class MapUiWorld extends World {
   session: SessionKind = 'ANONYMOUS';
 
   // Opt-in richer fixtures, so Epic 4's scenarios keep the exact payloads
-  // they were written against.
-  multiRouteCrag = false;
+  // they were written against. map-ui.feature's "the two pins do not share
+  // a silhouette" counts the markers on the map and asserts there are
+  // exactly two, so a third pin cannot join the default set.
+  //
+  // A richer *crag* is not a flag here: it goes through `overrides` like every
+  // other per-scenario payload change (see the note on `overrides` below).
+  // There were briefly two mechanisms for the same job and only one of them
+  // reached the browser reliably.
+  includeUnverifiedGym = false;
 
   // Per-endpoint overrides, keyed by the names in `defaultResponse` below.
   // This is how a scenario says "the server refuses this one with a 409".
@@ -180,8 +186,7 @@ export class MapUiWorld extends World {
   }
 
   private cragDetail() {
-    const base = this.multiRouteCrag ? MULTI_ROUTE_CRAG_DETAIL : CRAG_DETAIL;
-    return { ...base, status: this.cragStatus };
+    return { ...CRAG_DETAIL, status: this.cragStatus };
   }
 
   // The default answer for each stubbed endpoint. Scenarios override by key
@@ -247,7 +252,7 @@ export class MapUiWorld extends World {
           body: [
             { ...UNVERIFIED_CRAG_PIN, status: this.cragStatus },
             VERIFIED_GYM_PIN,
-            UNVERIFIED_GYM_PIN,
+            ...(this.includeUnverifiedGym ? [UNVERIFIED_GYM_PIN] : []),
           ],
         };
       case 'map-crag':
@@ -345,7 +350,7 @@ Before(function (this: MapUiWorld) {
   this.geolocation = null;
   this.cragStatus = 'UNVERIFIED';
   this.session = 'ANONYMOUS';
-  this.multiRouteCrag = false;
+  this.includeUnverifiedGym = false;
   this.overrides = new Map();
 });
 

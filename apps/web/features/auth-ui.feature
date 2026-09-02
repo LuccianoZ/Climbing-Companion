@@ -86,10 +86,14 @@ Feature: Registering, signing in, signing out and resetting a password
 
   Scenario: Logging out reaches the server rather than only the browser
     Given the climber is signed in
-    And the climber has opened "/"
-    When the climber taps "header-menu-button"
-    And the climber taps "menu-logout"
+    And the climber has opened "/profile"
+    When the climber taps "profile-logout"
     Then a POST request reached "/api/auth/logout"
+
+  Scenario: The profile tab sends a signed-out visitor to sign in
+    Given the climber is signed out
+    When the climber opens "/profile"
+    Then the browser lands on "/login?next=%2Fprofile"
 
   Scenario: A password reset never reveals whether the account exists
     Given the climber is signed out

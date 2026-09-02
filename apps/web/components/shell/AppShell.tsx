@@ -3,22 +3,30 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { HeaderMenu } from './HeaderMenu';
-import { BellIcon, MapIcon, ProfileIcon, SearchIcon } from './icons';
+import { useSession } from '@/lib/session';
+import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons';
 
-// The chrome every climber-facing screen in the mockups shares: a brand bar
-// and a bottom tab bar. Map and Search are Epic 4's (BL-019-022); Alerts and
-// Profile render honest "not built yet" placeholders naming their owning
-// epic, rather than being omitted, because a tab bar that grows new items
-// story by story shifts every other tab's hit target underneath the user's
-// thumb each sprint.
+// The chrome every climber-facing screen shares: a brand bar and a bottom tab
+// bar.
+//
+// The header carries no navigation of its own. It held a hamburger menu (with
+// logout and the submission links) and a profile shortcut; both duplicated
+// somewhere the tab bar already goes, and a phone header with a control at
+// each end leaves the product's name squeezed between them. Everything that
+// menu did now lives where a user would look for it anyway: submission on the
+// map's floating + (AR-29), logout on the Profile tab, and the admin
+// dashboard behind the one button still up there.
+//
+// That button is rendered only for a SYSTEM_ADMIN. BL-012's endpoint answers
+// 403 to anyone else (AR-17), so the entry point is hidden rather than
+// shown-and-refused -- a control that exists only to be denied teaches
+// nothing. The empty slot is reserved on both sides regardless of whether the
+// button is there, so the title stays optically centred for everyone.
 //
 // Four tabs, not the mockup's five. Direct messaging is cut from MVP scope
 // entirely -- Architecture section 7 marks `conversations` and
-// `direct_messages` as "CUT, not implemented" -- so the Chat slot that used
-// to hold its place is gone rather than kept as a permanent dead placeholder.
-// That is the one deliberate departure from the approved design here, and it
-// is the honest one: the alternative is a tab that will never do anything.
+// `direct_messages` as "CUT, not implemented" -- so the Chat slot is gone
+// rather than kept as a permanent dead placeholder.
 
 const TABS = [
   { href: '/', label: 'Map', Icon: MapIcon },
@@ -37,20 +45,31 @@ export function AppShell({
   bleed?: boolean;
 }) {
   const pathname = usePathname();
+  const { isAdmin } = useSession();
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[430px] flex-col border-line-soft bg-paper sm:border-x">
-      <header className="z-[1200] flex shrink-0 items-center justify-between border-b border-line bg-surface px-4 py-3">
-        {/* BL-003 lives in here: logout is a menu item, not a page. */}
-        <HeaderMenu />
-        <span className="label-caps text-[15px] text-ink">Climb Companion</span>
-        <Link
-          href="/profile"
-          aria-label="Your profile"
-          className="rounded-md p-1 text-ink transition-colors hover:bg-paper"
-        >
-          <ProfileIcon className="h-6 w-6" />
-        </Link>
+      <header className="z-[1200] flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-3">
+        <span className="flex w-9 shrink-0 justify-start">
+          {isAdmin ? (
+            <Link
+              href="/admin"
+              aria-label="Admin dashboard"
+              data-testid="admin-entry"
+              className="rounded-[8px] border-[1.5px] border-line bg-paper p-1.5 text-clay-deep"
+            >
+              <ShieldIcon className="h-[18px] w-[18px]" />
+            </Link>
+          ) : null}
+        </span>
+
+        <span className="label-caps flex-1 text-center text-[14px] text-ink">
+          Climbing Companion
+        </span>
+
+        {/* Mirrors the admin slot so the title is centred in the header, not
+            in whatever space the left button happens to leave. */}
+        <span className="w-9 shrink-0" aria-hidden />
       </header>
 
       <main

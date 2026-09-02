@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef } from 'react';
-import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet';
+import {
+  AttributionControl,
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+} from 'react-leaflet';
 import L from 'leaflet';
 import type { MapPin } from '@/lib/types';
 import { buildPinIcon } from './pin-icons';
@@ -184,9 +190,15 @@ export default function MapCanvas({
       // scroll behind the map.
       scrollWheelZoom
       zoomControl={false}
+      // Switched off and re-added on the left below: the recentre button and
+      // the submit + both live bottom-right, and the attribution sat directly
+      // underneath them. Leaflet's corner for the built-in control is not
+      // configurable, so the way to move it is to place your own.
+      attributionControl={false}
       className="h-full w-full"
       data-testid="map-container"
     >
+      <AttributionControl position="bottomleft" />
       {/* Free OSM raster tiles -- no API key, no billing account, per
           BL-019's card. Attribution is a licence requirement, not decoration. */}
       <TileLayer

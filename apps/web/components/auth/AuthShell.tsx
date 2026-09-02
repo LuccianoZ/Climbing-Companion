@@ -34,7 +34,7 @@ export function AuthShell({
           <span className="h-5 w-5" aria-hidden />
         )}
         <span className="label-caps flex-1 text-center text-[15px] text-ink">
-          Climb Companion
+          Climbing Companion
         </span>
         <span className="h-5 w-5" aria-hidden />
       </header>
@@ -70,7 +70,7 @@ export function AuthBrand() {
           <circle cx="9" cy="8" r="1.15" />
         </svg>
       </span>
-      <h1 className="label-caps text-[19px] text-ink">Climb Companion</h1>
+      <h1 className="label-caps text-[18px] text-ink">Climbing Companion</h1>
       <p className="text-[12px] text-ink-soft">Find your route, send it.</p>
     </div>
   );

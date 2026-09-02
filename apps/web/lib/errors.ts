@@ -42,7 +42,7 @@ export type ApiAction =
 // connection" is actionable where "something went wrong" is not, and at a
 // crag it is usually the true cause.
 const OFFLINE =
-  "We couldn't reach Climb Companion. Check your connection and try again.";
+  "We couldn't reach Climbing Companion. Check your connection and try again.";
 
 const UNEXPECTED =
   'Something went wrong on our end. Please try again in a moment.';

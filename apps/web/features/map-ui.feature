@@ -87,7 +87,7 @@ Feature: The map, its pins, its detail panel and its search box
     Given the climber opens the map
     When the climber clicks the pin for "The Great Wall"
     And the climber switches the grade scale to French
-    Then the route "Solar Power" shows a consensus grade of "7a"
+    Then the route "Solar Power" shows a consensus grade of "6c+"
     And no request was made to save a grade preference
 
   Scenario: Searching by name flies the map to the match

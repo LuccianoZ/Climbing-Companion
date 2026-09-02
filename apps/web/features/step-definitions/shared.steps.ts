@@ -1,7 +1,12 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import assert from 'node:assert/strict';
 import { MapUiWorld } from '../support/world';
-import { IN_RANGE_LOCATION, OUT_OF_RANGE_LOCATION } from '../support/fixtures';
+import {
+  GYM_IN_RANGE_LOCATION,
+  IN_RANGE_LOCATION,
+  MULTI_ROUTE_CRAG_DETAIL,
+  OUT_OF_RANGE_LOCATION,
+} from '../support/fixtures';
 
 // Steps shared by the five Sprint 1/2 backfill features. Kept in one file
 // rather than duplicated per feature because Cucumber's step registry is
@@ -24,10 +29,16 @@ Given('the climber is signed in as an administrator', function (this: MapUiWorld
   this.session = 'ADMIN';
 });
 
+// Serves the two-route crag by overriding the endpoint's payload outright,
+// the same way "every route at the crag is already verified" does, rather than
+// through a flag the stub consults while building its default response.
 Given(
   'the crag has a second route that is already verified',
   function (this: MapUiWorld) {
-    this.multiRouteCrag = true;
+    this.overrides.set('map-crag', {
+      status: 200,
+      body: MULTI_ROUTE_CRAG_DETAIL,
+    });
   },
 );
 
@@ -73,10 +84,33 @@ Given(
   },
 );
 
+// Name-aware, because the fixtures place the crag and the waiting gym ~1.7km
+// apart on purpose (see fixtures.ts) -- so "in range" is a different point
+// depending on which one you are standing at, and a scenario that stood at the
+// crag while acting on the gym would see the locked panel, not the actions.
+const IN_RANGE_OF: Record<string, { latitude: number; longitude: number }> = {
+  'The Great Wall': IN_RANGE_LOCATION,
+  'Chalk Line Bouldering': GYM_IN_RANGE_LOCATION,
+};
+
 Given(
   'the climber is standing within range of {string}',
-  function (this: MapUiWorld, _name: string) {
-    this.geolocation = IN_RANGE_LOCATION;
+  function (this: MapUiWorld, name: string) {
+    const location = IN_RANGE_OF[name];
+    if (!location) {
+      throw new Error(`No in-range fixture location for "${name}"`);
+    }
+    this.geolocation = location;
+  },
+);
+
+// Epic 4's map-ui.feature counts the pins on the map and asserts there are
+// exactly two, so the waiting gym is opt-in rather than part of the default
+// fixture set.
+Given(
+  'the map also shows a gym waiting for verification',
+  function (this: MapUiWorld) {
+    this.includeUnverifiedGym = true;
   },
 );
 
@@ -165,6 +199,16 @@ Then('{string} is on screen', async function (this: MapUiWorld, testId: string) 
   await this.page
     .locator(`[data-testid="${testId}"]`)
     .waitFor({ state: 'visible', timeout: 15_000 });
+});
+
+// Asserting a refusal by clicking the button and expecting nothing to happen
+// cannot work when the button is disabled: Playwright waits for it to become
+// enabled and then times out, which reads as a broken test rather than a
+// working guard.
+Then('{string} is disabled', async function (this: MapUiWorld, testId: string) {
+  const button = this.page.locator(`[data-testid="${testId}"]`);
+  await button.waitFor({ state: 'visible', timeout: 15_000 });
+  assert.equal(await button.isDisabled(), true, `expected "${testId}" to be disabled`);
 });
 
 Then('{string} is not on screen', async function (this: MapUiWorld, testId: string) {

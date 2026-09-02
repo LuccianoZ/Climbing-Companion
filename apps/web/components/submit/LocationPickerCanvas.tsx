@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect } from 'react';
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import {
+  AttributionControl,
+  MapContainer,
+  Marker,
+  TileLayer,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
 import L from 'leaflet';
 
 // AR-27. A *separate* Leaflet canvas from components/map/MapCanvas.tsx, behind
@@ -118,9 +125,11 @@ export default function LocationPickerCanvas({
       zoom={PICKER_ZOOM}
       scrollWheelZoom
       zoomControl={false}
+      attributionControl={false}
       className="h-full w-full"
       data-testid="location-picker-map"
     >
+      <AttributionControl position="bottomleft" />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -67,7 +67,7 @@ export function AdminShell({
         <div className="flex items-center gap-2.5">
           <ShieldIcon className="h-5 w-5 text-clay-deep" />
           <span className="label-caps text-[13px] text-ink">
-            Climb Companion — Admin
+            Climbing Companion — Admin
           </span>
         </div>
         <div className="flex items-center gap-4">

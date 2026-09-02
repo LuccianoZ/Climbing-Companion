@@ -74,7 +74,7 @@ export function SubmitFab({ raised }: { raised: boolean }) {
         aria-expanded={open}
         data-testid="submit-fab-button"
         onClick={() => setOpen((current) => !current)}
-        className="rounded-full border-[1.5px] border-clay-deep bg-clay-deep p-3.5 text-paper shadow-[2px_2px_0_var(--color-line)]"
+        className="rounded-full border-[1.5px] border-clay-deep bg-clay-deep p-2.5 text-paper shadow-[2px_2px_0_var(--color-line)]"
       >
         <PlusIcon
           className={[
