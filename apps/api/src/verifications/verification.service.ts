@@ -357,4 +357,131 @@ export class VerificationService {
       (err as { code?: unknown }).code === '23505'
     );
   }
+
+  // BL-029 (never cut) / Foundation §5: "If the admin rejects a verification
+  // photo, that verification is voided (decrementing the count, reverting
+  // verified -> unverified if it drops below 4)". This is the reverse of the
+  // forward path submitRouteVerification takes -- and the reason that path's
+  // 4-count check was written as a re-runnable `>= 4` query rather than an
+  // `=== 4` increment (see VERIFICATIONS_REQUIRED_TO_VERIFY, AR-16).
+  //
+  // Runs inside the caller's (ModerationService's) transaction so the void,
+  // the strike, the crag reversal and the notification all commit or roll
+  // back together. Called with the rejected photo's id -- the verification
+  // row is found by its media_asset_id.
+  //
+  // The route_grade_votes row this verification upserted (AR-4) is
+  // deliberately NOT deleted: a grade opinion cast by someone physically at
+  // the route is a separate concern from the photo's authenticity, and
+  // GradeVoteService.computeConsensus already falls back to "Proposed Grade"
+  // once a route is back under 4 votes -- see AR-46. The archival window is
+  // also untouched: §5 says a revert does not restart the clock, and it
+  // stays anchored to the route's original created_at.
+  async voidRouteVerificationByPhoto(
+    manager: EntityManager,
+    mediaAssetId: string,
+  ): Promise<{
+    voided: boolean;
+    routeReverted: boolean;
+    cragReverted: boolean;
+    routeId: string | null;
+  }> {
+    const verificationRepo = manager.getRepository(RouteVerification);
+    const verification = await verificationRepo.findOne({
+      where: { mediaAssetId },
+    });
+    if (!verification) {
+      return {
+        voided: false,
+        routeReverted: false,
+        cragReverted: false,
+        routeId: null,
+      };
+    }
+
+    const { routeId } = verification;
+    await verificationRepo.remove(verification);
+
+    const remaining = await verificationRepo.count({ where: { routeId } });
+
+    let routeReverted = false;
+    let cragReverted = false;
+
+    const routeRepo = manager.getRepository(Route);
+    const route = await routeRepo.findOne({ where: { id: routeId } });
+    if (
+      route &&
+      route.status === LifecycleStatus.VERIFIED &&
+      remaining < VERIFICATIONS_REQUIRED_TO_VERIFY
+    ) {
+      route.status = LifecycleStatus.UNVERIFIED;
+      route.verifiedAt = null;
+      await routeRepo.save(route);
+      routeReverted = true;
+
+      // The mirror of the §4 forward cascade: a founding route reverting
+      // drags its crag back to UNVERIFIED too, even if a non-founding
+      // sibling route is independently VERIFIED (Foundation §4/§21 risk 8).
+      const cragRepo = manager.getRepository(Crag);
+      const crag = await cragRepo.findOne({ where: { id: route.cragId } });
+      if (
+        crag &&
+        crag.foundingRouteId === route.id &&
+        crag.status === LifecycleStatus.VERIFIED
+      ) {
+        crag.status = LifecycleStatus.UNVERIFIED;
+        crag.verifiedAt = null;
+        await cragRepo.save(crag);
+        cragReverted = true;
+      }
+    }
+
+    return { voided: true, routeReverted, cragReverted, routeId };
+  }
+
+  // AR-47: the same void, for a rejected GYM-verification photo. BL-029 is
+  // titled route-only, but Foundation §5's "that verification is voided"
+  // language is not route-qualified, and a rejected gym photo still counting
+  // toward the gym's 4 is the identical correctness hole. No crag cascade --
+  // gyms have no crag. `disciplines_offered` is left as-is on a revert:
+  // it is only ever set on the 4th verification (a fresh union, AR-17), and
+  // recomputing it here off three rows would be inventing behaviour §5 does
+  // not describe; a re-verified gym recomputes it from scratch anyway.
+  async voidGymVerificationByPhoto(
+    manager: EntityManager,
+    mediaAssetId: string,
+  ): Promise<{
+    voided: boolean;
+    gymReverted: boolean;
+    gymId: string | null;
+  }> {
+    const verificationRepo = manager.getRepository(GymVerification);
+    const verification = await verificationRepo.findOne({
+      where: { mediaAssetId },
+    });
+    if (!verification) {
+      return { voided: false, gymReverted: false, gymId: null };
+    }
+
+    const { gymId } = verification;
+    await verificationRepo.remove(verification);
+
+    const remaining = await verificationRepo.count({ where: { gymId } });
+
+    let gymReverted = false;
+    const gymRepo = manager.getRepository(Gym);
+    const gym = await gymRepo.findOne({ where: { id: gymId } });
+    if (
+      gym &&
+      gym.status === LifecycleStatus.VERIFIED &&
+      remaining < VERIFICATIONS_REQUIRED_TO_VERIFY
+    ) {
+      gym.status = LifecycleStatus.UNVERIFIED;
+      gym.verifiedAt = null;
+      await gymRepo.save(gym);
+      gymReverted = true;
+    }
+
+    return { voided: true, gymReverted, gymId };
+  }
 }

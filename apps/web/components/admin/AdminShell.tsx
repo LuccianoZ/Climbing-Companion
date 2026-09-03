@@ -32,13 +32,13 @@ const SECTIONS = [
   {
     href: '/admin/media',
     label: 'Photo flag queue',
-    story: 'BL-027 / BL-029 — Sprint 3',
-    available: false,
+    story: 'BL-027 / BL-028 / BL-029 / BL-030',
+    available: true,
   },
   {
     href: '/admin/users',
     label: 'Strikes & bans',
-    story: 'BL-030 / BL-031 — Sprint 3',
+    story: 'BL-033 — Epic 7',
     available: false,
   },
 ] as const;

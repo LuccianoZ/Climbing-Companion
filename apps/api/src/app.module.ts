@@ -15,6 +15,8 @@ import { GradeVotesModule } from './grade-votes/grade-votes.module';
 import { ClimbLogsModule } from './climb-logs/climb-logs.module';
 import { MapModule } from './map/map.module';
 import { GymCheckinsModule } from './gym-checkins/gym-checkins.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ModerationModule } from './moderation/moderation.module';
 import { TestBypassModule } from './auth/test-bypass.module';
 
 @Module({
@@ -65,6 +67,11 @@ import { TestBypassModule } from './auth/test-bypass.module';
     // sibling self-recorded grade tier) was cut from scope before
     // implementation began -- this module is Epic 5's only one.
     GymCheckinsModule,
+    // Epic 6 (Sprint 3, BL-026-030) / Architecture.md AR-41-AR-47: media
+    // moderation, the profanity gateway, verification voiding, and the
+    // in-app notifications table pulled forward from Epic 7 (AR-43).
+    NotificationsModule,
+    ModerationModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and

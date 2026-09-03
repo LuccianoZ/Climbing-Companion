@@ -310,3 +310,80 @@ export const CHECK_IN_RESULT: CheckInResult = {
   id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
   checkedInAt: '2026-09-01T12:05:00.000Z',
 };
+
+// ---------------------------------------------------------------------------
+// Epic 6 -- Media & Moderation (BL-026-030)
+// ---------------------------------------------------------------------------
+
+import type { AppNotification, FlagQueueItem } from '@/lib/types';
+
+// The two notification kinds Epic 6 raises (Foundation §12). Newest first,
+// mirroring NotificationsController's ORDER BY created_at DESC.
+export const NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'n1111111-1111-4111-8111-111111111111',
+    type: 'STRIKE_ISSUED',
+    relatedEntityId: 'acc11111-1111-4111-8111-111111111111',
+    createdAt: '2026-09-02T09:00:00.000Z',
+  },
+  {
+    id: 'n2222222-2222-4222-8222-222222222222',
+    type: 'IMAGE_REJECTED',
+    relatedEntityId: 'mod22222-2222-4222-8222-222222222222',
+    createdAt: '2026-09-01T18:00:00.000Z',
+  },
+];
+
+const REVIEW_PHOTO_ID = 'f1111111-1111-4111-8111-111111111111';
+const VERIFICATION_PHOTO_ID = 'f2222222-2222-4222-8222-222222222222';
+
+// One ordinary photo (a community report sent it back) and one route
+// verification photo (rejection always strikes -- AR-1).
+export const FLAG_QUEUE: FlagQueueItem[] = [
+  {
+    mediaAssetId: REVIEW_PHOTO_ID,
+    ownerUserId: CLIMBER.id,
+    purpose: 'REVIEW_PHOTO',
+    mimeType: 'image/jpeg',
+    byteSize: 40_000,
+    moderationStatus: 'PENDING',
+    createdAt: '2026-09-02T08:00:00.000Z',
+    reports: [
+      {
+        id: 'r1111111-1111-4111-8111-111111111111',
+        reportedBy: '99999999-9999-4999-8999-999999999999',
+        reason: 'Not climbing related',
+        createdAt: '2026-09-02T08:30:00.000Z',
+      },
+    ],
+  },
+  {
+    mediaAssetId: VERIFICATION_PHOTO_ID,
+    ownerUserId: CLIMBER.id,
+    purpose: 'ROUTE_VERIFICATION_PHOTO',
+    mimeType: 'image/png',
+    byteSize: 120_000,
+    moderationStatus: 'PENDING',
+    createdAt: '2026-09-02T07:00:00.000Z',
+    reports: [],
+  },
+];
+
+export const MODERATION_RESULT = {
+  decision: 'REJECT' as const,
+  assetStatus: 'REJECTED' as const,
+  verificationVoided: false,
+  routeReverted: false,
+  cragReverted: false,
+  gymReverted: false,
+  strikeIssued: false,
+  newStrikeCount: null,
+  userBanned: false,
+};
+
+// A 1x1 transparent PNG -- the flag queue renders each pending asset as an
+// <img src="/api/media/:id">, so that GET has to return image bytes, not JSON.
+export const TINY_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);

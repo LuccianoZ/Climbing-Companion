@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import * as api from './api';
+import { isSuspended } from './errors';
 import type { PublicUser } from './types';
 
 // AR-22. The frontend's only auth check: one GET /api/auth/me from a client
@@ -34,7 +35,11 @@ import type { PublicUser } from './types';
 export type SessionState =
   | { status: 'loading'; user: null }
   | { status: 'authenticated'; user: PublicUser }
-  | { status: 'anonymous'; user: null };
+  | { status: 'anonymous'; user: null }
+  // BL-028 / Foundation §12: the account holds a valid session cookie but is
+  // banned. Distinct from 'anonymous' so a screen shows the "Account
+  // Suspended" notice rather than a sign-in prompt.
+  | { status: 'suspended'; user: null };
 
 interface SessionContextValue {
   status: SessionState['status'];
@@ -67,8 +72,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const user = await api.fetchMe();
       setState({ status: 'authenticated', user });
-    } catch {
-      setState({ status: 'anonymous', user: null });
+    } catch (error) {
+      setState(
+        isSuspended(error)
+          ? { status: 'suspended', user: null }
+          : { status: 'anonymous', user: null },
+      );
     }
   }, []);
 
@@ -87,9 +96,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
           setState({ status: 'authenticated', user });
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (live) {
-          setState({ status: 'anonymous', user: null });
+          setState(
+            isSuspended(error)
+              ? { status: 'suspended', user: null }
+              : { status: 'anonymous', user: null },
+          );
         }
       });
     return () => {

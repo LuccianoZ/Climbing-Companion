@@ -427,3 +427,203 @@ describe('VerificationService.submitGymVerification', () => {
     expect(result.gymNewlyVerified).toBe(true);
   });
 });
+
+// BL-029 (never cut) / AR-47: the reverse of the forward verification path,
+// run inside ModerationService's transaction when an admin rejects a
+// verification photo.
+describe('VerificationService.voidRouteVerificationByPhoto', () => {
+  let routeVerificationRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
+  };
+  let routeRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let cragRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let manager: { getRepository: ReturnType<typeof vi.fn> };
+  let service: VerificationService;
+
+  const mediaAssetId = 'photo-1';
+  const routeId = 'route-9';
+
+  beforeEach(() => {
+    routeVerificationRepo = {
+      findOne: vi.fn(),
+      remove: vi.fn(),
+      count: vi.fn().mockResolvedValue(3),
+    };
+    routeRepo = { findOne: vi.fn(), save: vi.fn((r: Route) => r) };
+    cragRepo = { findOne: vi.fn(), save: vi.fn((c: Crag) => c) };
+    manager = {
+      getRepository: vi.fn((entity: unknown) => {
+        if (entity === RouteVerification) return routeVerificationRepo;
+        if (entity === Route) return routeRepo;
+        if (entity === Crag) return cragRepo;
+        throw new Error('unexpected repository requested');
+      }),
+    };
+    service = new VerificationService({} as unknown as DataSource);
+  });
+
+  it('no-ops when no verification row points at the rejected photo', async () => {
+    routeVerificationRepo.findOne.mockResolvedValue(null);
+
+    const result = await service.voidRouteVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+
+    expect(result).toEqual({
+      voided: false,
+      routeReverted: false,
+      cragReverted: false,
+      routeId: null,
+    });
+    expect(routeVerificationRepo.remove).not.toHaveBeenCalled();
+  });
+
+  it('deletes the row but leaves a still-verified route alone when the count stays >= 4', async () => {
+    routeVerificationRepo.findOne.mockResolvedValue({ routeId, mediaAssetId });
+    routeVerificationRepo.count.mockResolvedValue(4);
+    routeRepo.findOne.mockResolvedValue({
+      id: routeId,
+      cragId: 'crag-1',
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+
+    const result = await service.voidRouteVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+
+    expect(routeVerificationRepo.remove).toHaveBeenCalled();
+    expect(result.voided).toBe(true);
+    expect(result.routeReverted).toBe(false);
+    expect(routeRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('reverts VERIFIED -> UNVERIFIED and cascades the crag when the founding route drops below 4', async () => {
+    routeVerificationRepo.findOne.mockResolvedValue({ routeId, mediaAssetId });
+    routeVerificationRepo.count.mockResolvedValue(3);
+    routeRepo.findOne.mockResolvedValue({
+      id: routeId,
+      cragId: 'crag-1',
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+    cragRepo.findOne.mockResolvedValue({
+      id: 'crag-1',
+      foundingRouteId: routeId,
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+
+    const result = await service.voidRouteVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+
+    expect(result.routeReverted).toBe(true);
+    expect(result.cragReverted).toBe(true);
+    const savedRoute = routeRepo.save.mock.calls[0][0] as Route;
+    expect(savedRoute.status).toBe(LifecycleStatus.UNVERIFIED);
+    expect(savedRoute.verifiedAt).toBeNull();
+    const savedCrag = cragRepo.save.mock.calls[0][0] as Crag;
+    expect(savedCrag.status).toBe(LifecycleStatus.UNVERIFIED);
+  });
+
+  it('reverts a non-founding route without touching the crag', async () => {
+    routeVerificationRepo.findOne.mockResolvedValue({ routeId, mediaAssetId });
+    routeVerificationRepo.count.mockResolvedValue(3);
+    routeRepo.findOne.mockResolvedValue({
+      id: routeId,
+      cragId: 'crag-1',
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+    cragRepo.findOne.mockResolvedValue({
+      id: 'crag-1',
+      foundingRouteId: 'some-other-route',
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+
+    const result = await service.voidRouteVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+
+    expect(result.routeReverted).toBe(true);
+    expect(result.cragReverted).toBe(false);
+    expect(cragRepo.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('VerificationService.voidGymVerificationByPhoto', () => {
+  let gymVerificationRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    remove: ReturnType<typeof vi.fn>;
+    count: ReturnType<typeof vi.fn>;
+  };
+  let gymRepo: {
+    findOne: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let manager: { getRepository: ReturnType<typeof vi.fn> };
+  let service: VerificationService;
+
+  const mediaAssetId = 'gym-photo-1';
+  const gymId = 'gym-9';
+
+  beforeEach(() => {
+    gymVerificationRepo = {
+      findOne: vi.fn(),
+      remove: vi.fn(),
+      count: vi.fn().mockResolvedValue(3),
+    };
+    gymRepo = { findOne: vi.fn(), save: vi.fn((g: Gym) => g) };
+    manager = {
+      getRepository: vi.fn((entity: unknown) => {
+        if (entity === GymVerification) return gymVerificationRepo;
+        if (entity === Gym) return gymRepo;
+        throw new Error('unexpected repository requested');
+      }),
+    };
+    service = new VerificationService({} as unknown as DataSource);
+  });
+
+  it('reverts a VERIFIED gym to UNVERIFIED when a rejected photo drops it below 4', async () => {
+    gymVerificationRepo.findOne.mockResolvedValue({ gymId, mediaAssetId });
+    gymVerificationRepo.count.mockResolvedValue(3);
+    gymRepo.findOne.mockResolvedValue({
+      id: gymId,
+      status: LifecycleStatus.VERIFIED,
+      verifiedAt: new Date(),
+    });
+
+    const result = await service.voidGymVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+
+    expect(result).toEqual({ voided: true, gymReverted: true, gymId });
+    const savedGym = gymRepo.save.mock.calls[0][0] as Gym;
+    expect(savedGym.status).toBe(LifecycleStatus.UNVERIFIED);
+    expect(savedGym.verifiedAt).toBeNull();
+  });
+
+  it('no-ops when no gym verification row points at the photo', async () => {
+    gymVerificationRepo.findOne.mockResolvedValue(null);
+    const result = await service.voidGymVerificationByPhoto(
+      manager as never,
+      mediaAssetId,
+    );
+    expect(result.voided).toBe(false);
+  });
+});

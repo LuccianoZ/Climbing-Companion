@@ -1,11 +1,9 @@
-import { TabPlaceholder } from '@/components/shell/AppShell';
+import { AlertsScreen } from '@/components/alerts/AlertsScreen';
 
+// Tab 3. Epic 6 (BL-028) fills in what was a placeholder: image-rejected and
+// strike-issued notifications, per Foundation §12. Friend requests join the
+// same feed with Epic 7. Direct messages never will — messaging is cut from
+// MVP scope.
 export default function AlertsPage() {
-  return (
-    <TabPlaceholder title="Alerts" owningStory="Epic 9 — Notifications">
-      Friend requests, photo-rejection notices and moderation alerts land here
-      once their epic is scheduled. Direct messages will not — messaging is cut
-      from MVP scope.
-    </TabPlaceholder>
-  );
+  return <AlertsScreen />;
 }

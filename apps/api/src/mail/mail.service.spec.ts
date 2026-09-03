@@ -62,6 +62,29 @@ describe('MailService', () => {
 
       expect(service.getSentEmails()).toHaveLength(2);
     });
+
+    it('records a moderation email carrying the reason and the right subject per kind', async () => {
+      const service = await buildService('test');
+
+      await service.sendModerationEmail(
+        'owner@example.com',
+        'STRIKE_ISSUED',
+        'Off-topic content',
+      );
+      await service.sendModerationEmail(
+        'owner@example.com',
+        'ACCOUNT_BANNED',
+        'Repeated violations',
+      );
+
+      expect(sendMail).not.toHaveBeenCalled();
+      const sent = service.getSentEmails();
+      expect(sent).toHaveLength(2);
+      expect(sent[0].subject).toContain('strike');
+      expect(sent[0].text).toContain('Reason: Off-topic content');
+      expect(sent[1].subject).toContain('suspended');
+      expect(sent[1].text).toContain('Reason: Repeated violations');
+    });
   });
 
   describe('outside NODE_ENV=test', () => {

@@ -47,6 +47,26 @@ export type MediaPurpose =
 
 export type MediaModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+// --- moderation & notifications (Epic 6, BL-026-030) ----------------------
+
+export type NotificationType =
+  | 'FRIEND_REQUEST_RECEIVED'
+  | 'IMAGE_REJECTED'
+  | 'STRIKE_ISSUED';
+
+export type ModerationDecision = 'APPROVE' | 'REJECT';
+
+export type ModerationReasonPreset =
+  | 'OFF_TOPIC'
+  | 'LOW_IMAGE_QUALITY'
+  | 'INAPPROPRIATE_EXPLICIT'
+  | 'SUSPECTED_FRAUDULENT'
+  | 'OTHER';
+
+// The two AccountabilityAction values an admin can pair with a Reject on a
+// photo (Foundation §10.2); the other two are Admin-Dashboard actions.
+export type PairableAccountabilityAction = 'ISSUE_STRIKE' | 'BAN_OUTRIGHT';
+
 export type MapPinKind = 'CRAG' | 'GYM';
 
 // --- map read surface (AR-19) ----------------------------------------------
@@ -161,7 +181,7 @@ export interface MediaAsset {
 // The gateway's own constants (media-asset.entity.ts), restated so the client
 // can fail fast rather than spend an upload round trip on a file the server
 // will reject anyway.
-export const MAX_MEDIA_BYTES = 2_097_152;
+export const MAX_MEDIA_BYTES = 5_242_880; // 5MB (raised from 2MB, Sept 2 2026)
 export const ALLOWED_MEDIA_MIME_TYPES: readonly string[] = [
   'image/jpeg',
   'image/png',
@@ -278,6 +298,91 @@ export interface CheckInResult {
 
 export interface AdminVerifyGymInput {
   disciplinesOffered: GymDiscipline[];
+}
+
+// --- moderation payloads (Epic 6) ----------------------------------------
+
+// NotificationsController's GET response. `relatedEntityId` points at the
+// media_moderation_actions row (IMAGE_REJECTED) or user_accountability_actions
+// row (STRIKE_ISSUED) -- the client does not dereference it, it is here only
+// so the shape mirrors the API. The reasoning itself is in the user's email
+// (Foundation §12), so the card links there rather than showing it inline.
+export interface AppNotification {
+  id: string;
+  type: NotificationType;
+  relatedEntityId: string | null;
+  createdAt: string;
+}
+
+export interface FlagQueueReport {
+  id: string;
+  reportedBy: string;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface FlagQueueItem {
+  mediaAssetId: string;
+  ownerUserId: string;
+  purpose: MediaPurpose;
+  mimeType: string;
+  byteSize: number;
+  moderationStatus: MediaModerationStatus;
+  createdAt: string;
+  reports: FlagQueueReport[];
+}
+
+// ModerationController's POST /admin/media/:id/moderate body. `reasonPreset`
+// and `reasonText` are both optional at the wire level; ModerationService
+// enforces "at least one, and OTHER needs text" for the branches that
+// require a reason (verification photo, or paired with a strike/ban).
+export interface ModerateMediaInput {
+  decision: ModerationDecision;
+  reasonPreset?: ModerationReasonPreset;
+  reasonText?: string;
+  pairedAction?: PairableAccountabilityAction;
+}
+
+export interface ModerationResult {
+  decision: ModerationDecision;
+  assetStatus: MediaModerationStatus;
+  verificationVoided: boolean;
+  routeReverted: boolean;
+  cragReverted: boolean;
+  gymReverted: boolean;
+  strikeIssued: boolean;
+  newStrikeCount: number | null;
+  userBanned: boolean;
+}
+
+export const MODERATION_REASON_PRESET_LABELS: Record<
+  ModerationReasonPreset,
+  string
+> = {
+  OFF_TOPIC: 'Off-topic content',
+  LOW_IMAGE_QUALITY: 'Low image quality',
+  INAPPROPRIATE_EXPLICIT: 'Inappropriate/explicit content',
+  SUSPECTED_FRAUDULENT: 'Suspected fraudulent submission',
+  OTHER: 'Other (free text required)',
+};
+
+export const MODERATION_REASON_MAX_LENGTH = 500;
+
+export const MEDIA_PURPOSE_LABELS: Record<MediaPurpose, string> = {
+  PROFILE_PHOTO: 'Profile photo',
+  ROUTE_VERIFICATION_PHOTO: 'Route verification photo',
+  GYM_VERIFICATION_PHOTO: 'Gym verification photo',
+  REVIEW_PHOTO: 'Review photo',
+};
+
+// AR-1: a verification photo's rejection always strikes the uploader, no
+// admin discretion. The admin sheet uses this to lock the strike in and hide
+// the plain "Reject" button for those two purposes.
+export function isVerificationPhoto(purpose: MediaPurpose): boolean {
+  return (
+    purpose === 'ROUTE_VERIFICATION_PHOTO' ||
+    purpose === 'GYM_VERIFICATION_PHOTO'
+  );
 }
 
 // --- display labels --------------------------------------------------------

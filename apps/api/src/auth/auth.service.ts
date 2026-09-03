@@ -19,6 +19,10 @@ export interface PublicUser {
   email: string;
   displayName: string;
   role: UserRole;
+  // BL-028 (Epic 6): a banned account is "locked out" (Foundation §12).
+  // Carried on the request-attached user so SessionGuard can refuse every
+  // guarded route for a banned caller without a second DB round trip.
+  isBanned: boolean;
 }
 
 export interface LoginResult {
@@ -258,6 +262,7 @@ export class AuthService {
       email: user.email,
       displayName: user.displayName,
       role: user.role,
+      isBanned: user.isBanned,
     };
   }
 }

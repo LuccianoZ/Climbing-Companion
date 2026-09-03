@@ -48,6 +48,14 @@ export class AuthWorld extends World {
     gymsArchived: number;
     cragsArchived: number;
   };
+  // Epic 6 (BL-027-030): the media asset a moderation scenario is acting on,
+  // the email of the climber who uploaded it, and (for the verification-void
+  // scenario) the email of the seeded verifier whose photo is being
+  // rejected. Kept on the world since a scenario uploads once and then
+  // streams / moderates / asserts against it across several steps.
+  lastMediaAssetId?: string;
+  lastUploaderEmail?: string;
+  voidVerifierEmail?: string;
 
   constructor(options: IWorldOptions) {
     super(options);

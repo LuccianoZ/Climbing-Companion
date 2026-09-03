@@ -1,5 +1,9 @@
-import { UnauthorizedException, ExecutionContext } from '@nestjs/common';
-import { SessionGuard } from './session.guard';
+import {
+  ForbiddenException,
+  UnauthorizedException,
+  ExecutionContext,
+} from '@nestjs/common';
+import { SessionGuard, ACCOUNT_SUSPENDED_CODE } from './session.guard';
 import { AuthService } from './auth.service';
 import { UserRole } from '../users/entities/user.entity';
 
@@ -82,6 +86,42 @@ describe('SessionGuard', () => {
     const result = await guard.canActivate(contextFor(request));
 
     expect(result).toBe(true);
+    expect(authService.validateSession).not.toHaveBeenCalled();
+  });
+
+  // BL-028 (Epic 6): a banned account is "locked out" (Foundation §12). The
+  // guard refuses every guarded route with a 403 carrying a distinguishable
+  // code, so the web client renders the "Account Suspended" screen rather
+  // than bouncing to /login (which a plain 401 would trigger).
+  it('rejects a valid session belonging to a banned user with a 403 ACCOUNT_SUSPENDED', async () => {
+    authService.validateSession.mockResolvedValue({
+      id: 'user-1',
+      email: 'alex@example.com',
+      displayName: 'Alex',
+      role: UserRole.VERIFIED_USER,
+      isBanned: true,
+    });
+
+    await expect(
+      guard.canActivate(contextFor({ cookies: { session: 'valid-token' } })),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('rejects a banned user already attached by the mock-auth guard', async () => {
+    const request = {
+      cookies: {},
+      user: {
+        id: 'user-1',
+        email: 'alex@example.com',
+        displayName: 'Alex',
+        role: UserRole.VERIFIED_USER,
+        isBanned: true,
+      },
+    };
+
+    await expect(guard.canActivate(contextFor(request))).rejects.toMatchObject({
+      response: { error: ACCOUNT_SUSPENDED_CODE },
+    });
     expect(authService.validateSession).not.toHaveBeenCalled();
   });
 });

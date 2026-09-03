@@ -1,9 +1,11 @@
 import type {
   AdminVerifyGymInput,
+  AppNotification,
   CheckInInput,
   CheckInResult,
   ClimbLogResult,
   CragDetail,
+  FlagQueueItem,
   GradeConsensus,
   GymDetail,
   LoginInput,
@@ -12,6 +14,8 @@ import type {
   MapSearchResult,
   MediaAsset,
   MediaPurpose,
+  ModerateMediaInput,
+  ModerationResult,
   PinDetail,
   PublicUser,
   RegisterInput,
@@ -214,7 +218,7 @@ export function confirmPasswordReset(
 
 // Real multipart, never base64-in-JSON: that encoding was explicitly rejected
 // in backend review (Foundation section 19.1) and inflates the payload by a
-// third against a hard 2MB cap. Content-Type is deliberately NOT set -- the
+// third against a hard 5MB cap. Content-Type is deliberately NOT set -- the
 // browser has to add its own multipart boundary, and setting the header by
 // hand strips it and makes multer fail to parse the body.
 export async function uploadMedia(
@@ -321,4 +325,45 @@ export function adminVerifyGym(
   input: AdminVerifyGymInput,
 ): Promise<{ id: string; status: string; disciplinesOffered: string[] }> {
   return sendJson('PATCH', `/api/gyms/${gymId}/admin-verify`, input);
+}
+
+// ---------------------------------------------------------------------------
+// Moderation & notifications -- Epic 6, BL-027 / BL-028 / BL-030
+// ---------------------------------------------------------------------------
+
+// BL-027 / §14. Admin-only (SessionGuard + RolesGuard). Every PENDING asset
+// with its reports nested.
+export function fetchFlagQueue(signal?: AbortSignal): Promise<FlagQueueItem[]> {
+  return getJson<FlagQueueItem[]>('/api/admin/flag-queue', signal);
+}
+
+// BL-028. Approve / Reject / Reject+Strike / Reject+Ban.
+export function moderateMedia(
+  mediaAssetId: string,
+  input: ModerateMediaInput,
+): Promise<ModerationResult> {
+  return sendJson<ModerationResult>(
+    'POST',
+    `/api/admin/media/${mediaAssetId}/moderate`,
+    input,
+  );
+}
+
+// BL-030. A community report on a published asset -- any Verified Climber.
+export function reportMedia(
+  mediaAssetId: string,
+  reason: string | undefined,
+): Promise<{ mediaAssetId: string; moderationStatus: string }> {
+  return sendJson('POST', `/api/media/${mediaAssetId}/reports`, { reason });
+}
+
+// The Alerts tab's feed (Epic 6 half of §19.2). `since` is the client's
+// last_checked_timestamp -- omitted on first load, then the newest seen
+// createdAt so the poll is incremental.
+export function fetchNotifications(
+  since?: string,
+  signal?: AbortSignal,
+): Promise<AppNotification[]> {
+  const query = since ? `?since=${encodeURIComponent(since)}` : '';
+  return getJson<AppNotification[]>(`/api/notifications${query}`, signal);
 }

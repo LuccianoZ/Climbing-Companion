@@ -8,7 +8,7 @@ import {
   MediaPurpose,
 } from './entities/media-asset.entity';
 
-// The MIME allowlist and 2MB cap are already enforced by the time a request
+// The MIME allowlist and byte cap are already enforced by the time a request
 // reaches here -- see media-upload.options.ts (AR-15). This service assumes
 // `file` already passed the gateway and only owns the actual write/read.
 export interface UploadedMediaFile {

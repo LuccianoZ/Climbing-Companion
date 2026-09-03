@@ -46,14 +46,14 @@ function formatBytes(bytes: number): string {
 // The client half of the gateway's two rules. The server enforces both
 // regardless (multer aborts an oversized parse mid-stream, and fileFilter
 // throws 415 on a bad type), so this is not the security boundary -- it
-// exists to fail in a tenth of a second instead of after pushing 2MB up a
+// exists to fail in a tenth of a second instead of after pushing 5MB up a
 // phone's uplink at a crag, which is exactly where this component is used.
 function preCheck(file: File): string | null {
   if (!ALLOWED_MEDIA_MIME_TYPES.includes(file.type)) {
     return 'Photos must be JPEG or PNG.';
   }
   if (file.size > MAX_MEDIA_BYTES) {
-    return `That photo is ${formatBytes(file.size)} — the limit is 2MB. Try a smaller image.`;
+    return `That photo is ${formatBytes(file.size)} — the limit is 5MB. Try a smaller image.`;
   }
   return null;
 }
@@ -202,7 +202,7 @@ export function ImageUploadField({
             {pending ? 'Uploading…' : label}
           </span>
           <span className="text-[10.5px] text-ink-faint">
-            {hint ?? 'Max 2MB (JPEG or PNG only)'}
+            {hint ?? 'Max 5MB (JPEG or PNG only)'}
           </span>
         </label>
       )}

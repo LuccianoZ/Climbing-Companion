@@ -35,7 +35,10 @@ export type ApiAction =
   | 'VOTE'
   | 'LOG_CLIMB'
   | 'CHECK_IN'
-  | 'ADMIN_VERIFY_GYM';
+  | 'ADMIN_VERIFY_GYM'
+  | 'MODERATE_MEDIA'
+  | 'REPORT_MEDIA'
+  | 'NOTIFICATIONS';
 
 // A request that never reached the server at all: fetch rejects with a
 // TypeError rather than resolving to a non-ok Response, so this never becomes
@@ -81,7 +84,7 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     // Both also pre-checked client-side (BL-008), so reaching either of these
     // means the browser disagreed with the server about the file. Say what
     // the limit actually is rather than repeating "invalid file".
-    413: 'That photo is over the 2MB limit. Try a smaller image.',
+    413: 'That photo is over the 5MB limit. Try a smaller image.',
     415: 'Photos must be JPEG or PNG.',
     400: 'Choose a photo to upload.',
     401: SESSION_EXPIRED,
@@ -128,6 +131,21 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     409: 'This gym is already verified.',
     401: SESSION_EXPIRED,
     400: 'Select at least one discipline.',
+  },
+  MODERATE_MEDIA: {
+    400: 'Add a reason before rejecting — a preset, or written text for “Other”.',
+    403: 'Only a system administrator can moderate photos.',
+    404: 'That photo no longer exists.',
+    409: 'That photo has already been moderated — refresh the queue.',
+    401: SESSION_EXPIRED,
+  },
+  REPORT_MEDIA: {
+    404: 'That photo no longer exists.',
+    409: 'That photo is already under review.',
+    401: SESSION_EXPIRED,
+  },
+  NOTIFICATIONS: {
+    401: SESSION_EXPIRED,
   },
 };
 
@@ -203,4 +221,13 @@ export function messageFor(action: ApiAction, error: unknown): string {
 // they can send the climber to /login rather than render an error in place.
 export function isUnauthenticated(error: unknown): boolean {
   return error instanceof ApiError && error.status === 401;
+}
+
+// BL-028 / Foundation §12: a banned account is locked out. Every guarded
+// endpoint answers 403 with `error: 'ACCOUNT_SUSPENDED'` for a banned caller.
+// `/api/auth/me` has no role gate, so a 403 there can only mean suspension --
+// the session provider uses that to render the "Account Suspended" screen
+// instead of bouncing to /login the way a 401 would.
+export function isSuspended(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 403;
 }

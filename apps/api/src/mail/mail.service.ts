@@ -8,6 +8,21 @@ export interface SentEmail {
   text: string;
 }
 
+const MODERATION_EMAIL_COPY = {
+  IMAGE_REJECTED: {
+    subject: 'A photo you uploaded to Climbing Companion was removed',
+    lead: 'An administrator reviewed a photo you uploaded and removed it from Climbing Companion.',
+  },
+  STRIKE_ISSUED: {
+    subject: 'You received a moderation strike on Climbing Companion',
+    lead: 'An administrator issued a strike against your Climbing Companion account. Three strikes result in an automatic suspension.',
+  },
+  ACCOUNT_BANNED: {
+    subject: 'Your Climbing Companion account has been suspended',
+    lead: 'Your Climbing Companion account has been suspended and you can no longer sign in.',
+  },
+} as const;
+
 // Foundation §15/§20.1: Nodemailer + Gmail SMTP in production (~500/day,
 // arbitrary recipients, no domain ownership needed), Mailpit in dev.
 // Foundation §16: "Email is fully stubbed in automated tests -- assert the
@@ -36,6 +51,41 @@ export class MailService {
       `Use this link to choose a new password: ${resetUrl}`,
       '',
       "If you didn't request this, you can safely ignore this email -- your password won't change.",
+    ].join('\n');
+
+    if (this.isStubbed()) {
+      this.sentEmails.push({ to, subject, text });
+      return;
+    }
+
+    await this.transporter!.sendMail({
+      from:
+        this.config.get<string>('MAIL_FROM') ??
+        'no-reply@climbingcompanion.com',
+      to,
+      subject,
+      text,
+    });
+  }
+
+  // BL-028 / Foundation §11-§12: every moderation reason is "emailed to the
+  // affected user", and for image rejections / strikes the in-app
+  // notification only points the user *to* their email for the actual
+  // reasoning. A ban produces no in-app notification at all -- email is the
+  // only channel. All three share one sender: the subject line and a short
+  // lead-in differ, the body is always "<lead-in>\n\nReason: <reason>".
+  async sendModerationEmail(
+    to: string,
+    kind: 'IMAGE_REJECTED' | 'STRIKE_ISSUED' | 'ACCOUNT_BANNED',
+    reason: string,
+  ): Promise<void> {
+    const { subject, lead } = MODERATION_EMAIL_COPY[kind];
+    const text = [
+      lead,
+      '',
+      `Reason: ${reason}`,
+      '',
+      'If you believe this was a mistake, reply to this email or contact support (Settings → Help).',
     ].join('\n');
 
     if (this.isStubbed()) {

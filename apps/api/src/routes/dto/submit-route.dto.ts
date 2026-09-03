@@ -17,6 +17,7 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 import { GearRequirement, OutdoorDiscipline } from '../entities/route.entity';
+import { IsCleanText } from '../../common/profanity/is-clean-text.validator';
 
 // Architecture.md §3's CHECK constraint, mirrored here per its own wording
 // ("enforced both as a Postgres CHECK... and mirrored in DTO validation"):
@@ -62,9 +63,13 @@ function BoltRopeOnlyForRopeDisciplines(validationOptions?: ValidationOptions) {
 // `gear_requirements` column defaulting to `'{}'` rather than being
 // NOT NULL with no default. See Architecture.md AR-14.
 export class SubmitRouteDto {
+  // BL-026: the profanity gateway screens route/gym names (Foundation §10).
+  // A match aborts here in the ValidationPipe with a 400, before
+  // RoutesService.submitRoute (and its crag-or-attach transaction) runs.
   @IsString()
   @MinLength(1)
   @MaxLength(100)
+  @IsCleanText()
   name: string;
 
   @IsLatitude()

@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -8,6 +9,18 @@ import type { Request } from 'express';
 import { AuthService, PublicUser } from './auth.service';
 
 const SESSION_COOKIE_NAME = 'session';
+
+// BL-028 / Foundation §12: a banned account is "locked out" -- reasoning
+// arrives by email, there is no in-app notification. Every guarded route
+// answers with this shape so the web client can tell a suspension apart
+// from an ordinary signed-out 401 and render the "Account Suspended" screen
+// (4-screen mockup) instead of bouncing to /login.
+export const ACCOUNT_SUSPENDED_CODE = 'ACCOUNT_SUSPENDED';
+export const accountSuspendedResponse = () => ({
+  statusCode: 403,
+  error: ACCOUNT_SUSPENDED_CODE,
+  message: 'This account is suspended.',
+});
 
 export type AuthenticatedRequest = Request & { user: PublicUser };
 
@@ -32,8 +45,10 @@ export class SessionGuard implements CanActivate {
     // and may have already resolved a mock user from X-Test-Mock-Auth onto
     // the request. Defer to it instead of demanding a real cookie -- this
     // is what lets the bypass header substitute for a real login on any
-    // route guarded by SessionGuard.
+    // route guarded by SessionGuard. The ban check still applies to that
+    // path (BL-028), so it runs before this early return.
     if (request.user) {
+      this.assertNotBanned(request.user);
       return true;
     }
 
@@ -50,7 +65,15 @@ export class SessionGuard implements CanActivate {
       throw new UnauthorizedException('Session expired or invalid');
     }
 
+    this.assertNotBanned(user);
+
     request.user = user;
     return true;
+  }
+
+  private assertNotBanned(user: PublicUser): void {
+    if (user.isBanned) {
+      throw new ForbiddenException(accountSuspendedResponse());
+    }
   }
 }

@@ -10,13 +10,13 @@ Feature: Image upload gateway
     Given a Verified Climber "alex@example.com" is already registered with password "correct horse battery staple"
     And "alex@example.com" is logged in with password "correct horse battery staple"
 
-  Scenario: A .jpg under 2MB uploads successfully and is retrievable via the streaming endpoint with a matching ETag
+  Scenario: A .jpg under 5MB uploads successfully and is retrievable via the streaming endpoint with a matching ETag
     When "alex@example.com" uploads a "10KB" "image/jpeg" file for purpose "PROFILE_PHOTO"
     Then the upload succeeds
     And streaming the uploaded media back returns the same bytes with a matching ETag
 
-  Scenario: An upload over 2MB is rejected at the gateway before touching the database
-    When "alex@example.com" uploads a "3MB" "image/jpeg" file for purpose "PROFILE_PHOTO"
+  Scenario: An upload over 5MB is rejected at the gateway before touching the database
+    When "alex@example.com" uploads a "6MB" "image/jpeg" file for purpose "PROFILE_PHOTO"
     Then the upload is rejected as too large
     And no media_assets row was written
 

@@ -6,9 +6,10 @@ import {
   MAX_MEDIA_BYTES,
 } from './entities/media-asset.entity';
 
-// Architecture.md AR-15 / Foundation §19.1: the 2MB cap and MIME allowlist
-// are enforced here, at the multer/FileInterceptor gateway layer, rather
-// than duplicated as an app-level check inside MediaService.
+// Architecture.md AR-15 / Foundation §19.1: the per-image byte cap
+// (MAX_MEDIA_BYTES, currently 5MB) and MIME allowlist are enforced here, at
+// the multer/FileInterceptor gateway layer, rather than duplicated as an
+// app-level check inside MediaService.
 //
 // - `limits.fileSize`: multer aborts the parse mid-stream once this is
 //   exceeded, so an oversized upload never fully reaches the database (the

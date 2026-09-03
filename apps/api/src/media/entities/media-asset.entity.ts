@@ -19,16 +19,20 @@ export enum MediaModerationStatus {
   REJECTED = 'REJECTED',
 }
 
-// Foundation §19.1 / Architecture §6: the MIME allowlist and 2MB cap are
-// gateway-level constants, not something each future caller (BL-009/011/045)
-// re-derives -- shared by the migration's CHECK constraints, the multer
-// gateway options (media-upload.options.ts), and any Vitest/Cucumber
-// assertion that needs the boundary value.
+// Foundation §19.1 / Architecture §6: the MIME allowlist and per-image byte
+// cap are gateway-level constants, not something each future caller
+// (BL-009/011/045) re-derives -- shared by the migration's CHECK constraint,
+// the multer gateway options (media-upload.options.ts), and any
+// Vitest/Cucumber assertion that needs the boundary value.
 export const ALLOWED_MEDIA_MIME_TYPES: readonly string[] = [
   'image/jpeg',
   'image/png',
 ];
-export const MAX_MEDIA_BYTES = 2097152; // 2MB, Foundation §19.1
+// Raised from 2MB to 5MB by product decision (Sept 2 2026). The DB CHECK
+// constraint follows via migration 1787790000000-WidenMediaByteSizeCap.
+// Foundation §19.1 / §21 risk 3 & 5 still apply: BYTEA growth and home
+// upload bandwidth are the tradeoff being spent here.
+export const MAX_MEDIA_BYTES = 5_242_880; // 5MB
 
 // Architecture.md §6 `media_assets`. BL-008: the binary media gateway every
 // photo in the app goes through -- never joined into map/route/search reads,

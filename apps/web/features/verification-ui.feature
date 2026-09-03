@@ -36,8 +36,8 @@ Feature: Verifying a route and verifying a gym from the map
     Given the climber opens the map
     When the climber clicks the pin for "The Great Wall"
     And the climber taps "action-verify"
-    And the climber attaches a 3000000 byte "image/png" photo
-    Then "image-upload-error" reads "2MB"
+    And the climber attaches a 6000000 byte "image/png" photo
+    Then "image-upload-error" reads "5MB"
     And no request reached "/api/media"
 
   Scenario: A file that is not a photo never leaves the browser

@@ -22,10 +22,14 @@ import {
   CLIMBER,
   CRAG_DETAIL,
   CRAG_ID,
+  FLAG_QUEUE,
   GYM_DETAIL,
   GYM_ID,
   MEDIA_ASSET,
+  MODERATION_RESULT,
+  NOTIFICATIONS,
   SEARCH_TARGET,
+  TINY_PNG,
   SUBMIT_GYM_RESULT,
   SUBMIT_ROUTE_RESULT,
   UNVERIFIED_GYM_DETAIL,
@@ -77,7 +81,7 @@ AfterAll(async function () {
 // forms, the validation, the multipart upload body, Leaflet, the browser's
 // Geolocation API, and every line of app code -- is real.
 
-export type SessionKind = 'ANONYMOUS' | 'CLIMBER' | 'ADMIN';
+export type SessionKind = 'ANONYMOUS' | 'CLIMBER' | 'ADMIN' | 'SUSPENDED';
 
 export interface StubResponse {
   status: number;
@@ -196,9 +200,29 @@ export class MapUiWorld extends World {
   private defaultResponse(key: string): StubResponse {
     switch (key) {
       case 'auth-me':
-        return this.session === 'ANONYMOUS'
-          ? { status: 401, body: { statusCode: 401, message: 'No active session' } }
-          : { status: 200, body: this.session === 'ADMIN' ? ADMIN : CLIMBER };
+        if (this.session === 'ANONYMOUS') {
+          return {
+            status: 401,
+            body: { statusCode: 401, message: 'No active session' },
+          };
+        }
+        // BL-028: a banned account holds a valid cookie but every guarded
+        // endpoint answers 403 ACCOUNT_SUSPENDED. /api/auth/me has no role
+        // gate, so a 403 there means suspension (lib/errors.ts isSuspended).
+        if (this.session === 'SUSPENDED') {
+          return {
+            status: 403,
+            body: {
+              statusCode: 403,
+              error: 'ACCOUNT_SUSPENDED',
+              message: 'This account is suspended.',
+            },
+          };
+        }
+        return {
+          status: 200,
+          body: this.session === 'ADMIN' ? ADMIN : CLIMBER,
+        };
       case 'auth-login':
       case 'auth-register':
         return { status: 200, body: this.session === 'ADMIN' ? ADMIN : CLIMBER };
@@ -266,6 +290,17 @@ export class MapUiWorld extends World {
         return { status: 200, body: UNVERIFIED_GYM_DETAIL };
       case 'map-search':
         return { status: 200, body: [SEARCH_TARGET] };
+      case 'notifications':
+        return { status: 200, body: NOTIFICATIONS };
+      case 'flag-queue':
+        return { status: 200, body: FLAG_QUEUE };
+      case 'moderate':
+        return { status: 200, body: MODERATION_RESULT };
+      case 'media-report':
+        return {
+          status: 201,
+          body: { mediaAssetId: 'f1', moderationStatus: 'PENDING' },
+        };
       default:
         return { status: 501, body: { message: `No stub for "${key}"` } };
     }
@@ -343,6 +378,28 @@ export class MapUiWorld extends World {
     await on(`**/api/map/gyms/${GYM_ID}`, 'map-gym');
     await on(`**/api/map/gyms/${UNVERIFIED_GYM_ID}`, 'map-gym-unverified');
     await on('**/api/map/search**', 'map-search');
+
+    // Epic 6 (BL-027-030).
+    await on('**/api/notifications**', 'notifications');
+    await on('**/api/admin/flag-queue', 'flag-queue');
+    await on('**/api/admin/media/*/moderate', 'moderate');
+    await on('**/api/media/*/reports', 'media-report');
+
+    // The flag queue renders each pending asset as <img src="/api/media/:id">,
+    // so this GET must answer with image bytes, not the JSON every other stub
+    // returns. Registered last so it wins over the '**/api/media' upload
+    // handler for the ':id' path (which that pattern does not match anyway).
+    await this.page.route('**/api/media/*', (route) => {
+      if (route.request().method() === 'GET') {
+        void route.fulfill({
+          status: 200,
+          contentType: 'image/png',
+          body: TINY_PNG,
+        });
+        return;
+      }
+      void this.fulfil('media', route);
+    });
   }
 }
 

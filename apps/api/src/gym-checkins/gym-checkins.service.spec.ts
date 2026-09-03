@@ -68,17 +68,17 @@ describe('GymCheckinsService', () => {
 
   it('throws NotFoundException when the gym does not exist', async () => {
     gymRepo.findOne.mockResolvedValue(undefined);
-    await expect(
-      service.checkIn(gymId, userId, dto, location),
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.checkIn(gymId, userId, dto, location)).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('throws ForbiddenException when the climber is outside 300m', async () => {
     gymRepo.findOne.mockResolvedValue(baseGym());
     manager.query.mockResolvedValueOnce([{ within: false }]);
-    await expect(
-      service.checkIn(gymId, userId, dto, location),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.checkIn(gymId, userId, dto, location)).rejects.toThrow(
+      ForbiddenException,
+    );
     expect(checkinRepo.save).not.toHaveBeenCalled();
   });
 

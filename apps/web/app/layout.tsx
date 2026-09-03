@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import "@fontsource-variable/space-grotesk";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
+import { SuspendedGate } from "@/components/auth/SuspendedGate";
 
 export const metadata: Metadata = {
   title: "Climbing Companion",
@@ -43,7 +44,13 @@ export default function RootLayout({
             so navigating between tabs does not re-ask the same question --
             and so the header menu can render the right thing before any
             individual page has decided what it needs. */}
-        <SessionProvider>{children}</SessionProvider>
+        {/* BL-028: a suspended account is locked out of the whole app, not
+            just guarded actions — SuspendedGate swaps in the "Account
+            Suspended" notice for every route when GET /api/auth/me reports a
+            ban. */}
+        <SessionProvider>
+          <SuspendedGate>{children}</SuspendedGate>
+        </SessionProvider>
       </body>
     </html>
   );
