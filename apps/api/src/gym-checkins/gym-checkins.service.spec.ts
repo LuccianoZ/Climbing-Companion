@@ -30,6 +30,8 @@ describe('GymCheckinsService', () => {
       location: { type: 'Point', coordinates: [-78.87, 42.89] },
       status: LifecycleStatus.UNVERIFIED,
       disciplinesOffered: [] as GymDiscipline[],
+      operatingHours: {},
+      ianaTimezone: 'America/New_York',
       submittedBy: 'submitter-1',
       verifiedDirectlyByAdmin: false,
       verifiedAt: null,

@@ -16,6 +16,21 @@ export enum GymDiscipline {
   SPEED_CLIMBING = 'SPEED_CLIMBING',
 }
 
+// Foundation Revision Sept 3 2026 (AR-51, BL-x04): a gym's weekly hours.
+// One range within a day; `closes < opens` means it runs past midnight into
+// the next day; `fullDay` (with 00:00/00:00) means open 24 hours.
+export interface OperatingHoursRange {
+  opens: string; // "HH:MM", 24-hour
+  closes: string; // "HH:MM", 24-hour
+  fullDay: boolean;
+}
+
+// Keys are weekday numbers "0"-"6" (0 = Sunday). A missing key or an empty
+// array means closed that day; multiple ranges mean a split shift. A valid
+// submission carries all seven keys. Shape validation lives on the DTO
+// (class-validator), not the DB -- same convention as grade ordinals.
+export type OperatingHours = Record<string, OperatingHoursRange[]>;
+
 // Architecture.md §3 `gyms`. BL-007: unlike crags, a gym is a standalone
 // pin -- Foundation §4 ("no child routes, its own independent verification
 // pipeline") -- so there is deliberately no crag_id/founding-route concept
@@ -45,10 +60,12 @@ export class Gym {
   })
   status: LifecycleStatus;
 
-  // Architecture §3/§4: empty at submission time -- populated as the union
-  // of all four verifiers' disciplines_submitted arrays once BL-011's 4th
-  // gym verification lands (gym_verifications.disciplines_submitted), not
-  // collected on the submission form itself.
+  // Foundation Revision Sept 3 2026 (AR-51, BL-x04/x06): now set ONCE, at
+  // submission, with >= 1 discipline required (DTO-enforced). Verification
+  // only confirms the submission is accurate -- it no longer re-collects or
+  // unions disciplines (the pre-Sept-3 AR-17 "union the four verifiers'
+  // arrays" step is removed). Default '{}' kept only for the migration's
+  // sake; a real insert always supplies a non-empty array.
   @Column({
     name: 'disciplines_offered',
     type: 'enum',
@@ -58,6 +75,21 @@ export class Gym {
     default: '{}',
   })
   disciplinesOffered: GymDiscipline[];
+
+  // Foundation Revision Sept 3 2026 (AR-51, BL-x04). Migration
+  // AddGymOperatingHoursAndTimezone. See OperatingHours above for the shape.
+  @Column({
+    name: 'operating_hours',
+    type: 'jsonb',
+    default: () => `'{}'::jsonb`,
+  })
+  operatingHours: OperatingHours;
+
+  // IANA zone (e.g. "America/New_York") derived from `location` at
+  // submission via the offline `tz-lookup` package. NOT NULL in the DB; no
+  // default after the migration, so every insert must supply one.
+  @Column({ name: 'iana_timezone', type: 'text' })
+  ianaTimezone: string;
 
   @Column({ name: 'submitted_by', type: 'uuid' })
   submittedBy: string;

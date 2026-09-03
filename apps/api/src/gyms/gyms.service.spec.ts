@@ -96,6 +96,8 @@ describe('GymsService.adminVerifyGym', () => {
       location: { type: 'Point', coordinates: [-78.8712, 42.8901] },
       status: LifecycleStatus.UNVERIFIED,
       disciplinesOffered: [],
+      operatingHours: {},
+      ianaTimezone: 'America/New_York',
       submittedBy: 'submitter-1',
       verifiedDirectlyByAdmin: false,
       verifiedAt: null,

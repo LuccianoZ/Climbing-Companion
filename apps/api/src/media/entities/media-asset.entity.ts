@@ -11,6 +11,11 @@ export enum MediaPurpose {
   ROUTE_VERIFICATION_PHOTO = 'ROUTE_VERIFICATION_PHOTO',
   GYM_VERIFICATION_PHOTO = 'GYM_VERIFICATION_PHOTO',
   REVIEW_PHOTO = 'REVIEW_PHOTO',
+  // Foundation Revision Sept 3 2026 (AR-51, BL-x04/x05): >= 3 photos on
+  // every gym / outdoor-climb submission, linked via subject_gym_id /
+  // subject_route_id below. Added by migration AddSubmissionPhotos.
+  ROUTE_SUBMISSION_PHOTO = 'ROUTE_SUBMISSION_PHOTO',
+  GYM_SUBMISSION_PHOTO = 'GYM_SUBMISSION_PHOTO',
 }
 
 export enum MediaModerationStatus {
@@ -68,6 +73,17 @@ export class MediaAsset {
     default: MediaModerationStatus.PENDING,
   })
   moderationStatus: MediaModerationStatus;
+
+  // Foundation Revision Sept 3 2026 (AR-51): submission photos link back to
+  // the route or gym they were uploaded for. Exactly one is set, and only
+  // for a *_SUBMISSION_PHOTO purpose; verification photos still link through
+  // their route_verifications / gym_verifications row instead. Nullable FKs,
+  // migration AddSubmissionPhotos.
+  @Column({ name: 'subject_route_id', type: 'uuid', nullable: true })
+  subjectRouteId: string | null;
+
+  @Column({ name: 'subject_gym_id', type: 'uuid', nullable: true })
+  subjectGymId: string | null;
 
   // Hash of `payload`, computed at insert (Architecture §6) -- doubles as
   // the HTTP ETag value on the streaming endpoint.

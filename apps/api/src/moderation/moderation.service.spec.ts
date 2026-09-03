@@ -77,6 +77,8 @@ describe('ModerationService', () => {
       mimeType: 'image/jpeg',
       byteSize: 10,
       moderationStatus: MediaModerationStatus.PENDING,
+      subjectRouteId: null,
+      subjectGymId: null,
       etag: 'etag',
       createdAt: new Date('2026-09-01T00:00:00Z'),
       updatedAt: new Date('2026-09-01T00:00:00Z'),

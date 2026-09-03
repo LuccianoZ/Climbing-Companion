@@ -288,6 +288,8 @@ describe('VerificationService.submitGymVerification', () => {
       location: { type: 'Point', coordinates: [-78.8712, 42.8901] },
       status: LifecycleStatus.UNVERIFIED,
       disciplinesOffered: [],
+      operatingHours: {},
+      ianaTimezone: 'America/New_York',
       submittedBy: submitterId,
       verifiedDirectlyByAdmin: false,
       verifiedAt: null,
