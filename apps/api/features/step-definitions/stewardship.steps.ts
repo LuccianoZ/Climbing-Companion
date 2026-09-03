@@ -143,7 +143,7 @@ When(
     const id = await gymId(dataSource, name);
 
     const current = await dataSource.query(
-      `SELECT id FROM media_assets WHERE subject_gym_id = $1::uuid ORDER BY created_at ASC`,
+      `SELECT id FROM media_assets WHERE subject_gym_id = $1::uuid ORDER BY id ASC`,
       [id],
     );
     assert.ok(current.length >= 3);
@@ -164,7 +164,7 @@ When(
     const adminId = await findUserIdByEmail(dataSource, email);
     const id = await gymId(dataSource, name);
     const current = await dataSource.query(
-      `SELECT id FROM media_assets WHERE subject_gym_id = $1::uuid ORDER BY created_at ASC`,
+      `SELECT id FROM media_assets WHERE subject_gym_id = $1::uuid ORDER BY id ASC`,
       [id],
     );
     this.response = await this.http
