@@ -441,14 +441,28 @@ describe('GymsService.adminUpdateGym (BL-x07)', () => {
       ADMIN_ID,
     );
 
-    // existing[0] (aaaa...) dropped -> unlinked; dddd... linked + APPROVED
-    const unlinked = mediaRepo.save.mock.calls[0][0];
-    expect(unlinked[0].id).toBe('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
-    expect(unlinked[0].subjectGymId).toBeNull();
-    const linked = mediaRepo.save.mock.calls[1][0];
-    expect(linked[0].id).toBe('dddddddd-dddd-4ddd-8ddd-dddddddddddd');
-    expect(linked[0].subjectGymId).toBe('gym-1');
-    expect(linked[0].moderationStatus).toBe(MediaModerationStatus.APPROVED);
+    // Gather every saved asset across all save() calls (order varies:
+    // unlink, then re-approve kept, then link new).
+    const saved = new Map<string, MediaAsset>();
+    for (const call of mediaRepo.save.mock.calls) {
+      for (const asset of call[0]) saved.set(asset.id, asset);
+    }
+
+    // aaaa dropped -> unlinked
+    expect(
+      saved.get('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa')?.subjectGymId,
+    ).toBeNull();
+    // dddd added -> linked + APPROVED
+    const linked = saved.get('dddddddd-dddd-4ddd-8ddd-dddddddddddd')!;
+    expect(linked.subjectGymId).toBe('gym-1');
+    expect(linked.moderationStatus).toBe(MediaModerationStatus.APPROVED);
+    // bbbb / cccc kept -> published (were PENDING)
+    expect(
+      saved.get('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb')?.moderationStatus,
+    ).toBe(MediaModerationStatus.APPROVED);
+    expect(
+      saved.get('cccccccc-cccc-4ccc-8ccc-cccccccccccc')?.moderationStatus,
+    ).toBe(MediaModerationStatus.APPROVED);
   });
 
   it('rejects a photo set below the 3-photo floor', async () => {

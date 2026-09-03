@@ -176,6 +176,18 @@ export async function syncSubmissionPhotos(params: {
     asset.subjectGymId = null;
   }
 
+  // An admin who curates a photo set has implicitly vetted every photo left
+  // in it -- a kept community photo that was still PENDING is published,
+  // matching "admin photos publish without the §10 queue" (BL-x03).
+  const keptStillPending = current.filter(
+    (a) =>
+      desiredSet.has(a.id) &&
+      a.moderationStatus === MediaModerationStatus.PENDING,
+  );
+  for (const asset of keptStillPending) {
+    asset.moderationStatus = MediaModerationStatus.APPROVED;
+  }
+
   // Link the newly-added ones.
   const addIds = desiredIds.filter((id) => !currentIds.has(id));
   let toLink: MediaAsset[] = [];
@@ -209,6 +221,7 @@ export async function syncSubmissionPhotos(params: {
   }
 
   if (toUnlink.length > 0) await repo.save(toUnlink);
+  if (keptStillPending.length > 0) await repo.save(keptStillPending);
   if (toLink.length > 0) await repo.save(toLink);
 }
 
