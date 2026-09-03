@@ -108,13 +108,22 @@ export function UnverifiedGymList() {
                 {gym.latitude.toFixed(4)}, {gym.longitude.toFixed(4)}
               </td>
               <td className="px-3 py-2.5 text-right">
-                <Link
-                  href={`/admin/gyms/${gym.id}/verify`}
-                  data-testid="admin-verify-link"
-                  className="inline-block rounded-[8px] border-[1.5px] border-ink bg-ink px-3 py-1.5 text-[11.5px] font-semibold text-paper"
-                >
-                  Verify directly
-                </Link>
+                <div className="flex justify-end gap-1.5">
+                  <Link
+                    href={`/admin/stewardship/gym/${gym.id}`}
+                    data-testid="admin-edit-link"
+                    className="inline-block rounded-[8px] border-[1.5px] border-line-soft px-3 py-1.5 text-[11.5px] font-semibold text-ink-soft"
+                  >
+                    Edit
+                  </Link>
+                  <Link
+                    href={`/admin/gyms/${gym.id}/verify`}
+                    data-testid="admin-verify-link"
+                    className="inline-block rounded-[8px] border-[1.5px] border-ink bg-ink px-3 py-1.5 text-[11.5px] font-semibold text-paper"
+                  >
+                    Verify directly
+                  </Link>
+                </div>
               </td>
             </tr>
           ))}

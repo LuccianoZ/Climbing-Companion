@@ -43,7 +43,52 @@ export type MediaPurpose =
   | 'PROFILE_PHOTO'
   | 'ROUTE_VERIFICATION_PHOTO'
   | 'GYM_VERIFICATION_PHOTO'
-  | 'REVIEW_PHOTO';
+  | 'REVIEW_PHOTO'
+  // Sept 3 revision (AR-51, BL-x04/x05): >= 3 photos on every gym /
+  // outdoor-climb submission.
+  | 'ROUTE_SUBMISSION_PHOTO'
+  | 'GYM_SUBMISSION_PHOTO';
+
+// --- gym operating hours (AR-51, BL-x04) ----------------------------------
+
+// Mirrors OperatingHoursRange / OperatingHours in apps/api gym.entity.ts.
+// `closes` < `opens` means the range runs past midnight; `fullDay` (with
+// 00:00/00:00) means open 24h; multiple ranges in a day = a split shift; an
+// empty array = closed that day. A valid submission carries all seven keys.
+export interface OperatingHoursRange {
+  opens: string; // "HH:MM"
+  closes: string; // "HH:MM"
+  fullDay: boolean;
+}
+
+// Keys "0".."6", 0 = Sunday.
+export type OperatingHours = Record<string, OperatingHoursRange[]>;
+
+export const WEEKDAY_LABELS: readonly string[] = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday',
+];
+
+export const WEEKDAY_SHORT: readonly string[] = [
+  'Sun',
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+];
+
+export const MIN_SUBMISSION_PHOTOS = 3;
+
+// Foundation §13 / §12: the one static support address. User-requested gym
+// hours changes are handled by email (§13, AR-51 BL-x08), not an in-app form.
+export const SUPPORT_EMAIL = 'support@climbingcompanion.com';
 
 export type MediaModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
@@ -106,6 +151,8 @@ export interface MapRouteSummary {
   grade: GradeConsensus;
   verificationCount: number;
   verificationsRequired: number;
+  // BL-x05: true while no ROUTE_SUBMISSION_PHOTO for this route is APPROVED.
+  photosPending: boolean;
 }
 
 export interface CragDetail {
@@ -126,6 +173,12 @@ export interface GymDetail {
   longitude: number;
   status: LifecycleStatus;
   disciplinesOffered: GymDiscipline[];
+  // Sept 3 revision (AR-51, BL-x04). Rendered in the gym's local time via
+  // ianaTimezone.
+  operatingHours: OperatingHours;
+  ianaTimezone: string;
+  // BL-x05: true while no GYM_SUBMISSION_PHOTO for this gym is APPROVED.
+  photosPending: boolean;
 }
 
 export type PinDetail = CragDetail | GymDetail;
@@ -204,12 +257,26 @@ export interface SubmitRouteInput {
   proposedGradeOrdinal: number;
   boltCount?: number;
   minRopeLengthM?: number;
+  // AR-51 BL-x05: >= 3, pre-uploaded via POST /api/media with
+  // purpose = ROUTE_SUBMISSION_PHOTO.
+  photoMediaIds: string[];
+  // BL-x02: submitter's live device location for the non-admin 300m gate.
+  // Omitted for an admin submission (gate skipped server-side by role).
+  deviceLatitude?: number;
+  deviceLongitude?: number;
 }
 
 export interface SubmitGymInput {
   name: string;
   latitude: number;
   longitude: number;
+  // AR-51 BL-x04: authoritative at submission (>= 1).
+  disciplinesOffered: GymDiscipline[];
+  operatingHours: OperatingHours;
+  // AR-51 BL-x05: >= 3, purpose = GYM_SUBMISSION_PHOTO.
+  photoMediaIds: string[];
+  deviceLatitude?: number;
+  deviceLongitude?: number;
 }
 
 // RoutesService.SubmitRouteResult. `cragCreated` is what tells the submitter
@@ -243,9 +310,14 @@ export interface SubmitRouteVerificationInput extends ViewerLocationInput {
   gradeOrdinal: number;
 }
 
+// AR-51 BL-x06: gym verification is confirm/dispute. `informationAccurate:
+// true` -> counts toward the 4 (photo now OPTIONAL, no discipline re-entry).
+// `false` -> `disputeDetail` (<=500) becomes required and is routed to the
+// admin dispute queue; it does not count.
 export interface SubmitGymVerificationInput extends ViewerLocationInput {
-  mediaAssetId: string;
-  disciplinesSubmitted: GymDiscipline[];
+  informationAccurate: boolean;
+  mediaAssetId?: string;
+  disputeDetail?: string;
 }
 
 export interface VoteOnGradeInput extends ViewerLocationInput {
@@ -272,6 +344,9 @@ export interface SubmitRouteVerificationResult {
 }
 
 export interface SubmitGymVerificationResult {
+  outcome: 'CONFIRMED' | 'DISPUTED';
+  verification: { id: string } | null;
+  dispute: { id: string } | null;
   gym: {
     id: string;
     status: LifecycleStatus;
@@ -298,6 +373,160 @@ export interface CheckInResult {
 
 export interface AdminVerifyGymInput {
   disciplinesOffered: GymDiscipline[];
+}
+
+// --- admin stewardship (AR-51, BL-x07 / BL-x08 / BL-033) ------------------
+
+// AdminUpdateGymDto / AdminUpdateRouteDto -- every field optional; only the
+// keys present are changed. lat/lng must move together.
+export interface AdminUpdateGymInput {
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  disciplinesOffered?: GymDiscipline[];
+  operatingHours?: OperatingHours;
+  // Full desired photo set (>= 3). Added ids linked + APPROVED, dropped ids
+  // unlinked.
+  photoMediaIds?: string[];
+}
+
+export interface AdminUpdateRouteInput {
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  discipline?: OutdoorDiscipline;
+  gearRequirements?: GearRequirement[];
+  summary?: string;
+  proposedGradeOrdinal?: number;
+  boltCount?: number | null;
+  minRopeLengthM?: number | null;
+  photoMediaIds?: string[];
+}
+
+// GET /api/gyms/:id and /api/routes/:id (admin) -- the editor's read.
+export interface SubmissionPhotoView {
+  id: string;
+  mimeType: string;
+  byteSize: number;
+  moderationStatus: MediaModerationStatus;
+  createdAt: string;
+}
+
+export interface AdminGymView {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  disciplinesOffered: GymDiscipline[];
+  operatingHours: OperatingHours;
+  ianaTimezone: string;
+  status: LifecycleStatus;
+  verifiedDirectlyByAdmin: boolean;
+  photos: SubmissionPhotoView[];
+}
+
+export interface AdminRouteView {
+  id: string;
+  name: string;
+  cragId: string;
+  cragName: string | null;
+  isFoundingRoute: boolean;
+  latitude: number;
+  longitude: number;
+  discipline: OutdoorDiscipline;
+  gearRequirements: GearRequirement[];
+  summary: string;
+  proposedGradeOrdinal: number;
+  boltCount: number | null;
+  minRopeLengthM: number | null;
+  status: LifecycleStatus;
+  photos: SubmissionPhotoView[];
+}
+
+export interface HardDeleteGymResult {
+  gymId: string;
+  deleted: boolean;
+}
+
+export interface HardDeleteRouteResult {
+  routeId: string;
+  deleted: boolean;
+  cragDeleted: boolean;
+  siblingRoutesDeleted: number;
+}
+
+export interface RestoreResult {
+  restored: boolean;
+  alreadyActive: boolean;
+  cragRestored?: boolean;
+}
+
+export interface ForceArchiveRouteResult {
+  routeId: string;
+  routeArchived: boolean;
+  cragArchived: boolean;
+  alreadyArchived: boolean;
+}
+
+export interface ForceArchiveGymResult {
+  gymId: string;
+  gymArchived: boolean;
+  alreadyArchived: boolean;
+}
+
+export interface GymDisputeQueueItem {
+  id: string;
+  gymId: string;
+  gymName: string;
+  reporterUserId: string;
+  detail: string;
+  createdAt: string;
+}
+
+export type AccountabilityAction =
+  | 'ISSUE_STRIKE'
+  | 'REVOKE_STRIKE'
+  | 'BAN_OUTRIGHT'
+  | 'RESTORE_ACCOUNT';
+
+export const ACCOUNTABILITY_ACTION_LABELS: Record<AccountabilityAction, string> =
+  {
+    ISSUE_STRIKE: 'Issue Strike',
+    REVOKE_STRIKE: 'Revoke Strike',
+    BAN_OUTRIGHT: 'Ban Outright',
+    RESTORE_ACCOUNT: 'Restore Account',
+  };
+
+export interface ApplyAccountabilityActionInput {
+  action: AccountabilityAction;
+  reasonPreset?: ModerationReasonPreset;
+  reasonText?: string;
+}
+
+export interface AccountabilityResult {
+  action: AccountabilityAction;
+  targetUserId: string;
+  strikeCount: number;
+  isBanned: boolean;
+  autoBanned: boolean;
+}
+
+export interface UserAuditEntry {
+  id: string;
+  actionType: AccountabilityAction;
+  adminUserId: string;
+  reasonPreset: ModerationReasonPreset | null;
+  reasonText: string;
+  triggeringMediaActionId: string | null;
+  createdAt: string;
+}
+
+export interface UserAuditView {
+  userId: string;
+  strikeCount: number;
+  isBanned: boolean;
+  bannedAt: string | null;
+  history: UserAuditEntry[];
 }
 
 // --- moderation payloads (Epic 6) ----------------------------------------
@@ -373,6 +602,8 @@ export const MEDIA_PURPOSE_LABELS: Record<MediaPurpose, string> = {
   ROUTE_VERIFICATION_PHOTO: 'Route verification photo',
   GYM_VERIFICATION_PHOTO: 'Gym verification photo',
   REVIEW_PHOTO: 'Review photo',
+  ROUTE_SUBMISSION_PHOTO: 'Route submission photo',
+  GYM_SUBMISSION_PHOTO: 'Gym submission photo',
 };
 
 // AR-1: a verification photo's rejection always strikes the uploader, no

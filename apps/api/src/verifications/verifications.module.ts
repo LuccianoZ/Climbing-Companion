@@ -7,8 +7,10 @@ import { Gym } from '../gyms/entities/gym.entity';
 import { RouteVerification } from './entities/route-verification.entity';
 import { RouteGradeVote } from './entities/route-grade-vote.entity';
 import { GymVerification } from './entities/gym-verification.entity';
+import { GymInformationDispute } from './entities/gym-information-dispute.entity';
 import { RouteVerificationsController } from './verifications.controller';
 import { GymVerificationsController } from './gym-verifications.controller';
+import { AdminGymDisputesController } from './admin-gym-disputes.controller';
 import { VerificationService } from './verification.service';
 
 @Module({
@@ -17,13 +19,18 @@ import { VerificationService } from './verification.service';
       RouteVerification,
       RouteGradeVote,
       GymVerification,
+      GymInformationDispute,
       Route,
       Crag,
       Gym,
     ]),
     AuthModule,
   ],
-  controllers: [RouteVerificationsController, GymVerificationsController],
+  controllers: [
+    RouteVerificationsController,
+    GymVerificationsController,
+    AdminGymDisputesController,
+  ],
   providers: [VerificationService],
   exports: [VerificationService],
 })

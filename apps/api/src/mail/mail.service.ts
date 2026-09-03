@@ -21,7 +21,20 @@ const MODERATION_EMAIL_COPY = {
     subject: 'Your Climbing Companion account has been suspended',
     lead: 'Your Climbing Companion account has been suspended and you can no longer sign in.',
   },
+  // BL-033 / Foundation §11: the two reversal actions from the User Account
+  // Audit view also carry a mandatory, emailed reason.
+  STRIKE_REVOKED: {
+    subject:
+      'A moderation strike on your Climbing Companion account was revoked',
+    lead: 'An administrator revoked a strike on your Climbing Companion account.',
+  },
+  ACCOUNT_RESTORED: {
+    subject: 'Your Climbing Companion account has been restored',
+    lead: 'An administrator restored your Climbing Companion account. Any suspension has been lifted and your strike count has been reset to zero.',
+  },
 } as const;
+
+export type ModerationEmailKind = keyof typeof MODERATION_EMAIL_COPY;
 
 // Foundation §15/§20.1: Nodemailer + Gmail SMTP in production (~500/day,
 // arbitrary recipients, no domain ownership needed), Mailpit in dev.
@@ -76,7 +89,7 @@ export class MailService {
   // lead-in differ, the body is always "<lead-in>\n\nReason: <reason>".
   async sendModerationEmail(
     to: string,
-    kind: 'IMAGE_REJECTED' | 'STRIKE_ISSUED' | 'ACCOUNT_BANNED',
+    kind: ModerationEmailKind,
     reason: string,
   ): Promise<void> {
     const { subject, lead } = MODERATION_EMAIL_COPY[kind];

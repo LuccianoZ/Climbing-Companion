@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import {
   AttributionControl,
+  Circle,
   MapContainer,
   Marker,
   TileLayer,
@@ -10,6 +11,7 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
+import { clampToRadius } from '@/lib/geo';
 
 // AR-27. A *separate* Leaflet canvas from components/map/MapCanvas.tsx, behind
 // its own ssr:false boundary, rather than a second mode bolted onto that one.
@@ -26,24 +28,51 @@ import L from 'leaflet';
 // imports leaflet, which touches `window` at import time, and is imported
 // only through LocationPicker.tsx's next/dynamic.
 
+export interface LatLngLiteral {
+  latitude: number;
+  longitude: number;
+}
+
+export interface RadiusConstraint {
+  centre: LatLngLiteral;
+  radiusMeters: number;
+}
+
 export interface LocationPickerCanvasProps {
   latitude: number;
   longitude: number;
-  onPick: (next: { latitude: number; longitude: number }) => void;
+  onPick: (next: LatLngLiteral) => void;
+  // AR-51 BL-x02: draw the 300m circle and refuse a pin outside it.
+  constrainTo?: RadiusConstraint | null;
 }
 
 const PICKER_ZOOM = 15;
+
+function apply(
+  constrainTo: RadiusConstraint | null | undefined,
+  point: LatLngLiteral,
+): LatLngLiteral {
+  if (!constrainTo) return point;
+  return clampToRadius(constrainTo.centre, point, constrainTo.radiusMeters);
+}
 
 // Click anywhere to move the pin. On a phone this is the primary interaction:
 // dragging a 30px marker with a thumb is fiddly, tapping the spot is not.
 function ClickToPlace({
   onPick,
+  constrainTo,
 }: {
-  onPick: (next: { latitude: number; longitude: number }) => void;
+  onPick: (next: LatLngLiteral) => void;
+  constrainTo?: RadiusConstraint | null;
 }) {
   useMapEvents({
     click: (event) => {
-      onPick({ latitude: event.latlng.lat, longitude: event.latlng.lng });
+      onPick(
+        apply(constrainTo, {
+          latitude: event.latlng.lat,
+          longitude: event.latlng.lng,
+        }),
+      );
     },
   });
   return null;
@@ -118,6 +147,7 @@ export default function LocationPickerCanvas({
   latitude,
   longitude,
   onPick,
+  constrainTo = null,
 }: LocationPickerCanvasProps) {
   return (
     <MapContainer
@@ -136,10 +166,23 @@ export default function LocationPickerCanvas({
         maxZoom={19}
       />
 
-      <ClickToPlace onPick={onPick} />
+      <ClickToPlace onPick={onPick} constrainTo={constrainTo} />
       <FollowPoint latitude={latitude} longitude={longitude} />
       <PublishPickedAt latitude={latitude} longitude={longitude} />
       <ResizeObserverBridge />
+
+      {constrainTo ? (
+        <Circle
+          center={[constrainTo.centre.latitude, constrainTo.centre.longitude]}
+          radius={constrainTo.radiusMeters}
+          pathOptions={{
+            color: 'var(--color-clay-deep)',
+            weight: 1.5,
+            fillColor: 'var(--color-clay)',
+            fillOpacity: 0.12,
+          }}
+        />
+      ) : null}
 
       <Marker
         position={[latitude, longitude]}
@@ -148,7 +191,7 @@ export default function LocationPickerCanvas({
         eventHandlers={{
           dragend: (event) => {
             const { lat, lng } = event.target.getLatLng();
-            onPick({ latitude: lat, longitude: lng });
+            onPick(apply(constrainTo, { latitude: lat, longitude: lng }));
           },
         }}
         alt="Chosen location"

@@ -112,8 +112,19 @@ export const CRAG_DETAIL: CragDetail = {
       },
       verificationCount: 2,
       verificationsRequired: 4,
+      photosPending: false,
     },
   ],
+};
+
+const SAMPLE_HOURS = {
+  '0': [],
+  '1': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '2': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '3': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '4': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '5': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '6': [{ opens: '00:00', closes: '00:00', fullDay: true }],
 };
 
 export const GYM_DETAIL: GymDetail = {
@@ -123,6 +134,9 @@ export const GYM_DETAIL: GymDetail = {
   ...GYM_LOCATION,
   status: 'VERIFIED',
   disciplinesOffered: ['BOULDERING', 'LEAD'],
+  operatingHours: SAMPLE_HOURS,
+  ianaTimezone: 'America/New_York',
+  photosPending: false,
 };
 
 // Deliberately far from the map's default centre so a successful fly-to is
@@ -264,7 +278,10 @@ export const UNVERIFIED_GYM_DETAIL: GymDetail = {
   name: 'Chalk Line Bouldering',
   ...UNVERIFIED_GYM_LOCATION,
   status: 'UNVERIFIED',
-  disciplinesOffered: [],
+  disciplinesOffered: ['BOULDERING'],
+  operatingHours: SAMPLE_HOURS,
+  ianaTimezone: 'America/Denver',
+  photosPending: true,
 };
 
 export const SUBMIT_ROUTE_RESULT: SubmitRouteResult = {

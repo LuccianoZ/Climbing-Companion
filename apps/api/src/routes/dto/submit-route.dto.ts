@@ -1,4 +1,5 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsEnum,
   IsInt,
@@ -6,6 +7,7 @@ import {
   IsLongitude,
   IsOptional,
   IsString,
+  IsUUID,
   Max,
   MaxLength,
   Min,
@@ -18,6 +20,7 @@ import {
 } from 'class-validator';
 import { GearRequirement, OutdoorDiscipline } from '../entities/route.entity';
 import { IsCleanText } from '../../common/profanity/is-clean-text.validator';
+import { MIN_SUBMISSION_PHOTOS } from '../../common/media/link-submission-photos.util';
 
 // Architecture.md §3's CHECK constraint, mirrored here per its own wording
 // ("enforced both as a Postgres CHECK... and mirrored in DTO validation"):
@@ -110,4 +113,24 @@ export class SubmitRouteDto {
   @IsInt()
   @Min(1)
   minRopeLengthM?: number;
+
+  // Sept 3 revision (AR-51, BL-x05): >= 3 photos, pre-uploaded via
+  // POST /api/media with purpose = ROUTE_SUBMISSION_PHOTO, linked via
+  // media_assets.subject_route_id in the submit transaction.
+  @IsArray()
+  @ArrayMinSize(MIN_SUBMISSION_PHOTOS)
+  @IsUUID(undefined, { each: true })
+  photoMediaIds: string[];
+
+  // BL-x02: submitter's live device location for the non-admin 300m
+  // proximity gate (skipped for SYSTEM_ADMIN). See SubmitGymDto for the
+  // full resolution rule -- X-Test-Mock-GPS wins, then these fields, then
+  // the pin coordinates themselves.
+  @IsOptional()
+  @IsLatitude()
+  deviceLatitude?: number;
+
+  @IsOptional()
+  @IsLongitude()
+  deviceLongitude?: number;
 }

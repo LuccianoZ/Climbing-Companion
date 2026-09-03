@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { CrosshairIcon } from '@/components/shell/icons';
+import { clampToRadius } from '@/lib/geo';
 import type { LocationPickerCanvasProps } from './LocationPickerCanvas';
 
 // AR-27's coordinate entry, all three ways in at once, because each covers a
@@ -44,6 +45,11 @@ export interface LatLng {
   longitude: number;
 }
 
+export interface RadiusConstraint {
+  centre: LatLng;
+  radiusMeters: number;
+}
+
 export function LocationPicker({
   point,
   onPick,
@@ -51,6 +57,7 @@ export function LocationPicker({
   locationAvailable,
   placed,
   error,
+  constrainTo = null,
 }: {
   point: LatLng;
   onPick: (next: LatLng) => void;
@@ -60,6 +67,11 @@ export function LocationPicker({
   // the form can refuse to submit the fallback centre as if it were a choice.
   placed: boolean;
   error?: string | null;
+  // AR-51 BL-x02: for a non-admin submission, the pin can only be placed
+  // inside a circle around the submitter's device location -- a tap or drag
+  // outside it snaps to the boundary. Null for an admin (no constraint) or
+  // when the device location is not yet known.
+  constrainTo?: RadiusConstraint | null;
 }) {
   // Bumped only when the point changes from somewhere *other* than the number
   // fields, and used as their React key so they re-read the new value. The
@@ -68,9 +80,14 @@ export function LocationPicker({
   // constraint AR-27 and AR-32 already worked around elsewhere.
   const [syncKey, setSyncKey] = useState(0);
 
+  function constrain(next: LatLng): LatLng {
+    if (!constrainTo) return next;
+    return clampToRadius(constrainTo.centre, next, constrainTo.radiusMeters);
+  }
+
   function pickFromMap(next: LatLng) {
     setSyncKey((current) => current + 1);
-    onPick(next);
+    onPick(constrain(next));
   }
 
   function useMyLocation() {
@@ -97,6 +114,7 @@ export function LocationPicker({
             latitude={point.latitude}
             longitude={point.longitude}
             onPick={pickFromMap}
+            constrainTo={constrainTo}
           />
 
           <button
@@ -119,7 +137,7 @@ export function LocationPicker({
             value={point.latitude}
             min={-90}
             max={90}
-            onCommit={(latitude) => onPick({ ...point, latitude })}
+            onCommit={(latitude) => onPick(constrain({ ...point, latitude }))}
           />
           <CoordinateField
             key={`lng-${syncKey}`}
@@ -128,17 +146,22 @@ export function LocationPicker({
             value={point.longitude}
             min={-180}
             max={180}
-            onCommit={(longitude) => onPick({ ...point, longitude })}
+            onCommit={(longitude) => onPick(constrain({ ...point, longitude }))}
           />
         </div>
       </div>
 
-      <p className="text-[10.5px] leading-snug text-ink-faint">
-        {placed
-          ? 'Tap the map, drag the pin, or edit the numbers to adjust.'
-          : locationAvailable
-            ? 'Tap the map to place the pin, or use the crosshair for your current location.'
-            : 'Location access is off — tap the map to place the pin, or type the coordinates.'}
+      <p
+        data-testid="location-picker-hint"
+        className="text-[10.5px] leading-snug text-ink-faint"
+      >
+        {constrainTo
+          ? `The pin has to be within ${constrainTo.radiusMeters}m of where you are — the circle shows how far you can move it. Drag past the edge and it snaps back.`
+          : placed
+            ? 'Tap the map, drag the pin, or edit the numbers to adjust.'
+            : locationAvailable
+              ? 'Tap the map to place the pin, or use the crosshair for your current location.'
+              : 'Location access is off — tap the map to place the pin, or type the coordinates.'}
       </p>
 
       {error ? (

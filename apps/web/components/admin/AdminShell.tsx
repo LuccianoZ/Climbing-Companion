@@ -36,10 +36,22 @@ const SECTIONS = [
     available: true,
   },
   {
+    href: '/admin/stewardship',
+    label: 'Modify gyms & climbs',
+    story: 'BL-x07',
+    available: true,
+  },
+  {
     href: '/admin/users',
     label: 'Strikes & bans',
-    story: 'BL-033 — Epic 7',
-    available: false,
+    story: 'BL-033',
+    available: true,
+  },
+  {
+    href: '/admin/disputes',
+    label: 'Gym disputes',
+    story: 'BL-x08',
+    available: true,
   },
 ] as const;
 

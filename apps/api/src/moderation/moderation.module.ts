@@ -11,6 +11,7 @@ import { MediaModerationAction } from './entities/media-moderation-action.entity
 import { UserAccountabilityAction } from './entities/user-accountability-action.entity';
 import { ModerationController } from './moderation.controller';
 import { ModerationService } from './moderation.service';
+import { AccountabilityService } from './accountability.service';
 
 // Epic 6 (Sprint 3, BL-027/028/029/030). Imports VerificationsModule for
 // VerificationService's new void methods (BL-029/AR-47), NotificationsModule
@@ -33,7 +34,7 @@ import { ModerationService } from './moderation.service';
     VerificationsModule,
   ],
   controllers: [ModerationController],
-  providers: [ModerationService],
-  exports: [ModerationService],
+  providers: [ModerationService, AccountabilityService],
+  exports: [ModerationService, AccountabilityService],
 })
 export class ModerationModule {}

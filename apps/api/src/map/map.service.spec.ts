@@ -51,12 +51,24 @@ const CRAG = {
   location: point(37.7338, -119.5676),
 };
 
+const GYM_HOURS = {
+  '0': [],
+  '1': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '2': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '3': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '4': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '5': [{ opens: '06:00', closes: '22:00', fullDay: false }],
+  '6': [{ opens: '00:00', closes: '00:00', fullDay: true }],
+};
+
 const UNVERIFIED_GYM = {
   id: '22222222-2222-4222-8222-222222222222',
   name: 'Vertical Edge Climbing Gym',
   status: LifecycleStatus.UNVERIFIED,
   location: point(42.8864, -78.8784),
   disciplinesOffered: [GymDiscipline.BOULDERING, GymDiscipline.LEAD],
+  operatingHours: GYM_HOURS,
+  ianaTimezone: 'America/New_York',
 };
 
 const ROUTE = {
@@ -351,7 +363,22 @@ describe('MapService.getGymDetail', () => {
       longitude: -78.8784,
       status: LifecycleStatus.UNVERIFIED,
       disciplinesOffered: [GymDiscipline.BOULDERING, GymDiscipline.LEAD],
+      operatingHours: GYM_HOURS,
+      ianaTimezone: 'America/New_York',
+      // BL-x05: no APPROVED submission photo staged, so the panel shows
+      // the pending state.
+      photosPending: true,
     });
+  });
+
+  it('clears photosPending once a submission photo is APPROVED (BL-x05)', async () => {
+    const { service } = makeService({
+      findOneResult: UNVERIFIED_GYM,
+      queryResult: [{ '1': 1 }],
+    });
+
+    const detail = await service.getGymDetail(UNVERIFIED_GYM.id);
+    expect(detail.photosPending).toBe(false);
   });
 
   it('defaults a null disciplines_offered array to an empty list', async () => {

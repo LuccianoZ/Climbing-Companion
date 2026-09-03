@@ -10,7 +10,7 @@ export default function AdminHomePage() {
     <RequireSession requireAdmin>
       <AdminShell
         title="Admin dashboard"
-        description="Moderation and direct verification. Gym verification and the photo flag queue are built; the per-user strike/ban audit arrives with Epic 7."
+        description="Moderation, direct verification, account accountability and data stewardship."
       >
         <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
           <Link
@@ -42,6 +42,48 @@ export default function AdminHomePage() {
             <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
               Approve, reject, strike or ban on every pending photo. Rejecting a
               verification photo voids the verification and reverses its crag.
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/users"
+            data-testid="admin-card-users"
+            className="card-raised block p-4"
+          >
+            <p className="label-caps text-[9px] text-ink-faint">BL-033</p>
+            <p className="mt-1 text-[15px] font-bold text-ink">Strikes &amp; bans</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
+              Look up an account&apos;s strike history and issue / revoke a
+              strike, ban outright, or restore. Every action is reasoned and
+              emailed.
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/disputes"
+            data-testid="admin-card-disputes"
+            className="card-raised block p-4"
+          >
+            <p className="label-caps text-[9px] text-ink-faint">BL-x08</p>
+            <p className="mt-1 text-[15px] font-bold text-ink">Gym disputes</p>
+            <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
+              &ldquo;This gym&apos;s information is wrong&rdquo; reports from
+              verifiers on site. Fix the gym or dismiss the report.
+            </p>
+          </Link>
+
+          <Link
+            href="/admin/stewardship"
+            data-testid="admin-card-stewardship"
+            className="card-raised block p-4"
+          >
+            <p className="label-caps text-[9px] text-ink-faint">BL-x07</p>
+            <p className="mt-1 text-[15px] font-bold text-ink">
+              Modify gyms &amp; climbs
+            </p>
+            <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
+              Search any gym or climb, change any field or its photos with a
+              typed confirmation, or delete it outright.
             </p>
           </Link>
         </div>

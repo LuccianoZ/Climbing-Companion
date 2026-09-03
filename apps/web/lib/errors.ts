@@ -36,6 +36,13 @@ export type ApiAction =
   | 'LOG_CLIMB'
   | 'CHECK_IN'
   | 'ADMIN_VERIFY_GYM'
+  | 'ADMIN_UPDATE'
+  | 'ADMIN_READ'
+  | 'FORCE_ARCHIVE'
+  | 'RESTORE_ENTITY'
+  | 'DELETE_ENTITY'
+  | 'GYM_DISPUTE'
+  | 'ACCOUNTABILITY'
   | 'MODERATE_MEDIA'
   | 'REPORT_MEDIA'
   | 'NOTIFICATIONS';
@@ -90,11 +97,13 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     401: SESSION_EXPIRED,
   },
   SUBMIT_ROUTE: {
-    400: 'Check the form — some required details are missing or invalid.',
+    400: 'Check the form — a name, grade, description, location and at least 3 photos are required.',
+    403: `Your pin has to be within ${PROXIMITY_METERS} meters of where you are standing.`,
     401: SESSION_EXPIRED,
   },
   SUBMIT_GYM: {
-    400: 'Check the form — a gym needs a name and a location.',
+    400: 'Check the form — a name, location, at least one discipline, all seven days of hours and 3 photos are required.',
+    403: `Your pin has to be within ${PROXIMITY_METERS} meters of where you are standing.`,
     401: SESSION_EXPIRED,
   },
   VERIFY_ROUTE: {
@@ -105,9 +114,9 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
   },
   VERIFY_GYM: {
     404: 'This gym no longer exists. It may have been archived.',
-    409: 'You have already verified this gym.',
+    409: 'You have already confirmed this gym.',
     401: SESSION_EXPIRED,
-    400: 'Add a photo and pick at least one discipline before verifying.',
+    400: 'If the information is wrong, say what is inaccurate before submitting.',
   },
   VOTE: {
     403: TOO_FAR,
@@ -131,6 +140,44 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     409: 'This gym is already verified.',
     401: SESSION_EXPIRED,
     400: 'Select at least one discipline.',
+  },
+  ADMIN_UPDATE: {
+    400: 'Check the fields — latitude and longitude have to move together, and text is screened for profanity.',
+    403: 'Only a system administrator can edit map entities.',
+    404: 'That entity no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  ADMIN_READ: {
+    403: 'Only a system administrator can open this.',
+    404: 'That entity no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  FORCE_ARCHIVE: {
+    403: 'Only a system administrator can take an entity off the map.',
+    404: 'That entity no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  RESTORE_ENTITY: {
+    403: 'Only a system administrator can restore an entity.',
+    404: 'That entity no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  DELETE_ENTITY: {
+    403: 'Only a system administrator can delete an entity.',
+    404: 'That entity is already gone.',
+    401: SESSION_EXPIRED,
+  },
+  GYM_DISPUTE: {
+    403: 'Only a system administrator can review gym disputes.',
+    404: 'That dispute no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  ACCOUNTABILITY: {
+    400: 'A reason is required — pick a preset, or write one (required for “Other”).',
+    403: 'Only a system administrator can strike or ban accounts.',
+    404: 'That account no longer exists.',
+    409: 'That action does not apply to this account right now (already banned, no strikes to revoke, or nothing to restore).',
+    401: SESSION_EXPIRED,
   },
   MODERATE_MEDIA: {
     400: 'Add a reason before rejecting — a preset, or written text for “Other”.',

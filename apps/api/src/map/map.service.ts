@@ -1,7 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { Crag, GeoJsonPoint } from '../crags/entities/crag.entity';
-import { Gym, GymDiscipline } from '../gyms/entities/gym.entity';
+import {
+  Gym,
+  GymDiscipline,
+  OperatingHours,
+} from '../gyms/entities/gym.entity';
+import { hasApprovedSubmissionPhoto } from '../common/media/link-submission-photos.util';
 import {
   GearRequirement,
   OutdoorDiscipline,
@@ -54,6 +59,9 @@ export interface MapRouteSummary {
   grade: GradeConsensusResult;
   verificationCount: number;
   verificationsRequired: number;
+  // BL-x05: true while no ROUTE_SUBMISSION_PHOTO for this route has been
+  // APPROVED yet -- drives the "Photos pending admin approval" panel state.
+  photosPending: boolean;
 }
 
 export interface CragDetail {
@@ -74,6 +82,12 @@ export interface GymDetail {
   longitude: number;
   status: LifecycleStatus;
   disciplinesOffered: GymDiscipline[];
+  // Sept 3 revision (AR-51, BL-x04): rendered in the gym's local time via
+  // ianaTimezone. Keys "0".."6" (0 = Sunday).
+  operatingHours: OperatingHours;
+  ianaTimezone: string;
+  // BL-x05: true while no GYM_SUBMISSION_PHOTO for this gym is APPROVED yet.
+  photosPending: boolean;
 }
 
 export interface MapSearchResult {
@@ -196,6 +210,12 @@ export class MapService {
         this.dataSource.manager,
         route,
       );
+      const photosPending = !(await hasApprovedSubmissionPhoto(
+        this.dataSource,
+        {
+          routeId: route.id,
+        },
+      ));
       summaries.push({
         id: route.id,
         name: route.name,
@@ -210,6 +230,7 @@ export class MapService {
         grade,
         verificationCount: verificationCounts.get(route.id) ?? 0,
         verificationsRequired: VERIFICATIONS_REQUIRED_TO_VERIFY,
+        photosPending,
       });
     }
 
@@ -234,6 +255,10 @@ export class MapService {
       throw new NotFoundException(`Gym "${gymId}" not found`);
     }
 
+    const photosPending = !(await hasApprovedSubmissionPhoto(this.dataSource, {
+      gymId: gym.id,
+    }));
+
     return {
       id: gym.id,
       kind: 'GYM',
@@ -242,6 +267,9 @@ export class MapService {
       longitude: longitudeOf(gym.location),
       status: gym.status,
       disciplinesOffered: gym.disciplinesOffered ?? [],
+      operatingHours: gym.operatingHours ?? {},
+      ianaTimezone: gym.ianaTimezone,
+      photosPending,
     };
   }
 

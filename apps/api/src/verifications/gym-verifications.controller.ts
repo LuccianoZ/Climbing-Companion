@@ -19,11 +19,9 @@ import { VerificationService } from './verification.service';
 type VerificationRequest = AuthenticatedRequest & { mockGps?: MockGpsLocation };
 
 // BL-011 / Architecture.md AR-17: nested under /api/gyms/:gymId so the URL
-// names the gym being verified, exactly mirroring
-// RouteVerificationsController's /api/routes/:routeId/verifications shape.
-// Same location-resolution convention as that controller (AR-16): whatever
-// MockGpsGuard already attached from X-Test-Mock-GPS, else the DTO's own
-// latitude/longitude.
+// names the gym being verified, mirroring RouteVerificationsController.
+// Post-Sept-3 (BL-x06) this one endpoint handles both a "Yes" confirmation
+// and a "No" dispute -- the DTO's `informationAccurate` flag selects.
 @Controller('gyms/:gymId/verifications')
 export class GymVerificationsController {
   constructor(private readonly verificationService: VerificationService) {}

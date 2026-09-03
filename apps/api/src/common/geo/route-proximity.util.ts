@@ -49,3 +49,33 @@ export async function isWithinProximity(
   );
   return rows[0]?.within === true;
 }
+
+// Foundation Revision Sept 3 2026 (AR-51, BL-x02): the submission-siting
+// check. Unlike isWithinProximity above, there is no row yet -- this
+// compares the submitter's live device location against the coordinates
+// they are trying to drop a pin at. Still evaluated by PostGIS on
+// geography(Point,4326), NOT in JS: §19.4's mandate is that every 300m
+// check is a real geodesic ST_DWithin on `geography`, and a positive-only
+// haversine in application code is exactly the "always-true buffer" that
+// mandate exists to prevent (hence the 301m negative test, one per entity).
+//
+// `SELECT ... ST_DWithin(...)` with no FROM clause is a valid single-row
+// query -- no table is touched, so this works before the routes/gyms row
+// exists. Same explicit ::float8 casts as isWithinProximity, for the same
+// "function ... is not unique" reason (AR-16/AR-17).
+export async function isWithinProximityOfPoint(
+  manager: EntityManager,
+  from: ProximityLocation,
+  to: ProximityLocation,
+  radiusMeters: number = STANDARD_PROXIMITY_METERS,
+): Promise<boolean> {
+  const rows: Array<{ within: boolean }> = await manager.query(
+    `SELECT ST_DWithin(
+       ST_SetSRID(ST_MakePoint($1::float8, $2::float8), 4326)::geography,
+       ST_SetSRID(ST_MakePoint($3::float8, $4::float8), 4326)::geography,
+       $5::float8
+     ) AS within`,
+    [from.longitude, from.latitude, to.longitude, to.latitude, radiusMeters],
+  );
+  return rows[0]?.within === true;
+}

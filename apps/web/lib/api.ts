@@ -1,13 +1,24 @@
 import type {
+  AccountabilityResult,
+  AdminGymView,
+  AdminRouteView,
+  AdminUpdateGymInput,
+  AdminUpdateRouteInput,
   AdminVerifyGymInput,
   AppNotification,
+  ApplyAccountabilityActionInput,
   CheckInInput,
   CheckInResult,
   ClimbLogResult,
   CragDetail,
   FlagQueueItem,
+  ForceArchiveGymResult,
+  ForceArchiveRouteResult,
   GradeConsensus,
   GymDetail,
+  GymDisputeQueueItem,
+  HardDeleteGymResult,
+  HardDeleteRouteResult,
   LoginInput,
   LogClimbInput,
   MapPin,
@@ -19,6 +30,7 @@ import type {
   PinDetail,
   PublicUser,
   RegisterInput,
+  RestoreResult,
   SubmitGymInput,
   SubmitGymResult,
   SubmitGymVerificationInput,
@@ -27,6 +39,7 @@ import type {
   SubmitRouteResult,
   SubmitRouteVerificationInput,
   SubmitRouteVerificationResult,
+  UserAuditView,
   VoteOnGradeInput,
 } from './types';
 
@@ -99,7 +112,7 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 async function sendJson<T>(
-  method: 'POST' | 'PATCH',
+  method: 'POST' | 'PATCH' | 'DELETE',
   path: string,
   body: unknown,
 ): Promise<T> {
@@ -107,7 +120,9 @@ async function sendJson<T>(
     method,
     headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
     credentials: 'include',
-    body: JSON.stringify(body),
+    // A DELETE carries no body; JSON.stringify(undefined) is the string
+    // "undefined", so guard it.
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -325,6 +340,118 @@ export function adminVerifyGym(
   input: AdminVerifyGymInput,
 ): Promise<{ id: string; status: string; disciplinesOffered: string[] }> {
   return sendJson('PATCH', `/api/gyms/${gymId}/admin-verify`, input);
+}
+
+// ---------------------------------------------------------------------------
+// Admin stewardship -- AR-51, BL-x07 / BL-x08 / BL-033 (Epic 7)
+// ---------------------------------------------------------------------------
+
+// BL-x07 / §14: the admin editor's read (includes archived entities).
+export function fetchAdminGym(
+  gymId: string,
+  signal?: AbortSignal,
+): Promise<AdminGymView> {
+  return getJson<AdminGymView>(`/api/gyms/${gymId}`, signal);
+}
+
+export function fetchAdminRoute(
+  routeId: string,
+  signal?: AbortSignal,
+): Promise<AdminRouteView> {
+  return getJson<AdminRouteView>(`/api/routes/${routeId}`, signal);
+}
+
+// BL-x07 / §14: edit any field of any gym / climb, including the photo set.
+// Only keys present in `input` change; the server rejects a lone latitude or
+// longitude.
+export function adminUpdateGym(
+  gymId: string,
+  input: AdminUpdateGymInput,
+): Promise<AdminGymView> {
+  return sendJson<AdminGymView>('PATCH', `/api/gyms/${gymId}`, input);
+}
+
+export function adminUpdateRoute(
+  routeId: string,
+  input: AdminUpdateRouteInput,
+): Promise<{ id: string; name: string }> {
+  return sendJson('PATCH', `/api/routes/${routeId}`, input);
+}
+
+// BL-x07: un-archive a force-archived gym / climb.
+export function restoreGym(gymId: string): Promise<RestoreResult> {
+  return sendJson<RestoreResult>('POST', `/api/gyms/${gymId}/restore`, {});
+}
+
+export function restoreRoute(routeId: string): Promise<RestoreResult> {
+  return sendJson<RestoreResult>('POST', `/api/routes/${routeId}/restore`, {});
+}
+
+// BL-x07: the irreversible delete. UI gates this behind typing "DELETE".
+export function hardDeleteGym(gymId: string): Promise<HardDeleteGymResult> {
+  return sendJson<HardDeleteGymResult>('DELETE', `/api/gyms/${gymId}`, undefined);
+}
+
+export function hardDeleteRoute(
+  routeId: string,
+): Promise<HardDeleteRouteResult> {
+  return sendJson<HardDeleteRouteResult>(
+    'DELETE',
+    `/api/routes/${routeId}`,
+    undefined,
+  );
+}
+
+// BL-035 / BL-x07: "take down" -- force-archive, no reason. Founding route
+// cascades to its crag.
+export function forceArchiveRoute(
+  routeId: string,
+): Promise<ForceArchiveRouteResult> {
+  return sendJson<ForceArchiveRouteResult>(
+    'POST',
+    `/api/routes/${routeId}/force-archive`,
+    {},
+  );
+}
+
+export function forceArchiveGym(gymId: string): Promise<ForceArchiveGymResult> {
+  return sendJson<ForceArchiveGymResult>(
+    'POST',
+    `/api/gyms/${gymId}/force-archive`,
+    {},
+  );
+}
+
+// BL-x08: the gym-information dispute queue.
+export function fetchGymDisputes(
+  signal?: AbortSignal,
+): Promise<GymDisputeQueueItem[]> {
+  return getJson<GymDisputeQueueItem[]>('/api/admin/gym-disputes', signal);
+}
+
+export function resolveGymDispute(
+  disputeId: string,
+): Promise<{ id: string; resolvedAt: string; alreadyResolved: boolean }> {
+  return sendJson('POST', `/api/admin/gym-disputes/${disputeId}/resolve`, {});
+}
+
+// BL-033: the User Account Audit view + its four standalone actions.
+export function fetchUserAudit(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<UserAuditView> {
+  return getJson<UserAuditView>(`/api/admin/users/${userId}/audit`, signal);
+}
+
+export function applyAccountabilityAction(
+  userId: string,
+  input: ApplyAccountabilityActionInput,
+): Promise<AccountabilityResult> {
+  return sendJson<AccountabilityResult>(
+    'POST',
+    `/api/admin/users/${userId}/accountability`,
+    input,
+  );
 }
 
 // ---------------------------------------------------------------------------

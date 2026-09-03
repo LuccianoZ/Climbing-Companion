@@ -7,10 +7,11 @@ import {
 import { DataSource, EntityManager } from 'typeorm';
 import { Route } from '../routes/entities/route.entity';
 import { Crag } from '../crags/entities/crag.entity';
-import { Gym, GymDiscipline } from '../gyms/entities/gym.entity';
+import { Gym } from '../gyms/entities/gym.entity';
 import { RouteVerification } from './entities/route-verification.entity';
 import { RouteGradeVote } from './entities/route-grade-vote.entity';
 import { GymVerification } from './entities/gym-verification.entity';
+import { GymInformationDispute } from './entities/gym-information-dispute.entity';
 import { LifecycleStatus } from '../common/enums/lifecycle-status.enum';
 import { SubmitRouteVerificationDto } from './dto/submit-route-verification.dto';
 import { SubmitGymVerificationDto } from './dto/submit-gym-verification.dto';
@@ -50,9 +51,24 @@ export interface SubmitRouteVerificationResult {
 }
 
 export interface SubmitGymVerificationResult {
-  verification: GymVerification;
+  // 'CONFIRMED' -> a gym_verifications row was written (informationAccurate
+  // true); 'DISPUTED' -> a gym_information_disputes row was written instead
+  // (informationAccurate false), and none of the verification-count logic
+  // ran.
+  outcome: 'CONFIRMED' | 'DISPUTED';
+  verification: GymVerification | null;
+  dispute: GymInformationDispute | null;
   gym: Gym;
   gymNewlyVerified: boolean;
+}
+
+export interface GymDisputeQueueItem {
+  id: string;
+  gymId: string;
+  gymName: string;
+  reporterUserId: string;
+  detail: string;
+  createdAt: string;
 }
 
 // Architecture.md §9: both submitRouteVerification (BL-009) and
@@ -197,15 +213,22 @@ export class VerificationService {
     });
   }
 
-  // Architecture.md §4 / AR-17: BL-011's gym analog of
-  // submitRouteVerification above. Materially simpler -- no grade vote, no
-  // crag cascade (gyms have no crag relationship, Foundation §4) -- but the
-  // same gating shape (not-found, self-exclusion, already-VERIFIED,
-  // proximity, duplicate-vote-race) and the same 4-count re-runnable-query
-  // reasoning (see VERIFICATIONS_REQUIRED_TO_VERIFY above). On the 4th
-  // verification, disciplines_offered is set to a *fresh aggregation* over
-  // all four gym_verifications rows (Architecture §4's explicit wording),
-  // not an incremental accumulate-as-you-go union.
+  // BL-011 + Sept 3 revision (AR-51, BL-x06): the gym analog of
+  // submitRouteVerification, rewritten as a confirm/dispute step.
+  //
+  //   - "Yes, accurate" (informationAccurate true): writes a
+  //     gym_verifications row and re-runs the >= 4 count -- the 4th flips
+  //     the gym to VERIFIED. The photo is OPTIONAL now, and disciplines are
+  //     never touched here (gyms.disciplines_offered is set once at
+  //     submission -- the AR-17 union-on-4th-verification step is DELETED).
+  //   - "No" (informationAccurate false): writes a gym_information_disputes
+  //     row for the Admin Dashboard and returns without advancing the
+  //     count -- a dispute is not a verification.
+  //
+  // Same gating shape as before -- not-found, self-exclusion, proximity,
+  // duplicate-race -- with one difference: a "No" answer is still allowed
+  // against an already-VERIFIED gym (its information can still be wrong),
+  // whereas a "Yes" against a VERIFIED gym is a no-op conflict.
   async submitGymVerification(
     gymId: string,
     verifierUserId: string,
@@ -220,16 +243,11 @@ export class VerificationService {
       }
 
       // TestInventory: "Gym verification is subject to the same 300m and
-      // self-exclusion rules as routes."
+      // self-exclusion rules as routes." Applies to a dispute too -- you
+      // must be at the gym to say its information is wrong.
       if (gym.submittedBy === verifierUserId) {
         throw new ForbiddenException(
-          'The original submitter cannot verify their own gym',
-        );
-      }
-
-      if (gym.status === LifecycleStatus.VERIFIED) {
-        throw new ConflictException(
-          'This gym is already VERIFIED; re-verification is unavailable',
+          'The original submitter cannot confirm or dispute their own gym',
         );
       }
 
@@ -241,7 +259,32 @@ export class VerificationService {
       );
       if (!withinRange) {
         throw new ForbiddenException(
-          `Verifier must be within ${VERIFICATION_PROXIMITY_METERS}m of the gym`,
+          `You must be within ${VERIFICATION_PROXIMITY_METERS}m of the gym`,
+        );
+      }
+
+      if (dto.informationAccurate === false) {
+        const disputeRepo = manager.getRepository(GymInformationDispute);
+        const dispute = await disputeRepo.save(
+          disputeRepo.create({
+            gymId,
+            reporterUserId: verifierUserId,
+            detail: (dto.disputeDetail ?? '').trim(),
+            resolvedAt: null,
+          }),
+        );
+        return {
+          outcome: 'DISPUTED' as const,
+          verification: null,
+          dispute,
+          gym,
+          gymNewlyVerified: false,
+        };
+      }
+
+      if (gym.status === LifecycleStatus.VERIFIED) {
+        throw new ConflictException(
+          'This gym is already VERIFIED; re-confirmation is unavailable',
         );
       }
 
@@ -252,15 +295,15 @@ export class VerificationService {
           verificationRepo.create({
             gymId,
             verifierUserId,
-            mediaAssetId: dto.mediaAssetId,
-            disciplinesSubmitted: dto.disciplinesSubmitted,
+            mediaAssetId: dto.mediaAssetId ?? null,
+            disciplinesSubmitted: null,
           }),
         );
       } catch (err) {
         // UNIQUE (verifier_user_id, gym_id) -- same clean-4xx-not-500
         // treatment as the route path's duplicate check.
         if (this.isUniqueViolation(err)) {
-          throw new ConflictException('You have already verified this gym');
+          throw new ConflictException('You have already confirmed this gym');
         }
         throw err;
       }
@@ -273,37 +316,78 @@ export class VerificationService {
       let updatedGym = gym;
 
       if (verificationCount >= VERIFICATIONS_REQUIRED_TO_VERIFY) {
-        const disciplinesOffered = await this.unionSubmittedDisciplines(
-          manager,
-          gymId,
-        );
         gym.status = LifecycleStatus.VERIFIED;
         gym.verifiedAt = new Date();
-        gym.disciplinesOffered = disciplinesOffered;
         updatedGym = await gymRepo.save(gym);
         gymNewlyVerified = true;
       }
 
-      return { verification, gym: updatedGym, gymNewlyVerified };
+      return {
+        outcome: 'CONFIRMED' as const,
+        verification,
+        dispute: null,
+        gym: updatedGym,
+        gymNewlyVerified,
+      };
     });
   }
 
-  // Architecture §4: "a fresh aggregation query over the 4 rows, not an
-  // incremental accumulate-as-you-go" -- re-derives the full union from
-  // every gym_verifications row every time the gate trips, rather than
-  // merging this single submission's disciplines onto whatever
-  // disciplines_offered already held.
-  private async unionSubmittedDisciplines(
-    manager: EntityManager,
-    gymId: string,
-  ): Promise<GymDiscipline[]> {
-    const rows: Array<{ discipline: GymDiscipline }> = await manager.query(
-      `SELECT DISTINCT unnest("disciplines_submitted") AS discipline
-       FROM "gym_verifications"
-       WHERE "gym_id" = $1::uuid`,
-      [gymId],
+  // BL-x08 / Foundation §14: the Admin Dashboard's gym-information dispute
+  // queue -- every open (unresolved) row, oldest first, joined to its gym's
+  // name for display. Backed by the partial index
+  // IDX_gym_information_disputes_open.
+  async listOpenGymDisputes(): Promise<GymDisputeQueueItem[]> {
+    const rows: Array<{
+      id: string;
+      gym_id: string;
+      gym_name: string;
+      reporter_user_id: string;
+      detail: string;
+      created_at: Date;
+    }> = await this.dataSource.query(
+      `SELECT d."id", d."gym_id", g."name" AS gym_name,
+              d."reporter_user_id", d."detail", d."created_at"
+         FROM "gym_information_disputes" d
+         JOIN "gyms" g ON g."id" = d."gym_id"
+        WHERE d."resolved_at" IS NULL
+        ORDER BY d."created_at" ASC`,
     );
-    return rows.map((r) => r.discipline);
+    return rows.map((r) => ({
+      id: r.id,
+      gymId: r.gym_id,
+      gymName: r.gym_name,
+      reporterUserId: r.reporter_user_id,
+      detail: r.detail,
+      createdAt: new Date(r.created_at).toISOString(),
+    }));
+  }
+
+  // BL-x08: resolving a dispute just stamps resolved_at -- whether the admin
+  // applied a correction (adminUpdateGym, BL-x07) or dismissed it is not
+  // distinguished (MVP: §14 force-archive and admin edits carry no reason
+  // row either). Idempotent: a second resolve is a no-op.
+  async resolveGymDispute(
+    disputeId: string,
+  ): Promise<{ id: string; resolvedAt: string; alreadyResolved: boolean }> {
+    const repo = this.dataSource.getRepository(GymInformationDispute);
+    const dispute = await repo.findOne({ where: { id: disputeId } });
+    if (!dispute) {
+      throw new NotFoundException(`Dispute "${disputeId}" not found`);
+    }
+    if (dispute.resolvedAt) {
+      return {
+        id: dispute.id,
+        resolvedAt: dispute.resolvedAt.toISOString(),
+        alreadyResolved: true,
+      };
+    }
+    dispute.resolvedAt = new Date();
+    await repo.save(dispute);
+    return {
+      id: dispute.id,
+      resolvedAt: dispute.resolvedAt.toISOString(),
+      alreadyResolved: false,
+    };
   }
 
   // Architecture §4 / §19.4: PostGIS ST_DWithin on the geography column,
@@ -443,10 +527,14 @@ export class VerificationService {
   // titled route-only, but Foundation §5's "that verification is voided"
   // language is not route-qualified, and a rejected gym photo still counting
   // toward the gym's 4 is the identical correctness hole. No crag cascade --
-  // gyms have no crag. `disciplines_offered` is left as-is on a revert:
-  // it is only ever set on the 4th verification (a fresh union, AR-17), and
-  // recomputing it here off three rows would be inventing behaviour §5 does
-  // not describe; a re-verified gym recomputes it from scratch anyway.
+  // gyms have no crag.
+  //
+  // Post-Sept-3 (BL-x06) the photo is optional, so most gym_verifications
+  // rows carry no media_asset_id at all -- findOne({ where: { mediaAssetId }})
+  // simply won't match those, which is exactly right: a rejected photo can
+  // only void the one confirmation that was actually backed by it.
+  // `disciplines_offered` is never touched here -- it is set once at
+  // submission (BL-x04) and verification no longer collects it.
   async voidGymVerificationByPhoto(
     manager: EntityManager,
     mediaAssetId: string,

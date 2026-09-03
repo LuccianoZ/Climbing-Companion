@@ -4,17 +4,22 @@ import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { FormError, TextField } from '@/components/auth/fields';
 import { CheckIcon } from '@/components/shell/icons';
+import { MultiImageUploadField } from '@/components/media/MultiImageUploadField';
 import { submitRoute } from '@/lib/api';
 import { messageFor } from '@/lib/errors';
+import { PROXIMITY_METERS } from '@/lib/geo';
 import { gradeOptions } from '@/lib/grades';
+import { useSession } from '@/lib/session';
 import { useViewerLocation } from '@/lib/use-viewer-location';
 import {
   acceptsRopeDetails,
   DISCIPLINE_LABELS,
   GEAR_REQUIREMENTS,
   GEAR_REQUIREMENT_LABELS,
+  MIN_SUBMISSION_PHOTOS,
   OUTDOOR_DISCIPLINES,
   type GearRequirement,
+  type MediaAsset,
   type OutdoorDiscipline,
   type SubmitRouteInput,
   type SubmitRouteResult,
@@ -48,6 +53,7 @@ const FALLBACK_POINT: LatLng = { latitude: 37.7338, longitude: -119.5676 };
 const SUMMARY_MAX = 250;
 
 export function SubmitRouteForm() {
+  const { isAdmin } = useSession();
   const viewerState = useViewerLocation();
   const viewer =
     viewerState.status === 'ready'
@@ -63,6 +69,7 @@ export function SubmitRouteForm() {
   const [minRopeLengthM, setMinRopeLengthM] = useState('');
   const [gear, setGear] = useState<GearRequirement[]>([]);
   const [summary, setSummary] = useState('');
+  const [photos, setPhotos] = useState<MediaAsset[]>([]);
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -72,9 +79,16 @@ export function SubmitRouteForm() {
   // AR-27: derived during render from what is known, never copied into state
   // by an effect. A GPS fix arriving after mount changes `viewer`, which
   // changes this, without a set-state-in-effect anywhere.
-  const point: LatLng = pick ?? viewer ?? FALLBACK_POINT;
-  const placed = pick !== null || (usedGpsFix && viewer !== null);
+  const point: LatLng = pick ?? (isAdmin ? FALLBACK_POINT : viewer ?? FALLBACK_POINT);
+  const placed = isAdmin
+    ? pick !== null
+    : pick !== null || (usedGpsFix && viewer !== null);
   const ropeDiscipline = acceptsRopeDetails(discipline);
+  // BL-x02: non-admin pin is locked to a 300m circle around the device.
+  const constrainTo =
+    !isAdmin && viewer
+      ? { centre: viewer, radiusMeters: PROXIMITY_METERS }
+      : null;
 
   function changeDiscipline(next: OutdoorDiscipline) {
     setDiscipline(next);
@@ -102,11 +116,18 @@ export function SubmitRouteForm() {
     if (gradeOrdinal === null) {
       errors.grade = 'Pick a proposed grade.';
     }
+    if (!isAdmin && !viewer) {
+      errors.location =
+        'Location access is needed to place a route within 300m of you.';
+    }
     if (!placed) {
       errors.location = 'Place the pin on the route before submitting.';
     }
     if (!summary.trim()) {
       errors.summary = 'Add a short description — the crux, the holds, any hazards.';
+    }
+    if (photos.length < MIN_SUBMISSION_PHOTOS) {
+      errors.photos = `Upload at least ${MIN_SUBMISSION_PHOTOS} photos of the route.`;
     }
     if (ropeDiscipline && boltCount.trim() && !/^\d+$/.test(boltCount.trim())) {
       errors.boltCount = 'Bolt count must be a whole number.';
@@ -140,6 +161,7 @@ export function SubmitRouteForm() {
       discipline,
       summary: summary.trim(),
       proposedGradeOrdinal: gradeOrdinal,
+      photoMediaIds: photos.map((p) => p.id),
     };
     if (gear.length > 0) {
       payload.gearRequirements = gear;
@@ -149,6 +171,10 @@ export function SubmitRouteForm() {
     }
     if (ropeDiscipline && minRopeLengthM.trim()) {
       payload.minRopeLengthM = Number(minRopeLengthM.trim());
+    }
+    if (!isAdmin && viewer) {
+      payload.deviceLatitude = viewer.latitude;
+      payload.deviceLongitude = viewer.longitude;
     }
 
     setPending(true);
@@ -298,6 +324,7 @@ export function SubmitRouteForm() {
             placed={placed}
             locationAvailable={viewer !== null}
             error={fieldErrors.location}
+            constrainTo={constrainTo}
             onPick={(next) => {
               setPick(next);
               setUsedGpsFix(false);
@@ -408,6 +435,18 @@ export function SubmitRouteForm() {
                 {SUMMARY_MAX - summary.length} left
               </p>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <MultiImageUploadField
+              purpose="ROUTE_SUBMISSION_PHOTO"
+              assets={photos}
+              onChange={setPhotos}
+              disabled={pending}
+            />
+            {fieldErrors.photos ? (
+              <p className="text-[10.5px] text-clay-deep">{fieldErrors.photos}</p>
+            ) : null}
           </div>
         </div>
 
