@@ -3,12 +3,15 @@ import assert from 'node:assert/strict';
 import { DataSource } from 'typeorm';
 import { AuthWorld } from '../support/world';
 
-// BL-011 / BL-012 -- Architecture.md AR-16/AR-17: mirrors
-// route-verification.steps.ts's shape almost exactly (X-Test-Mock-Auth for
-// the acting climber/admin, X-Test-Mock-GPS for the verifier's physical
-// location) -- see that file's header comment for why cookie-based login
-// doesn't work once a scenario needs more than one concurrently-active
-// identity.
+// BL-011 / BL-012 + AR-51 BL-x06: gym verification is now a confirm/dispute
+// step. A verifier within 300m answers "is the submission info accurate?":
+//   - "Yes" -> a gym_verifications row (photo OPTIONAL, no disciplines);
+//     the 4th flips gyms.status to VERIFIED.
+//   - "No"  -> a gym_information_disputes row; does NOT count toward the 4.
+//
+// Actors act via X-Test-Mock-Auth + X-Test-Mock-GPS (AR-16) -- a scenario
+// has several concurrently-authenticated identities and AuthWorld tracks
+// only one cookie.
 
 async function findUserId(
   dataSource: DataSource,
@@ -26,10 +29,9 @@ async function findGymId(
   dataSource: DataSource,
   gymName: string,
 ): Promise<string> {
-  const [gym] = await dataSource.query(
-    'SELECT id FROM gyms WHERE name = $1',
-    [gymName],
-  );
+  const [gym] = await dataSource.query('SELECT id FROM gyms WHERE name = $1', [
+    gymName,
+  ]);
   assert.ok(gym?.id, `expected a seeded gym named "${gymName}"`);
   return gym.id as string;
 }
@@ -44,23 +46,14 @@ async function registerIfAbsent(
     'SELECT id FROM users WHERE email = $1',
     [email],
   );
-  if (existing) {
-    return;
-  }
-  const res = await world.http.post('/api/auth/register').send({
-    email,
-    password: 'correct horse battery staple',
-    displayName,
-  });
-  assert.equal(
-    res.status,
-    201,
-    `registration failed: ${JSON.stringify(res.body)}`,
-  );
+  if (existing) return;
+  const res = await world.http
+    .post('/api/auth/register')
+    .send({ email, password: 'correct horse battery staple', displayName });
+  assert.equal(res.status, 201, `registration failed: ${JSON.stringify(res.body)}`);
 }
 
-// Same ST_Project technique as route-verification.steps.ts's
-// offsetPointFromRoute, against `gyms` instead of `routes`.
+// ST_Project a point exactly `meters` due north of the gym.
 async function offsetPointFromGym(
   dataSource: DataSource,
   gymId: string,
@@ -75,72 +68,79 @@ async function offsetPointFromGym(
   return { lat: Number(point.lat), lng: Number(point.lng) };
 }
 
-function parseDisciplines(raw: string): string[] {
-  const trimmed = raw.trim();
-  if (!trimmed) {
-    return [];
-  }
-  return trimmed.split(',').map((d) => d.trim());
-}
-
-// Uploads a fresh GYM_VERIFICATION_PHOTO for `email` (via X-Test-Mock-Auth)
-// and submits the gym verification from a point exactly `meters` away from
-// the gym, with the given disciplines. Leaves `world.response` set to the
-// verification submission's response.
-async function performGymVerification(
+// A "Yes, accurate" confirmation from `email`, `meters` from the gym, with
+// an optional freshly-uploaded photo. Leaves world.response set.
+async function confirmGym(
   world: AuthWorld,
   email: string,
   gymName: string,
   meters: number,
-  disciplines: string[],
+  withPhoto: boolean,
 ): Promise<void> {
   const dataSource = world.app.get(DataSource);
   const gymId = await findGymId(dataSource, gymName);
   const userId = await findUserId(dataSource, email);
   const { lat, lng } = await offsetPointFromGym(dataSource, gymId, meters);
 
-  const mediaRes = await world.http
-    .post('/api/media')
-    .set('X-Test-Mock-Auth', userId)
-    .field('purpose', 'GYM_VERIFICATION_PHOTO')
-    .attach('file', Buffer.alloc(1024, 0xbb), {
-      filename: 'gym-verification-photo.jpg',
-      contentType: 'image/jpeg',
-    });
-  assert.equal(
-    mediaRes.status,
-    201,
-    `seed photo upload failed: ${JSON.stringify(mediaRes.body)}`,
-  );
+  const body: Record<string, unknown> = { informationAccurate: true };
+  if (withPhoto) {
+    const mediaRes = await world.http
+      .post('/api/media')
+      .set('X-Test-Mock-Auth', userId)
+      .field('purpose', 'GYM_VERIFICATION_PHOTO')
+      .attach('file', Buffer.alloc(1024, 0xbb), {
+        filename: 'gym-verification-photo.jpg',
+        contentType: 'image/jpeg',
+      });
+    assert.equal(
+      mediaRes.status,
+      201,
+      `seed photo upload failed: ${JSON.stringify(mediaRes.body)}`,
+    );
+    body.mediaAssetId = mediaRes.body.id as string;
+  }
 
   world.response = await world.http
     .post(`/api/gyms/${gymId}/verifications`)
     .set('X-Test-Mock-Auth', userId)
     .set('X-Test-Mock-GPS', `${lat},${lng}`)
-    .send({
-      mediaAssetId: mediaRes.body.id as string,
-      disciplinesSubmitted: disciplines,
-    });
+    .send(body);
 }
 
-// Seeds `count` distinct, already-verified climbers directly via SQL --
-// fixture setup for the 4th-verification/union scenario, not the behavior
-// under test (same "seed directly, bypass HTTP" convention as
-// route-verification.steps.ts's seedVerifications).
-async function seedGymVerifications(
+async function disputeGym(
+  world: AuthWorld,
+  email: string,
+  gymName: string,
+  meters: number,
+  detail: string,
+): Promise<void> {
+  const dataSource = world.app.get(DataSource);
+  const gymId = await findGymId(dataSource, gymName);
+  const userId = await findUserId(dataSource, email);
+  const { lat, lng } = await offsetPointFromGym(dataSource, gymId, meters);
+
+  world.response = await world.http
+    .post(`/api/gyms/${gymId}/verifications`)
+    .set('X-Test-Mock-Auth', userId)
+    .set('X-Test-Mock-GPS', `${lat},${lng}`)
+    .send({ informationAccurate: false, disputeDetail: detail });
+}
+
+// Seeds `count` distinct verified climbers with a gym_verifications row each
+// -- fixture setup for the 4th-confirmation scenario. No disciplines
+// (the column is nullable now), a seeded photo per row.
+async function seedGymConfirmations(
   world: AuthWorld,
   gymName: string,
   count: number,
-  disciplines: string[],
 ): Promise<void> {
   const dataSource = world.app.get(DataSource);
   const gymId = await findGymId(dataSource, gymName);
 
-  for (let i = 0; i < count; i++) {
-    const email = `seed-gym-verifier-${i}-${gymName.replace(/\s+/g, '')}@example.com`;
-    await registerIfAbsent(world, email, 'Seed Verifier');
+  for (let i = 0; i < count; i += 1) {
+    const email = `seed-gym-confirmer-${i}-${gymName.replace(/\s+/g, '')}@example.com`;
+    await registerIfAbsent(world, email, 'Seed Confirmer');
     const userId = await findUserId(dataSource, email);
-
     const [media] = await dataSource.query(
       `INSERT INTO media_assets (owner_user_id, purpose, payload, mime_type, byte_size, etag)
        VALUES ($1, 'GYM_VERIFICATION_PHOTO', $2, 'image/jpeg', 3, $3)
@@ -148,22 +148,24 @@ async function seedGymVerifications(
       [userId, Buffer.from([1, 2, 3]), `seed-etag-${email}`],
     );
     await dataSource.query(
-      `INSERT INTO gym_verifications (gym_id, verifier_user_id, media_asset_id, disciplines_submitted)
-       VALUES ($1, $2, $3, $4::gym_discipline[])`,
-      [gymId, userId, media.id, disciplines],
+      `INSERT INTO gym_verifications (gym_id, verifier_user_id, media_asset_id)
+       VALUES ($1, $2, $3)`,
+      [gymId, userId, media.id],
     );
   }
 }
 
+function parseDisciplines(raw: string): string[] {
+  const trimmed = raw.trim();
+  return trimmed ? trimmed.split(',').map((d) => d.trim()) : [];
+}
+
+// --- Given -------------------------------------------------------------------
+
 Given(
-  '{string} already has {int} existing verifications with disciplines {string}',
-  async function (
-    this: AuthWorld,
-    gymName: string,
-    count: number,
-    disciplinesRaw: string,
-  ) {
-    await seedGymVerifications(this, gymName, count, parseDisciplines(disciplinesRaw));
+  '{string} already has {int} confirmations',
+  async function (this: AuthWorld, gymName: string, count: number) {
+    await seedGymConfirmations(this, gymName, count);
   },
 );
 
@@ -179,54 +181,40 @@ Given(
   },
 );
 
+// --- When: confirm / dispute ----------------------------------------------
+
 When(
-  '{string} verifies gym {string} from {int} meters away with disciplines {string}',
-  async function (
-    this: AuthWorld,
-    email: string,
-    gymName: string,
-    meters: number,
-    disciplinesRaw: string,
-  ) {
-    await performGymVerification(
-      this,
-      email,
-      gymName,
-      meters,
-      parseDisciplines(disciplinesRaw),
-    );
+  '{string} confirms gym {string} from {int} meters away',
+  async function (this: AuthWorld, email: string, gymName: string, meters: number) {
+    await confirmGym(this, email, gymName, meters, true);
   },
 );
 
 When(
-  '{string} verifies gym {string} from {int} meters away with no disciplines selected',
-  async function (
-    this: AuthWorld,
-    email: string,
-    gymName: string,
-    meters: number,
-  ) {
-    await performGymVerification(this, email, gymName, meters, []);
+  '{string} confirms gym {string} from {int} meters away without a photo',
+  async function (this: AuthWorld, email: string, gymName: string, meters: number) {
+    await confirmGym(this, email, gymName, meters, false);
   },
 );
 
 When(
-  'a 4th unique Verified Climber {string} verifies gym {string} from {int} meters away with disciplines {string}',
+  'a 4th unique Verified Climber {string} confirms gym {string} from {int} meters away',
+  async function (this: AuthWorld, email: string, gymName: string, meters: number) {
+    await registerIfAbsent(this, email, 'Fourth Confirmer');
+    await confirmGym(this, email, gymName, meters, true);
+  },
+);
+
+When(
+  '{string} disputes gym {string} from {int} meters away because {string}',
   async function (
     this: AuthWorld,
     email: string,
     gymName: string,
     meters: number,
-    disciplinesRaw: string,
+    detail: string,
   ) {
-    await registerIfAbsent(this, email, 'Fourth Verifier');
-    await performGymVerification(
-      this,
-      email,
-      gymName,
-      meters,
-      parseDisciplines(disciplinesRaw),
-    );
+    await disputeGym(this, email, gymName, meters, detail);
   },
 );
 
@@ -241,7 +229,6 @@ When(
     const dataSource = this.app.get(DataSource);
     const gymId = await findGymId(dataSource, gymName);
     const userId = await findUserId(dataSource, email);
-
     this.response = await this.http
       .patch(`/api/gyms/${gymId}/admin-verify`)
       .set('X-Test-Mock-Auth', userId)
@@ -249,28 +236,65 @@ When(
   },
 );
 
-Then('the gym verification succeeds', function (this: AuthWorld) {
+When(
+  '{string} resolves the open dispute for gym {string}',
+  async function (this: AuthWorld, email: string, gymName: string) {
+    const dataSource = this.app.get(DataSource);
+    const gymId = await findGymId(dataSource, gymName);
+    const userId = await findUserId(dataSource, email);
+
+    const queue = await this.http
+      .get('/api/admin/gym-disputes')
+      .set('X-Test-Mock-Auth', userId);
+    assert.equal(queue.status, 200, JSON.stringify(queue.body));
+    const row = (queue.body as Array<{ id: string; gymId: string }>).find(
+      (d) => d.gymId === gymId,
+    );
+    assert.ok(row, `expected an open dispute for gym "${gymName}"`);
+
+    this.response = await this.http
+      .post(`/api/admin/gym-disputes/${row.id}/resolve`)
+      .set('X-Test-Mock-Auth', userId);
+  },
+);
+
+// --- Then ------------------------------------------------------------------
+
+Then('the gym confirmation succeeds', function (this: AuthWorld) {
   assert.equal(this.response.status, 201, JSON.stringify(this.response.body));
 });
 
+Then('the gym dispute is recorded', function (this: AuthWorld) {
+  assert.equal(this.response.status, 201, JSON.stringify(this.response.body));
+  assert.equal(
+    (this.response.body as { outcome?: string }).outcome,
+    'DISPUTED',
+    JSON.stringify(this.response.body),
+  );
+});
+
+Then('the gym confirmation is rejected as forbidden', function (this: AuthWorld) {
+  assert.equal(this.response.status, 403, JSON.stringify(this.response.body));
+});
+
 Then(
-  'the gym verification is rejected as a validation error',
+  'the gym confirmation is rejected with a proximity error',
+  function (this: AuthWorld) {
+    assert.equal(this.response.status, 403, JSON.stringify(this.response.body));
+  },
+);
+
+Then(
+  'the gym confirmation is rejected as a validation error',
   function (this: AuthWorld) {
     assert.equal(this.response.status, 400, JSON.stringify(this.response.body));
   },
 );
 
 Then(
-  'the gym verification is rejected as forbidden',
+  'the gym confirmation is rejected as a conflict',
   function (this: AuthWorld) {
-    assert.equal(this.response.status, 403, JSON.stringify(this.response.body));
-  },
-);
-
-Then(
-  'the gym verification is rejected with a proximity error',
-  function (this: AuthWorld) {
-    assert.equal(this.response.status, 403, JSON.stringify(this.response.body));
+    assert.equal(this.response.status, 409, JSON.stringify(this.response.body));
   },
 );
 
@@ -285,38 +309,70 @@ Then(
   },
 );
 
+Then('the dispute resolution succeeds', function (this: AuthWorld) {
+  assert.equal(this.response.status, 200, JSON.stringify(this.response.body));
+});
+
 Then(
-  'a gym_verifications row exists for {string} and {string} with disciplines {string}',
-  async function (
-    this: AuthWorld,
-    email: string,
-    gymName: string,
-    disciplinesRaw: string,
-  ) {
+  'gym {string} has {int} open information dispute(s)',
+  async function (this: AuthWorld, gymName: string, count: number) {
     const dataSource = this.app.get(DataSource);
-    // array_to_string sidesteps node-postgres's lack of a type parser for
-    // a custom ENUM array's OID (same reasoning as gym-submission.steps.ts's
-    // cardinality() trick) -- compare a plain CSV string instead of
-    // fighting client-side array parsing.
     const rows = await dataSource.query(
-      `SELECT array_to_string(gv.disciplines_submitted, ',') AS disciplines_csv
+      `SELECT count(*)::int AS n
+       FROM gym_information_disputes d
+       JOIN gyms g ON g.id = d.gym_id
+       WHERE g.name = $1 AND d.resolved_at IS NULL`,
+      [gymName],
+    );
+    assert.equal(rows[0].n, count);
+  },
+);
+
+Then(
+  'the open dispute for gym {string} says {string}',
+  async function (this: AuthWorld, gymName: string, detail: string) {
+    const dataSource = this.app.get(DataSource);
+    const rows = await dataSource.query(
+      `SELECT d.detail
+       FROM gym_information_disputes d
+       JOIN gyms g ON g.id = d.gym_id
+       WHERE g.name = $1 AND d.resolved_at IS NULL`,
+      [gymName],
+    );
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0].detail, detail);
+  },
+);
+
+Then(
+  'a gym_verifications row exists for {string} and {string}',
+  async function (this: AuthWorld, email: string, gymName: string) {
+    const dataSource = this.app.get(DataSource);
+    const rows = await dataSource.query(
+      `SELECT gv.id
        FROM gym_verifications gv
        JOIN users u ON u.id = gv.verifier_user_id
        JOIN gyms g ON g.id = gv.gym_id
        WHERE u.email = $1 AND g.name = $2`,
       [email, gymName],
     );
-    assert.equal(
-      rows.length,
-      1,
-      `expected exactly one gym_verifications row for ${email}/${gymName}`,
+    assert.equal(rows.length, 1);
+  },
+);
+
+Then(
+  'no gym_verifications row exists for {string} and {string}',
+  async function (this: AuthWorld, email: string, gymName: string) {
+    const dataSource = this.app.get(DataSource);
+    const rows = await dataSource.query(
+      `SELECT gv.id
+       FROM gym_verifications gv
+       JOIN users u ON u.id = gv.verifier_user_id
+       JOIN gyms g ON g.id = gv.gym_id
+       WHERE u.email = $1 AND g.name = $2`,
+      [email, gymName],
     );
-    const actual = (rows[0].disciplines_csv as string)
-      .split(',')
-      .map((d) => d.trim())
-      .sort();
-    const expected = parseDisciplines(disciplinesRaw).sort();
-    assert.deepEqual(actual, expected);
+    assert.equal(rows.length, 0);
   },
 );
 
@@ -329,6 +385,18 @@ Then(
       [gymName],
     );
     assert.equal(rows[0]?.status, 'VERIFIED');
+  },
+);
+
+Then(
+  'gym {string} is still UNVERIFIED',
+  async function (this: AuthWorld, gymName: string) {
+    const dataSource = this.app.get(DataSource);
+    const rows = await dataSource.query(
+      'SELECT status FROM gyms WHERE name = $1',
+      [gymName],
+    );
+    assert.equal(rows[0]?.status, 'UNVERIFIED');
   },
 );
 

@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import { DataSource } from 'typeorm';
 import { AuthWorld } from '../support/world';
 import { RoutesService } from '../../src/routes/routes.service';
+import {
+  findUserIdByEmail,
+  seedSubmissionPhotoIds,
+} from '../support/seed';
 
 const NUMERIC_FIELDS = new Set(['proposedGradeOrdinal', 'boltCount', 'minRopeLengthM']);
 
@@ -30,16 +34,37 @@ When(
   '{string} submits a route named {string} at latitude {float}, longitude {float} with these details:',
   async function (
     this: AuthWorld,
-    _email: string,
+    email: string,
     name: string,
     latitude: number,
     longitude: number,
     table: DataTable,
   ) {
+    // AR-51 BL-x05: a route submission now needs >= 3 pre-uploaded
+    // ROUTE_SUBMISSION_PHOTO ids. Seeded transparently here so the ~7 other
+    // features that submit a route through this step keep working; the
+    // >= 3 rule itself is exercised in gym-submission-and-verification.feature.
+    // The proximity gate (BL-x02) is not hit: with no X-Test-Mock-GPS and no
+    // device fields, the controller uses the pin coords as the device
+    // location, so distance is 0.
+    const dataSource = this.app.get(DataSource);
+    const submitterId = await findUserIdByEmail(dataSource, email);
+    const photoMediaIds = await seedSubmissionPhotoIds(
+      dataSource,
+      submitterId,
+      'ROUTE_SUBMISSION_PHOTO',
+    );
+
     this.response = await this.http
       .post('/api/routes')
       .set('Cookie', this.sessionCookie)
-      .send({ name, latitude, longitude, ...buildRouteDetails(table) });
+      .send({
+        name,
+        latitude,
+        longitude,
+        photoMediaIds,
+        ...buildRouteDetails(table),
+      });
   },
 );
 

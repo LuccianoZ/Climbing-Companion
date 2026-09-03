@@ -16,7 +16,7 @@ Before(async function (this: AuthWorld) {
   // remembered later. Extend as later epics add more.
   const dataSource = this.app.get(DataSource);
   await dataSource.query(
-    'TRUNCATE TABLE "users", "crags", "routes", "gyms", "media_assets", "route_verifications", "route_grade_votes", "gym_verifications", "climb_logs", "gym_checkins", "media_reports", "media_moderation_actions", "user_accountability_actions", "notifications" CASCADE',
+    'TRUNCATE TABLE "users", "crags", "routes", "gyms", "media_assets", "route_verifications", "route_grade_votes", "gym_verifications", "gym_information_disputes", "climb_logs", "gym_checkins", "media_reports", "media_moderation_actions", "user_accountability_actions", "notifications" CASCADE',
   );
 });
 

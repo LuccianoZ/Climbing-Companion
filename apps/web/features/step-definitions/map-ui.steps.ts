@@ -198,12 +198,23 @@ Then('the pin for {string} is translucent grey', async function (this: MapUiWorl
   assert.equal(background, DORMANT_RGB, 'expected the dormant grey fill');
 });
 
+// BL-x01: every pin now carries an *italicised* two-state pill -- muted
+// green "Verified" or translucent grey "Unverified". Asserts the text, the
+// data-pin-verified flag and that the pill is actually rendered italic.
 Then(
-  'the pin for {string} carries an {string} badge',
+  'the pin for {string} carries an italic {string} pill',
   async function (this: MapUiWorld, name: string, text: string) {
-    const badge = pin(this, name).locator('[data-testid="pin-unverified-badge"]');
-    await badge.waitFor({ timeout: 10_000 });
-    assert.equal((await badge.textContent())?.trim(), text);
+    const pill = pin(this, name).locator('[data-testid="pin-status-pill"]');
+    await pill.waitFor({ timeout: 10_000 });
+    assert.equal((await pill.textContent())?.trim(), text);
+    assert.equal(
+      await pill.getAttribute('data-pin-verified'),
+      text === 'Verified' ? 'true' : 'false',
+    );
+    const fontStyle = await pill.evaluate(
+      (node) => getComputedStyle(node).fontStyle,
+    );
+    assert.equal(fontStyle, 'italic', 'expected the status pill to be italic');
   },
 );
 
@@ -214,12 +225,34 @@ Then('the pin for {string} is fully opaque', async function (this: MapUiWorld, n
   assert.equal(Number(opacity), 1, `expected a VERIFIED pin to be opaque, got ${opacity}`);
 });
 
+// BL-x01: the same pill in the detail-panel header.
 Then(
-  'the pin for {string} carries no unverified badge',
-  async function (this: MapUiWorld, name: string) {
+  'the detail panel header shows an {string} status',
+  async function (this: MapUiWorld, status: string) {
+    const testid =
+      status === 'Verified'
+        ? 'detail-status-verified'
+        : 'detail-status-unverified';
+    const pill = this.page.locator(
+      `[data-testid="detail-sheet"] [data-testid="${testid}"]`,
+    );
+    await pill.waitFor({ timeout: 10_000 });
+    assert.match((await pill.textContent()) ?? '', new RegExp(status));
+  },
+);
+
+// BL-x01: and on each crag route row.
+Then(
+  'the route {string} row shows an {string} status',
+  async function (this: MapUiWorld, routeName: string, status: string) {
+    const pill = routeCard(this, routeName).locator(
+      '[data-testid="route-status-pill"]',
+    );
+    await pill.waitFor({ timeout: 10_000 });
+    assert.equal((await pill.textContent())?.trim(), status);
     assert.equal(
-      await pin(this, name).locator('[data-testid="pin-unverified-badge"]').count(),
-      0,
+      await pill.getAttribute('data-verified'),
+      status === 'Verified' ? 'true' : 'false',
     );
   },
 );
