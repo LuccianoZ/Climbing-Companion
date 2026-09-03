@@ -27,12 +27,16 @@ import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons'
 // entirely -- Architecture section 7 marks `conversations` and
 // `direct_messages` as "CUT, not implemented" -- so the Chat slot is gone
 // rather than kept as a permanent dead placeholder.
+//
+// The last tab is the account slot: "Profile" for a signed-in climber,
+// "Log in" for a visitor (Owner request, Sept 3). Same position and icon --
+// a visitor tapping where the profile lives is trying to get to their
+// account, and the honest next step for them is the login screen.
 
-const TABS = [
+const BASE_TABS = [
   { href: '/', label: 'Map', Icon: MapIcon },
   { href: '/search', label: 'Search', Icon: SearchIcon },
   { href: '/alerts', label: 'Alerts', Icon: BellIcon },
-  { href: '/profile', label: 'Profile', Icon: ProfileIcon },
 ] as const;
 
 export function AppShell({
@@ -45,7 +49,13 @@ export function AppShell({
   bleed?: boolean;
 }) {
   const pathname = usePathname();
-  const { isAdmin } = useSession();
+  const { isAdmin, status } = useSession();
+
+  const accountTab =
+    status === 'authenticated'
+      ? { href: '/profile', label: 'Profile', Icon: ProfileIcon }
+      : { href: '/login', label: 'Log in', Icon: ProfileIcon };
+  const tabs = [...BASE_TABS, accountTab];
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[430px] flex-col border-line-soft bg-paper sm:border-x">
@@ -86,14 +96,14 @@ export function AppShell({
         aria-label="Primary"
         className="z-[1200] flex shrink-0 items-stretch justify-around border-t border-line bg-surface px-1 pt-1.5 pb-2"
       >
-        {TABS.map(({ href, label, Icon }) => {
+        {tabs.map(({ href, label, Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
           return (
             <Link
               key={href}
               href={href}
               aria-current={active ? 'page' : undefined}
-              data-testid={`tab-${label.toLowerCase()}`}
+              data-testid={`tab-${label.toLowerCase().replace(/\s+/g, '-')}`}
               className="flex flex-1 flex-col items-center gap-1 py-1 text-ink"
             >
               <span

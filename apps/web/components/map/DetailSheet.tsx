@@ -191,7 +191,7 @@ export function StatusPill({
           : 'border-line-soft bg-paper text-ink-soft',
       ].join(' ')}
     >
-      {verified ? 'Verified by Community' : 'Unverified by Community'}
+      {verified ? 'Verified' : 'Unverified'}
     </span>
   );
 }

@@ -4,9 +4,9 @@ import type { MapPin } from '@/lib/types';
 // BL-020 + Sept 3 revision (AR-51, BL-x01): crags and gyms are visually
 // distinct (two silhouettes, not just two colours), and every pin now
 // carries the entity NAME above an *italicised* two-state status pill --
-// muted green "Verified by Community" or translucent grey "Unverified by
-// Community". The pill is shown for verified pins too now, not only
-// unverified.
+// muted green "Verified" or translucent grey "Unverified". The pill is
+// shown for verified pins too now, not only unverified. (Owner shortened
+// the wording from "... by Community" on Sept 3.)
 //
 // Built as Leaflet divIcons (real DOM) rather than image markers: the label
 // and pill are text that must stay legible and assertable by the Playwright
@@ -26,8 +26,8 @@ const GYM_GLYPH =
   '<circle cx="15" cy="12.5" r="1.2" fill="currentColor"/>' +
   '<circle cx="9.5" cy="15.5" r="1.2" fill="currentColor"/>';
 
-export const VERIFIED_BADGE_TEXT = 'Verified by Community';
-export const UNVERIFIED_BADGE_TEXT = 'Unverified by Community';
+export const VERIFIED_BADGE_TEXT = 'Verified';
+export const UNVERIFIED_BADGE_TEXT = 'Unverified';
 
 function escapeHtml(value: string): string {
   return value
