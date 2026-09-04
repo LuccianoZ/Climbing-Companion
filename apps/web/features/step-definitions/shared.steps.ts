@@ -199,11 +199,42 @@ When(
 When(
   'the climber attaches a file that is not an image',
   async function (this: MapUiWorld) {
-    await this.page.locator('[data-testid="image-upload-input"]').setInputFiles({
-      name: 'notes.txt',
-      mimeType: 'text/plain',
-      buffer: Buffer.from('not a photo'),
-    });
+    await this.page
+      .locator('[data-testid="image-upload-input"]')
+      .first()
+      .setInputFiles({
+        name: 'notes.txt',
+        mimeType: 'text/plain',
+        buffer: Buffer.from('not a photo'),
+      });
+  },
+);
+
+// AR-51 BL-x04/x05: a route/gym submission now needs >= 3 photos, uploaded
+// through MultiImageUploadField's slots. Fills all three and waits for the
+// count indicator to flip to "enough".
+When(
+  'the climber uploads the required submission photos',
+  async function (this: MapUiWorld) {
+    for (let i = 0; i < 3; i += 1) {
+      await this.page
+        .locator(
+          `[data-testid="submission-photo-slot-${i}"] [data-testid="image-upload-input"]`,
+        )
+        .setInputFiles({
+          name: `photo-${i}.jpg`,
+          mimeType: 'image/jpeg',
+          buffer: Buffer.alloc(1024, 1),
+        });
+      await this.page
+        .locator(
+          `[data-testid="submission-photo-slot-${i}"] [data-testid="image-upload-preview"]`,
+        )
+        .waitFor({ state: 'visible', timeout: 15_000 });
+    }
+    await this.page
+      .locator('[data-testid="submission-photo-count"][data-enough="true"]')
+      .waitFor({ state: 'visible', timeout: 15_000 });
   },
 );
 

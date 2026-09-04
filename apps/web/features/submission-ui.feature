@@ -30,6 +30,7 @@ Feature: Submitting a route and submitting a gym
     And the climber selects "V4" in "grade-select"
     And the climber taps "use-my-location"
     And the climber fills "summary" with "Sit start, big move off the undercling."
+    And the climber uploads the required submission photos
     And the climber taps "submit-route"
     Then a POST request reached "/api/routes"
     And the body sent to "/api/routes" has no "boltCount" field
@@ -44,6 +45,7 @@ Feature: Submitting a route and submitting a gym
     And the climber fills "boltCount" with "12"
     And the climber fills "minRopeLengthM" with "60"
     And the climber fills "summary" with "Sustained face climbing, crux at the third bolt."
+    And the climber uploads the required submission photos
     And the climber taps "submit-route"
     Then the body sent to "/api/routes" has "boltCount" set to "12"
     And the body sent to "/api/routes" has "minRopeLengthM" set to "60"
@@ -56,6 +58,7 @@ Feature: Submitting a route and submitting a gym
     And the climber fills "summary" with "Bolted face, bring a helmet for the ledge."
     And the climber taps "gear-option-QUICKDRAWS"
     And the climber taps "gear-option-HELMET"
+    And the climber uploads the required submission photos
     And the climber taps "submit-route"
     Then the body sent to "/api/routes" has "gearRequirements" set to '["QUICKDRAWS","HELMET"]'
 
@@ -65,6 +68,7 @@ Feature: Submitting a route and submitting a gym
     And the climber selects "5.11a" in "grade-select"
     And the climber taps "use-my-location"
     And the climber fills "summary" with "Nothing but bolts and good edges."
+    And the climber uploads the required submission photos
     And the climber taps "submit-route"
     Then the body sent to "/api/routes" has no "gearRequirements" field
 
@@ -91,20 +95,37 @@ Feature: Submitting a route and submitting a gym
     And the climber selects "5.11a" in "grade-select"
     And the climber taps "use-my-location"
     And the climber fills "summary" with "Morning sun, clean rock, two bolts to the ledge."
+    And the climber uploads the required submission photos
     And the climber taps "submit-route"
     Then "submit-route-success" is on screen
     And "crag-outcome" reads "No crag existed within 300m"
 
-  Scenario: A gym asks only for a name and a place
+  Scenario: The pin can only be dragged inside the 300m circle
+    Given the climber has opened "/submit-route"
+    Then "location-picker-hint" reads "within 300m"
+
+  # AR-51 BL-x04: a gym now carries disciplines, weekly hours and >= 3 photos.
+  Scenario: A gym submission carries its disciplines, hours and photos
     Given the climber has opened "/submit-gym"
     Then "submit-gym-form" is on screen
     And "grade-select" is not on screen
-    And "gear-requirements" is not on screen
+    And "operating-hours" is on screen
     When the climber fills "name" with "Chalk Line Bouldering"
     And the climber taps "use-my-location"
+    And the climber taps "gym-discipline-BOULDERING"
+    And the climber uploads the required submission photos
     And the climber taps "submit-gym"
     Then a POST request reached "/api/gyms"
+    And the body sent to "/api/gyms" has "disciplinesOffered" set to '["BOULDERING"]'
     And "submit-gym-success" is on screen
+
+  Scenario: A gym cannot be submitted without a discipline
+    Given the climber has opened "/submit-gym"
+    When the climber fills "name" with "Chalk Line Bouldering"
+    And the climber taps "use-my-location"
+    And the climber uploads the required submission photos
+    And the climber taps "submit-gym"
+    Then no request reached "/api/gyms"
 
   Scenario: The floating plus is hidden from a signed-out visitor
     Given the climber is signed out

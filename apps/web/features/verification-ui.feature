@@ -113,7 +113,9 @@ Feature: Verifying a route and verifying a gym from the map
     And "action-verify" is not on screen
     And "nothing-to-verify" is on screen
 
-  Scenario: Verifying a gym asks for disciplines and never for a grade
+  # AR-51 BL-x06: gym verification is confirm/dispute, never a grade, and the
+  # photo is now optional.
+  Scenario: Confirming a gym counts toward verification without a photo
     Given the map also shows a gym waiting for verification
     And the climber is standing within range of "Chalk Line Bouldering"
     And the climber opens the map
@@ -121,11 +123,23 @@ Feature: Verifying a route and verifying a gym from the map
     And the climber taps "action-verify"
     Then "verify-gym-sheet" is on screen
     And "verify-grade-select" is not on screen
-    When the climber attaches a 4096 byte "image/png" photo
-    And the climber taps "gym-discipline-BOULDERING"
+    When the climber taps "gym-accurate-yes"
     And the climber taps "verify-gym-submit"
     Then a POST request reached "/verifications"
-    And the body sent to "/verifications" has "disciplinesSubmitted" set to '["BOULDERING"]'
+    And the body sent to "/verifications" has "informationAccurate" set to "true"
+
+  Scenario: Disputing a gym sends a note and does not count as a verification
+    Given the map also shows a gym waiting for verification
+    And the climber is standing within range of "Chalk Line Bouldering"
+    And the climber opens the map
+    When the climber clicks the pin for "Chalk Line Bouldering"
+    And the climber taps "action-verify"
+    And the climber taps "gym-accurate-no"
+    And the climber fills "dispute-detail" with "The bouldering wall is closed for renovation."
+    And the climber taps "verify-gym-submit"
+    Then a POST request reached "/verifications"
+    And the body sent to "/verifications" has "informationAccurate" set to "false"
+    And the body sent to "/verifications" has "disputeDetail" set to '"The bouldering wall is closed for renovation."'
 
   # MOVED -- Epic 5 (BL-024) now owns this button's real behaviour; see
   # gym-checkin-ui.feature. This scenario used to assert that tapping

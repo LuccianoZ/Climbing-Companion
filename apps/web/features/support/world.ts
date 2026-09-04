@@ -119,6 +119,11 @@ export class MapUiWorld extends World {
   // neither the translucent treatment nor the badge.
   cragStatus: 'UNVERIFIED' | 'VERIFIED' = 'UNVERIFIED';
 
+  // Every POST /api/media stub answers with a distinct id, so a submission
+  // form that uploads >= 3 photos (AR-51 BL-x04/x05) ends up with a real set
+  // rather than the same id three times.
+  mediaUploadCount = 0;
+
   // Who /api/auth/me says you are. ANONYMOUS answers 401, which is the
   // ordinary signed-out case and not an error.
   session: SessionKind = 'ANONYMOUS';
@@ -231,8 +236,17 @@ export class MapUiWorld extends World {
       case 'reset-request':
       case 'reset-confirm':
         return { status: 200, body: { success: true } };
-      case 'media':
-        return { status: 201, body: MEDIA_ASSET };
+      case 'media': {
+        // The first upload in a scenario keeps MEDIA_ASSET's real id so
+        // single-photo flows (verification-ui.feature) can assert the
+        // verification request referenced it. AR-51 BL-x04/x05's >= 3-photo
+        // submissions need distinct ids per slot, so every upload after the
+        // first gets a synthetic one instead of colliding on the fixture id.
+        const id =
+          this.mediaUploadCount === 0 ? MEDIA_ASSET.id : `media-${this.mediaUploadCount}`;
+        this.mediaUploadCount += 1;
+        return { status: 201, body: { ...MEDIA_ASSET, id } };
+      }
       case 'routes':
         return { status: 201, body: SUBMIT_ROUTE_RESULT };
       case 'gyms':
@@ -250,10 +264,15 @@ export class MapUiWorld extends World {
         return {
           status: 201,
           body: {
+            // AR-51 BL-x06: confirm/dispute. Overridden per-scenario for the
+            // "No" case.
+            outcome: 'CONFIRMED',
+            verification: { id: 'gv1' },
+            dispute: null,
             gym: {
               id: UNVERIFIED_GYM_ID,
               status: 'UNVERIFIED',
-              disciplinesOffered: [],
+              disciplinesOffered: ['BOULDERING'],
             },
             gymNewlyVerified: false,
           },
@@ -410,6 +429,7 @@ Before(function (this: MapUiWorld) {
   this.calls = [];
   this.geolocation = null;
   this.cragStatus = 'UNVERIFIED';
+  this.mediaUploadCount = 0;
   this.session = 'ANONYMOUS';
   this.includeUnverifiedGym = false;
   this.overrides = new Map();
