@@ -45,7 +45,12 @@ export type ApiAction =
   | 'ACCOUNTABILITY'
   | 'MODERATE_MEDIA'
   | 'REPORT_MEDIA'
-  | 'NOTIFICATIONS';
+  | 'NOTIFICATIONS'
+  | 'FRIEND_REQUEST'
+  | 'GYM_ACTIVITY'
+  | 'OUTDOOR_ANALYTICS'
+  | 'BADGES_PUBLIC'
+  | 'ADD_PHOTOS';
 
 // A request that never reached the server at all: fetch rejects with a
 // TypeError rather than resolving to a non-ok Response, so this never becomes
@@ -192,6 +197,30 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     401: SESSION_EXPIRED,
   },
   NOTIFICATIONS: {
+    401: SESSION_EXPIRED,
+  },
+  FRIEND_REQUEST: {
+    400: "You can't send a friend request to yourself.",
+    403: 'Only the person a request was sent to can accept or decline it.',
+    404: 'That friend request no longer exists.',
+    409: 'You already have a friendship or pending request with this person.',
+    401: SESSION_EXPIRED,
+  },
+  GYM_ACTIVITY: {
+    404: 'That climber no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  OUTDOOR_ANALYTICS: {
+    401: SESSION_EXPIRED,
+  },
+  BADGES_PUBLIC: {
+    400: 'That value is not valid — badge visibility is on or off.',
+    401: SESSION_EXPIRED,
+  },
+  ADD_PHOTOS: {
+    400: 'Choose at least one photo to add.',
+    403: 'Only the original submitter can add more photos here.',
+    404: 'This gym or climb no longer exists.',
     401: SESSION_EXPIRED,
   },
 };

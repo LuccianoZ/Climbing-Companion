@@ -21,6 +21,7 @@ import { UserRole } from '../users/entities/user.entity';
 import { SubmitGymDto } from './dto/submit-gym.dto';
 import { AdminVerifyGymDto } from './dto/admin-verify-gym.dto';
 import { AdminUpdateGymDto } from './dto/admin-update-gym.dto';
+import { AddGymPhotosDto } from './dto/add-gym-photos.dto';
 import { GymsService } from './gyms.service';
 
 type GymRequest = AuthenticatedRequest & { mockGps?: MockGpsLocation };
@@ -51,6 +52,19 @@ export class GymsController {
       deviceLocation,
       isAdmin,
     });
+  }
+
+  // Sept 7, 2026 (AR-54): the original submitter adds more photos to their
+  // own gym, no cap. Service-layer 403 for anyone else.
+  @Post(':gymId/photos')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(SessionGuard)
+  addPhotos(
+    @Param('gymId', ParseUUIDPipe) gymId: string,
+    @Body() dto: AddGymPhotosDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.gymsService.addPhotos(gymId, req.user.id, dto);
   }
 
   // BL-012 / Architecture.md AR-17: direct verification of an existing gym.

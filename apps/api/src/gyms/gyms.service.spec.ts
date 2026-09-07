@@ -560,6 +560,68 @@ describe('GymsService stewardship: getGymForAdmin / restore / hardDelete (BL-x07
   });
 });
 
+describe('GymsService.addPhotos (AR-54)', () => {
+  let gymRepo: { findOne: ReturnType<typeof vi.fn> };
+  let mediaRepo: {
+    find: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let service: GymsService;
+
+  const newPhotoId = '44444444-4444-4444-8444-444444444444';
+
+  beforeEach(() => {
+    gymRepo = { findOne: vi.fn() };
+    mediaRepo = {
+      find: vi.fn().mockResolvedValue([makeAsset(newPhotoId)]),
+      save: vi.fn((rows: MediaAsset[]) => rows),
+    };
+    service = serviceWithGymRepo(gymRepo, { mediaRepo });
+  });
+
+  it('lets the original submitter add a single extra photo, staying PENDING', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym({ submittedBy: 'user-1' }));
+
+    const result = await service.addPhotos('gym-1', 'user-1', {
+      photoMediaIds: [newPhotoId],
+    });
+
+    expect(result).toEqual({ added: 1 });
+    const saved = mediaRepo.save.mock.calls[0][0] as MediaAsset[];
+    expect(saved[0].subjectGymId).toBe('gym-1');
+    expect(saved[0].moderationStatus).toBe(MediaModerationStatus.PENDING);
+  });
+
+  it('rejects anyone other than the original submitter', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym({ submittedBy: 'user-1' }));
+
+    await expect(
+      service.addPhotos('gym-1', 'someone-else', {
+        photoMediaIds: [newPhotoId],
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(mediaRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('404s for an unknown gym', async () => {
+    gymRepo.findOne.mockResolvedValue(null);
+    await expect(
+      service.addPhotos('gym-x', 'user-1', { photoMediaIds: [newPhotoId] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects a photo not owned by the submitter (reuses appendSubmissionPhotos validation)', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym({ submittedBy: 'user-1' }));
+    mediaRepo.find.mockResolvedValue([
+      makeAsset(newPhotoId, { ownerUserId: 'someone-else' }),
+    ]);
+
+    await expect(
+      service.addPhotos('gym-1', 'user-1', { photoMediaIds: [newPhotoId] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+});
+
 describe('GymsService.forceArchiveGym (BL-035)', () => {
   let gymRepo: {
     findOne: ReturnType<typeof vi.fn>;

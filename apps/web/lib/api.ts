@@ -14,7 +14,9 @@ import type {
   FlagQueueItem,
   ForceArchiveGymResult,
   ForceArchiveRouteResult,
+  Friendship,
   GradeConsensus,
+  GymActivity,
   GymDetail,
   GymDisputeQueueItem,
   HardDeleteGymResult,
@@ -27,6 +29,8 @@ import type {
   MediaPurpose,
   ModerateMediaInput,
   ModerationResult,
+  OutdoorAnalytics,
+  PendingFriendRequest,
   PinDetail,
   PublicUser,
   RegisterInput,
@@ -271,6 +275,22 @@ export function submitGym(input: SubmitGymInput): Promise<SubmitGymResult> {
   return sendJson<SubmitGymResult>('POST', '/api/gyms', input);
 }
 
+// AR-54 (Sept 7, 2026): the original submitter adding more photos after the
+// fact, no upper cap. Photos enter moderation PENDING like any upload.
+export function addGymPhotos(
+  gymId: string,
+  photoMediaIds: string[],
+): Promise<{ added: number }> {
+  return sendJson('POST', `/api/gyms/${gymId}/photos`, { photoMediaIds });
+}
+
+export function addRoutePhotos(
+  routeId: string,
+  photoMediaIds: string[],
+): Promise<{ added: number }> {
+  return sendJson('POST', `/api/routes/${routeId}/photos`, { photoMediaIds });
+}
+
 // ---------------------------------------------------------------------------
 // Presence-gated actions -- BL-009/010/011/014/015/017/018
 // ---------------------------------------------------------------------------
@@ -482,6 +502,61 @@ export function reportMedia(
   reason: string | undefined,
 ): Promise<{ mediaAssetId: string; moderationStatus: string }> {
   return sendJson('POST', `/api/media/${mediaAssetId}/reports`, { reason });
+}
+
+// ---------------------------------------------------------------------------
+// Gym Badges & Streaks -- AR-53, BL-x09/x10 (Sept 7 2026)
+// ---------------------------------------------------------------------------
+
+export function fetchGymActivity(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<GymActivity> {
+  return getJson<GymActivity>(`/api/users/${userId}/gym-activity`, signal);
+}
+
+export function updateBadgesPublic(
+  badgesPublic: boolean,
+): Promise<{ badgesPublic: boolean }> {
+  return sendJson('PATCH', '/api/users/me/badges-public', { badgesPublic });
+}
+
+// ---------------------------------------------------------------------------
+// Minimal friendship -- AR-53, BL-x11 (Sept 7 2026)
+// ---------------------------------------------------------------------------
+
+export function sendFriendRequest(addresseeId: string): Promise<Friendship> {
+  return sendJson<Friendship>('POST', '/api/friendships', { addresseeId });
+}
+
+export function fetchPendingFriendRequests(
+  signal?: AbortSignal,
+): Promise<PendingFriendRequest[]> {
+  return getJson<PendingFriendRequest[]>('/api/friendships/pending', signal);
+}
+
+export function acceptFriendRequest(id: string): Promise<Friendship> {
+  return sendJson<Friendship>('PATCH', `/api/friendships/${id}/accept`, {});
+}
+
+// Covers both Decline (a PENDING request) and Unadd (an ACTIVE friendship) --
+// FriendshipsService.remove() on the server tells them apart by status.
+export function removeFriendship(id: string): Promise<void> {
+  return sendJson<void>('DELETE', `/api/friendships/${id}`, undefined);
+}
+
+// ---------------------------------------------------------------------------
+// Outdoor analytics -- BL-036/037
+// ---------------------------------------------------------------------------
+
+export function fetchOutdoorAnalytics(
+  userId: string,
+  signal?: AbortSignal,
+): Promise<OutdoorAnalytics> {
+  return getJson<OutdoorAnalytics>(
+    `/api/users/${userId}/outdoor-analytics`,
+    signal,
+  );
 }
 
 // The Alerts tab's feed (Epic 6 half of §19.2). `since` is the client's

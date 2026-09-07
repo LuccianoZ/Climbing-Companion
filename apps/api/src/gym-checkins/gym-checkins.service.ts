@@ -12,6 +12,8 @@ import {
   STANDARD_PROXIMITY_METERS,
   isWithinProximity,
 } from '../common/geo/route-proximity.util';
+import { GymBadgesService } from '../gym-badges/gym-badges.service';
+import { GymStreaksService } from '../gym-streaks/gym-streaks.service';
 
 // Architecture.md §5 / AR-18-style 300m-gated write. BL-024: a Verified
 // Climber within 300m of a gym can check in, gated the same way grade
@@ -28,10 +30,20 @@ import {
 // AR-39: BL-025 (a self-recorded per-facility grade tier, originally
 // scoped alongside check-in under this same Epic 5) was cut from scope
 // before implementation began. This service has no tier-reading or
-// tier-writing method, and none is planned.
+// tier-writing method.
+//
+// AR-53 (Sept 7, 2026): a check-in now also mints a Gym Badge (first visit
+// only) and updates the gym's Streak counter, both inside this same
+// transaction -- same "commits atomically with the write that triggered
+// it" convention as NotificationsService.createNotification (AR-43) and
+// GradeVoteService.computeConsensus (AR-18).
 @Injectable()
 export class GymCheckinsService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly gymBadgesService: GymBadgesService,
+    private readonly gymStreaksService: GymStreaksService,
+  ) {}
 
   async checkIn(
     gymId: string,
@@ -58,6 +70,21 @@ export class GymCheckinsService {
           `Climber must be within ${STANDARD_PROXIMITY_METERS}m of the gym to check in`,
         );
       }
+
+      const checkedInAt = new Date();
+      await this.gymBadgesService.mintIfAbsent(
+        manager,
+        userId,
+        gymId,
+        gym.name,
+        checkedInAt,
+      );
+      await this.gymStreaksService.recordCheckIn(
+        manager,
+        userId,
+        gymId,
+        checkedInAt,
+      );
 
       const checkinRepo = manager.getRepository(GymCheckin);
       return checkinRepo.save(checkinRepo.create({ gymId, userId }));

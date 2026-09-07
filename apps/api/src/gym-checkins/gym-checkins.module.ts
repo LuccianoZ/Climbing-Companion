@@ -5,6 +5,8 @@ import { Gym } from '../gyms/entities/gym.entity';
 import { GymCheckin } from './entities/gym-checkin.entity';
 import { GymCheckinsController } from './gym-checkins.controller';
 import { GymCheckinsService } from './gym-checkins.service';
+import { GymBadgesModule } from '../gym-badges/gym-badges.module';
+import { GymStreaksModule } from '../gym-streaks/gym-streaks.module';
 
 // Epic 5 (Sprint 3, BL-024). A new top-level module rather than folding
 // into GymsModule -- following the precedent GradeVotesModule/
@@ -14,7 +16,14 @@ import { GymCheckinsService } from './gym-checkins.service';
 // same reason ClimbLogsModule imports Route directly rather than
 // RoutesService: this module only ever reads a gym to check it exists.
 @Module({
-  imports: [TypeOrmModule.forFeature([Gym, GymCheckin]), AuthModule],
+  imports: [
+    TypeOrmModule.forFeature([Gym, GymCheckin]),
+    AuthModule,
+    // AR-53 (Sept 7, 2026): check-in mints a Gym Badge and updates a Gym
+    // Streak in the same transaction (BL-x09/x10).
+    GymBadgesModule,
+    GymStreaksModule,
+  ],
   controllers: [GymCheckinsController],
   providers: [GymCheckinsService],
 })

@@ -1,4 +1,8 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { SubmitRouteDto } from './dto/submit-route.dto';
@@ -692,5 +696,101 @@ describe('RoutesService.forceArchiveRoute (BL-035)', () => {
     expect(result.routeArchived).toBe(true);
     expect(result.cragArchived).toBe(false);
     expect(cragRepo.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('RoutesService.addPhotos (AR-54)', () => {
+  const newPhotoId = '44444444-4444-4444-8444-444444444444';
+
+  function baseRoute(overrides: Partial<Route> = {}): Route {
+    return {
+      id: 'route-1',
+      cragId: 'crag-1',
+      name: 'Solar Power',
+      location: { type: 'Point', coordinates: [-78.8784, 42.8864] },
+      discipline: OutdoorDiscipline.SPORT_CLIMBING,
+      gearRequirements: [],
+      summary: 'summary',
+      proposedGradeOrdinal: 10,
+      boltCount: 8,
+      minRopeLengthM: null,
+      status: LifecycleStatus.VERIFIED,
+      submittedBy: 'user-1',
+      verifiedAt: new Date(),
+      archivedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    };
+  }
+
+  let routeRepo: { findOne: ReturnType<typeof vi.fn> };
+  let mediaRepo: {
+    find: ReturnType<typeof vi.fn>;
+    save: ReturnType<typeof vi.fn>;
+  };
+  let service: RoutesService;
+
+  beforeEach(() => {
+    routeRepo = { findOne: vi.fn() };
+    mediaRepo = {
+      find: vi.fn().mockResolvedValue([makePhoto(newPhotoId)]),
+      save: vi.fn((rows: MediaAsset[]) => rows),
+    };
+    const txManager = {
+      getRepository: vi.fn((e: unknown) => {
+        if (e === Route) return routeRepo;
+        if (e === MediaAsset) return mediaRepo;
+        throw new Error('unexpected repo');
+      }),
+    };
+    const dataSource = {
+      transaction: vi.fn((cb: (m: typeof txManager) => unknown) =>
+        cb(txManager),
+      ),
+    };
+    service = new RoutesService(dataSource as unknown as DataSource);
+  });
+
+  it('lets the original submitter add a single extra photo, staying PENDING', async () => {
+    routeRepo.findOne.mockResolvedValue(baseRoute({ submittedBy: 'user-1' }));
+
+    const result = await service.addPhotos('route-1', 'user-1', {
+      photoMediaIds: [newPhotoId],
+    });
+
+    expect(result).toEqual({ added: 1 });
+    const saved = mediaRepo.save.mock.calls[0][0] as MediaAsset[];
+    expect(saved[0].subjectRouteId).toBe('route-1');
+    expect(saved[0].moderationStatus).toBe(MediaModerationStatus.PENDING);
+  });
+
+  it('rejects anyone other than the original submitter', async () => {
+    routeRepo.findOne.mockResolvedValue(baseRoute({ submittedBy: 'user-1' }));
+
+    await expect(
+      service.addPhotos('route-1', 'someone-else', {
+        photoMediaIds: [newPhotoId],
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+    expect(mediaRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('404s for an unknown route', async () => {
+    routeRepo.findOne.mockResolvedValue(null);
+    await expect(
+      service.addPhotos('route-x', 'user-1', { photoMediaIds: [newPhotoId] }),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('rejects a photo not owned by the submitter', async () => {
+    routeRepo.findOne.mockResolvedValue(baseRoute({ submittedBy: 'user-1' }));
+    mediaRepo.find.mockResolvedValue([
+      makePhoto(newPhotoId, { ownerUserId: 'someone-else' }),
+    ]);
+
+    await expect(
+      service.addPhotos('route-1', 'user-1', { photoMediaIds: [newPhotoId] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 });

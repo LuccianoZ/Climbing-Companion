@@ -84,6 +84,12 @@ export const VERIFIED_GYM_PIN: MapPin = {
   status: 'VERIFIED',
 };
 
+// AR-54: a submitter id distinct from CLIMBER/ADMIN (declared further down
+// this file), for detail fixtures where nothing tests the "add more photos"
+// affordance -- keeps it hidden in every pre-existing scenario exactly as
+// before that field existed.
+const OTHER_SUBMITTER_ID = '99999999-0000-4000-8000-000000000001';
+
 export const CRAG_DETAIL: CragDetail = {
   id: CRAG_ID,
   kind: 'CRAG',
@@ -113,6 +119,8 @@ export const CRAG_DETAIL: CragDetail = {
       verificationCount: 2,
       verificationsRequired: 4,
       photosPending: false,
+      photoMediaIds: [],
+      submittedBy: OTHER_SUBMITTER_ID,
     },
   ],
 };
@@ -137,6 +145,8 @@ export const GYM_DETAIL: GymDetail = {
   operatingHours: SAMPLE_HOURS,
   ianaTimezone: 'America/New_York',
   photosPending: false,
+  photoMediaIds: [],
+  submittedBy: OTHER_SUBMITTER_ID,
 };
 
 // Deliberately far from the map's default centre so a successful fly-to is
@@ -282,6 +292,8 @@ export const UNVERIFIED_GYM_DETAIL: GymDetail = {
   operatingHours: SAMPLE_HOURS,
   ianaTimezone: 'America/Denver',
   photosPending: true,
+  photoMediaIds: [],
+  submittedBy: OTHER_SUBMITTER_ID,
 };
 
 export const SUBMIT_ROUTE_RESULT: SubmitRouteResult = {

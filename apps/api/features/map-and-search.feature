@@ -87,6 +87,20 @@ Feature: Map query surface and DB-only name search
     And the detail panel offers disciplines "BOULDERING,LEAD"
     And the detail panel has no route list
 
+  Scenario: A gym with no approved photos shows an empty gallery, not an error (AR-54)
+    When the detail panel for gym "Vertical Edge Climbing Gym" is requested
+    Then the detail panel has 0 approved photos
+
+  Scenario: An approved gym photo appears in the gallery (AR-54, fixes the missing-gallery bug)
+    Given a submission photo for gym "Vertical Edge Climbing Gym" is approved
+    When the detail panel for gym "Vertical Edge Climbing Gym" is requested
+    Then the detail panel has 1 approved photo
+
+  Scenario: An approved route photo appears in its crag panel's row (AR-54)
+    Given a submission photo for route "Solar Power" is approved
+    When the detail panel for crag "Solar Power" is requested
+    Then the detail panel route "Solar Power" has 1 approved photo
+
   Scenario: An archived crag's detail panel is unreachable rather than empty
     Given every route under crag "Solar Power" is ARCHIVED
     And the crag "Solar Power" is ARCHIVED

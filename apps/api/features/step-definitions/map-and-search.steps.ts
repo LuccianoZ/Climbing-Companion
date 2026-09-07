@@ -30,6 +30,8 @@ interface DetailRoutePayload {
   grade: { source: string; gradeOrdinal: number; totalVotes: number };
   verificationCount: number;
   verificationsRequired: number;
+  // AR-54: ordered APPROVED photo ids -- see DetailPayload's field.
+  photoMediaIds?: string[];
 }
 
 interface DetailPayload {
@@ -37,6 +39,10 @@ interface DetailPayload {
   name: string;
   routes?: DetailRoutePayload[];
   disciplinesOffered?: string[];
+  // AR-54 (Sept 7, 2026): fixes the bug where the detail panel had no way to
+  // render a gallery once photos WERE approved -- only `photosPending` came
+  // back before. GYM-only field (routes carry their own, above).
+  photoMediaIds?: string[];
 }
 
 interface SearchResultPayload {
@@ -312,6 +318,65 @@ Then(
 Then('the detail panel has no route list', function (this: AuthWorld) {
   assert.equal(detail(this).routes, undefined);
 });
+
+// AR-54 (Sept 7, 2026): the gallery-rendering bug fix. Ordered oldest-first;
+// only APPROVED rows ever appear here, never PENDING/REJECTED ones.
+Then(
+  'the detail panel has {int} approved photo(s)',
+  function (this: AuthWorld, count: number) {
+    assert.equal(detail(this).photoMediaIds?.length ?? 0, count);
+  },
+);
+
+Then(
+  'the detail panel route {string} has {int} approved photo(s)',
+  function (this: AuthWorld, routeName: string, count: number) {
+    const route = findRoute(this, routeName);
+    assert.equal(route.photoMediaIds?.length ?? 0, count);
+  },
+);
+
+// Marks the oldest unapproved submission photo for the named gym/crag's
+// founding route APPROVED, directly via SQL -- a self-contained fixture
+// step rather than routing through the full moderation.feature flow, which
+// this scenario isn't about.
+Given(
+  'a submission photo for gym {string} is approved',
+  async function (this: AuthWorld, gymName: string) {
+    const dataSource = this.app.get(DataSource);
+    const gymId = await idOf(this, 'gyms', gymName);
+    await dataSource.query(
+      `UPDATE "media_assets" SET "moderation_status" = 'APPROVED'
+        WHERE "id" = (
+          SELECT "id" FROM "media_assets"
+           WHERE "subject_gym_id" = $1::uuid
+           ORDER BY "created_at" ASC LIMIT 1
+        )`,
+      [gymId],
+    );
+  },
+);
+
+Given(
+  'a submission photo for route {string} is approved',
+  async function (this: AuthWorld, routeName: string) {
+    const dataSource = this.app.get(DataSource);
+    const rows: Array<{ id: string }> = await dataSource.query(
+      `SELECT id FROM "routes" WHERE name = $1`,
+      [routeName],
+    );
+    assert.ok(rows[0]?.id, `expected a seeded route named "${routeName}"`);
+    await dataSource.query(
+      `UPDATE "media_assets" SET "moderation_status" = 'APPROVED'
+        WHERE "id" = (
+          SELECT "id" FROM "media_assets"
+           WHERE "subject_route_id" = $1::uuid
+           ORDER BY "created_at" ASC LIMIT 1
+        )`,
+      [rows[0].id],
+    );
+  },
+);
 
 Then(
   'the detail panel request is rejected as not found',

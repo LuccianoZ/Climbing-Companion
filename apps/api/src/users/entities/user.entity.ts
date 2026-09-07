@@ -61,6 +61,13 @@ export class User {
   @Column({ name: 'is_private', type: 'boolean', default: false })
   isPrivate: boolean;
 
+  // AR-53 (Sept 7, 2026): independent of `isPrivate` (photo gallery only).
+  // Gates a non-friend's view of the gym-badge shelf; friends and the owner
+  // always see it regardless of this flag. `gym_streaks` has no equivalent
+  // column -- always friends-only, full stop.
+  @Column({ name: 'badges_public', type: 'boolean', default: true })
+  badgesPublic: boolean;
+
   @Column({ name: 'strike_count', type: 'smallint', default: 0 })
   strikeCount: number;
 

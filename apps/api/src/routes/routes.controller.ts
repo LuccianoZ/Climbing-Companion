@@ -20,6 +20,7 @@ import { Roles } from '../auth/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { SubmitRouteDto } from './dto/submit-route.dto';
 import { AdminUpdateRouteDto } from './dto/admin-update-route.dto';
+import { AddRoutePhotosDto } from './dto/add-route-photos.dto';
 import { RoutesService } from './routes.service';
 
 type RouteRequest = AuthenticatedRequest & { mockGps?: MockGpsLocation };
@@ -49,6 +50,19 @@ export class RoutesController {
       deviceLocation,
       isAdmin,
     });
+  }
+
+  // Sept 7, 2026 (AR-54): the original submitter adds more photos to their
+  // own climb, no cap. Service-layer 403 for anyone else.
+  @Post(':routeId/photos')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(SessionGuard)
+  addPhotos(
+    @Param('routeId', ParseUUIDPipe) routeId: string,
+    @Body() dto: AddRoutePhotosDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.routesService.addPhotos(routeId, req.user.id, dto);
   }
 
   // BL-x07 / Foundation §14: the admin editor's read (includes archived).

@@ -5,6 +5,8 @@ import { GymCheckin } from './entities/gym-checkin.entity';
 import { Gym, GymDiscipline } from '../gyms/entities/gym.entity';
 import { LifecycleStatus } from '../common/enums/lifecycle-status.enum';
 import type { CheckInDto } from './dto/check-in.dto';
+import type { GymBadgesService } from '../gym-badges/gym-badges.service';
+import type { GymStreaksService } from '../gym-streaks/gym-streaks.service';
 
 describe('GymCheckinsService', () => {
   let gymRepo: { findOne: ReturnType<typeof vi.fn> };
@@ -17,6 +19,8 @@ describe('GymCheckinsService', () => {
     query: ReturnType<typeof vi.fn>;
   };
   let dataSource: { transaction: ReturnType<typeof vi.fn> };
+  let gymBadgesService: { mintIfAbsent: ReturnType<typeof vi.fn> };
+  let gymStreaksService: { recordCheckIn: ReturnType<typeof vi.fn> };
   let service: GymCheckinsService;
 
   const gymId = 'gym-1';
@@ -63,7 +67,15 @@ describe('GymCheckinsService', () => {
     dataSource = {
       transaction: vi.fn((cb: (m: typeof manager) => unknown) => cb(manager)),
     };
-    service = new GymCheckinsService(dataSource as unknown as DataSource);
+    gymBadgesService = { mintIfAbsent: vi.fn().mockResolvedValue(undefined) };
+    gymStreaksService = {
+      recordCheckIn: vi.fn().mockResolvedValue(undefined),
+    };
+    service = new GymCheckinsService(
+      dataSource as unknown as DataSource,
+      gymBadgesService as unknown as GymBadgesService,
+      gymStreaksService as unknown as GymStreaksService,
+    );
   });
 
   const dto: CheckInDto = {};
@@ -103,5 +115,43 @@ describe('GymCheckinsService', () => {
     await service.checkIn(gymId, userId, dto, location);
 
     expect(checkinRepo.save).toHaveBeenCalledTimes(2);
+  });
+
+  // AR-53 (Sept 7, 2026): a successful check-in mints a badge and records a
+  // streak in the same transaction, before the gym_checkins row itself is
+  // written -- both services receive the same EntityManager the check-in
+  // insert uses.
+  it('mints a badge and records a streak inside the same transaction on a successful check-in', async () => {
+    const gym = baseGym({ name: 'Chalk Line Bouldering' });
+    gymRepo.findOne.mockResolvedValue(gym);
+    manager.query.mockResolvedValueOnce([{ within: true }]);
+
+    await service.checkIn(gymId, userId, dto, location);
+
+    expect(gymBadgesService.mintIfAbsent).toHaveBeenCalledWith(
+      manager,
+      userId,
+      gymId,
+      gym.name,
+      expect.any(Date),
+    );
+    expect(gymStreaksService.recordCheckIn).toHaveBeenCalledWith(
+      manager,
+      userId,
+      gymId,
+      expect.any(Date),
+    );
+  });
+
+  it('does not mint a badge or record a streak when the climber is outside 300m', async () => {
+    gymRepo.findOne.mockResolvedValue(baseGym());
+    manager.query.mockResolvedValueOnce([{ within: false }]);
+
+    await expect(service.checkIn(gymId, userId, dto, location)).rejects.toThrow(
+      ForbiddenException,
+    );
+
+    expect(gymBadgesService.mintIfAbsent).not.toHaveBeenCalled();
+    expect(gymStreaksService.recordCheckIn).not.toHaveBeenCalled();
   });
 });

@@ -42,6 +42,14 @@
   /* The translucent-grey treatment BL-020 requires for UNVERIFIED pins. */
   --color-dormant: #9b968f;
 
+  /* BL-036/037's Attempted series, paired against --color-clay-deep for
+     Completed. Validated with the dataviz skill's palette checker
+     (node validate_palette.js "#a4432f,#2a78d6" --mode light): passes
+     lightness band, chroma floor, CVD separation (deltaE 25.1 deutan) and
+     contrast. clay-deep alone failed against every other existing token
+     here (ink-soft reads as gray; moss-deep is a red/green CVD collision). */
+  --color-chart-attempted: #2a78d6;
+
   --font-sans: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
 
   --radius-card: 14px;

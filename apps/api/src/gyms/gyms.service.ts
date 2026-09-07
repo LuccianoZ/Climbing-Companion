@@ -16,6 +16,7 @@ import {
   type ProximityLocation,
 } from '../common/geo/route-proximity.util';
 import {
+  appendSubmissionPhotos,
   linkSubmissionPhotos,
   listSubmissionPhotos,
   syncSubmissionPhotos,
@@ -25,6 +26,7 @@ import {
 import { SubmitGymDto } from './dto/submit-gym.dto';
 import { AdminVerifyGymDto } from './dto/admin-verify-gym.dto';
 import { AdminUpdateGymDto } from './dto/admin-update-gym.dto';
+import { AddGymPhotosDto } from './dto/add-gym-photos.dto';
 
 export interface ForceArchiveGymResult {
   gymId: string;
@@ -142,6 +144,40 @@ export class GymsService {
       });
 
       return gym;
+    });
+  }
+
+  // Sept 7, 2026 (AR-54): the original submitter adds more photos to their
+  // own gym, no cap, once the >= 3 minimum was already met at submission.
+  // Added photos enter moderation PENDING like any other upload -- this is
+  // not an admin-authority action (contrast adminUpdateGym's
+  // syncSubmissionPhotos, which auto-approves).
+  async addPhotos(
+    gymId: string,
+    userId: string,
+    dto: AddGymPhotosDto,
+  ): Promise<{ added: number }> {
+    return this.dataSource.transaction(async (manager) => {
+      const gym = await manager
+        .getRepository(Gym)
+        .findOne({ where: { id: gymId } });
+      if (!gym) {
+        throw new NotFoundException(`Gym "${gymId}" not found`);
+      }
+      if (gym.submittedBy !== userId) {
+        throw new ForbiddenException(
+          'Only the original submitter can add more photos to this gym',
+        );
+      }
+
+      const assets = await appendSubmissionPhotos({
+        manager,
+        mediaIds: dto.photoMediaIds,
+        ownerUserId: userId,
+        purpose: MediaPurpose.GYM_SUBMISSION_PHOTO,
+        subjectGymId: gymId,
+      });
+      return { added: assets.length };
     });
   }
 

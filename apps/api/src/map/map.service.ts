@@ -6,7 +6,7 @@ import {
   GymDiscipline,
   OperatingHours,
 } from '../gyms/entities/gym.entity';
-import { hasApprovedSubmissionPhoto } from '../common/media/link-submission-photos.util';
+import { listApprovedPhotoIds } from '../common/media/link-submission-photos.util';
 import {
   GearRequirement,
   OutdoorDiscipline,
@@ -61,7 +61,15 @@ export interface MapRouteSummary {
   verificationsRequired: number;
   // BL-x05: true while no ROUTE_SUBMISSION_PHOTO for this route has been
   // APPROVED yet -- drives the "Photos pending admin approval" panel state.
+  // Sept 7, 2026 (AR-54): now simply `photoMediaIds.length === 0`.
   photosPending: boolean;
+  // Sept 7, 2026 (AR-54): ordered (oldest-first) APPROVED photo ids, fixing
+  // the bug where the detail panel had no way to render a gallery once
+  // photos WERE approved -- fetch each via GET /api/media/:id.
+  photoMediaIds: string[];
+  // Sept 7, 2026 (AR-54): lets the client show an "add more photos"
+  // affordance only to the original submitter.
+  submittedBy: string;
 }
 
 export interface CragDetail {
@@ -87,7 +95,12 @@ export interface GymDetail {
   operatingHours: OperatingHours;
   ianaTimezone: string;
   // BL-x05: true while no GYM_SUBMISSION_PHOTO for this gym is APPROVED yet.
+  // Sept 7, 2026 (AR-54): now simply `photoMediaIds.length === 0`.
   photosPending: boolean;
+  // Sept 7, 2026 (AR-54): ordered (oldest-first) APPROVED photo ids -- see
+  // MapRouteSummary's identical field for why.
+  photoMediaIds: string[];
+  submittedBy: string;
 }
 
 export interface MapSearchResult {
@@ -210,12 +223,9 @@ export class MapService {
         this.dataSource.manager,
         route,
       );
-      const photosPending = !(await hasApprovedSubmissionPhoto(
-        this.dataSource,
-        {
-          routeId: route.id,
-        },
-      ));
+      const photoMediaIds = await listApprovedPhotoIds(this.dataSource, {
+        routeId: route.id,
+      });
       summaries.push({
         id: route.id,
         name: route.name,
@@ -230,7 +240,9 @@ export class MapService {
         grade,
         verificationCount: verificationCounts.get(route.id) ?? 0,
         verificationsRequired: VERIFICATIONS_REQUIRED_TO_VERIFY,
-        photosPending,
+        photosPending: photoMediaIds.length === 0,
+        photoMediaIds,
+        submittedBy: route.submittedBy,
       });
     }
 
@@ -255,9 +267,9 @@ export class MapService {
       throw new NotFoundException(`Gym "${gymId}" not found`);
     }
 
-    const photosPending = !(await hasApprovedSubmissionPhoto(this.dataSource, {
+    const photoMediaIds = await listApprovedPhotoIds(this.dataSource, {
       gymId: gym.id,
-    }));
+    });
 
     return {
       id: gym.id,
@@ -269,7 +281,9 @@ export class MapService {
       disciplinesOffered: gym.disciplinesOffered ?? [],
       operatingHours: gym.operatingHours ?? {},
       ianaTimezone: gym.ianaTimezone,
-      photosPending,
+      photosPending: photoMediaIds.length === 0,
+      photoMediaIds,
+      submittedBy: gym.submittedBy,
     };
   }
 

@@ -69,6 +69,7 @@ const UNVERIFIED_GYM = {
   disciplinesOffered: [GymDiscipline.BOULDERING, GymDiscipline.LEAD],
   operatingHours: GYM_HOURS,
   ianaTimezone: 'America/New_York',
+  submittedBy: '99999999-9999-4999-8999-999999999991',
 };
 
 const ROUTE = {
@@ -83,6 +84,7 @@ const ROUTE = {
   status: LifecycleStatus.UNVERIFIED,
   location: point(37.734, -119.5679),
   proposedGradeOrdinal: 14,
+  submittedBy: '99999999-9999-4999-8999-999999999992',
 };
 
 const CONSENSUS = {
@@ -347,6 +349,19 @@ describe('MapService.getCragDetail', () => {
     const detail = await service.getCragDetail(CRAG.id);
     expect(detail.routes[0].gearRequirements).toEqual([]);
   });
+
+  it("carries each route's approved photo ids and submitter (AR-54)", async () => {
+    const { service } = makeService({
+      findOneResult: CRAG,
+      routes: [ROUTE],
+      queryResult: [{ id: 'route-photo-1' }],
+    });
+
+    const detail = await service.getCragDetail(CRAG.id);
+    expect(detail.routes[0].photoMediaIds).toEqual(['route-photo-1']);
+    expect(detail.routes[0].photosPending).toBe(false);
+    expect(detail.routes[0].submittedBy).toBe(ROUTE.submittedBy);
+  });
 });
 
 describe('MapService.getGymDetail', () => {
@@ -368,17 +383,20 @@ describe('MapService.getGymDetail', () => {
       // BL-x05: no APPROVED submission photo staged, so the panel shows
       // the pending state.
       photosPending: true,
+      photoMediaIds: [],
+      submittedBy: UNVERIFIED_GYM.submittedBy,
     });
   });
 
-  it('clears photosPending once a submission photo is APPROVED (BL-x05)', async () => {
+  it('clears photosPending once a submission photo is APPROVED (BL-x05), and lists its id (AR-54)', async () => {
     const { service } = makeService({
       findOneResult: UNVERIFIED_GYM,
-      queryResult: [{ '1': 1 }],
+      queryResult: [{ id: 'photo-1' }],
     });
 
     const detail = await service.getGymDetail(UNVERIFIED_GYM.id);
     expect(detail.photosPending).toBe(false);
+    expect(detail.photoMediaIds).toEqual(['photo-1']);
   });
 
   it('defaults a null disciplines_offered array to an empty list', async () => {

@@ -16,8 +16,10 @@ import {
   type OperatingHours,
   type PinDetail,
 } from '@/lib/types';
+import { AddMorePhotosForm } from './AddMorePhotosForm';
 import { GradeScaleToggle } from './GradeScaleToggle';
 import { InRangeActions, type InRangeAction } from './InRangeActions';
+import { PhotoGallery } from './PhotoGallery';
 import { VoteDistribution } from './VoteDistribution';
 
 // BL-021 + Sept 3 revision (AR-51, BL-x01/x04/x05). The panel header shows
@@ -34,6 +36,7 @@ export type DetailSheetState =
 export function DetailSheet({
   state,
   viewer,
+  viewerUserId,
   scale,
   onScaleChange,
   onAction,
@@ -41,6 +44,10 @@ export function DetailSheet({
 }: {
   state: DetailSheetState;
   viewer: { latitude: number; longitude: number } | null;
+  // AR-54: the signed-in viewer's own id, compared against a gym/route's
+  // `submittedBy` to decide whether to show the "add more photos" form.
+  // `null` for a signed-out Visitor -- the form never renders for one.
+  viewerUserId: string | null;
   scale: GradeScale;
   onScaleChange: (next: GradeScale) => void;
   onAction: (action: InRangeAction) => void;
@@ -149,9 +156,13 @@ export function DetailSheet({
             />
 
             {detail.kind === 'GYM' ? (
-              <GymBody gym={detail} />
+              <GymBody gym={detail} viewerUserId={viewerUserId} />
             ) : (
-              <CragBody routes={detail.routes} scale={scale} />
+              <CragBody
+                routes={detail.routes}
+                scale={scale}
+                viewerUserId={viewerUserId}
+              />
             )}
           </>
         ) : null}
@@ -208,10 +219,23 @@ function PhotosPendingNotice() {
   );
 }
 
-function GymBody({ gym }: { gym: GymDetail }) {
+function GymBody({
+  gym,
+  viewerUserId,
+}: {
+  gym: GymDetail;
+  viewerUserId: string | null;
+}) {
   return (
     <div className="space-y-4">
-      {gym.photosPending ? <PhotosPendingNotice /> : null}
+      {gym.photoMediaIds.length > 0 ? (
+        <PhotoGallery photoIds={gym.photoMediaIds} />
+      ) : gym.photosPending ? (
+        <PhotosPendingNotice />
+      ) : null}
+      {viewerUserId !== null && viewerUserId === gym.submittedBy ? (
+        <AddMorePhotosForm kind="GYM" entityId={gym.id} />
+      ) : null}
 
       <div data-testid="gym-disciplines">
         <p className="label-caps text-[9.5px] text-ink-faint">
@@ -367,9 +391,11 @@ function toMin(hhmm: string): number {
 function CragBody({
   routes,
   scale,
+  viewerUserId,
 }: {
   routes: MapRouteSummary[];
   scale: GradeScale;
+  viewerUserId: string | null;
 }) {
   if (routes.length === 0) {
     return (
@@ -385,7 +411,12 @@ function CragBody({
         Routes ({routes.length})
       </p>
       {routes.map((route) => (
-        <RouteCard key={route.id} route={route} scale={scale} />
+        <RouteCard
+          key={route.id}
+          route={route}
+          scale={scale}
+          viewerUserId={viewerUserId}
+        />
       ))}
     </div>
   );
@@ -394,9 +425,11 @@ function CragBody({
 function RouteCard({
   route,
   scale,
+  viewerUserId,
 }: {
   route: MapRouteSummary;
   scale: GradeScale;
+  viewerUserId: string | null;
 }) {
   const progress = Math.min(
     1,
@@ -433,7 +466,14 @@ function RouteCard({
         </span>
       </header>
 
-      {route.photosPending ? <PhotosPendingNotice /> : null}
+      {route.photoMediaIds.length > 0 ? (
+        <PhotoGallery photoIds={route.photoMediaIds} />
+      ) : route.photosPending ? (
+        <PhotosPendingNotice />
+      ) : null}
+      {viewerUserId !== null && viewerUserId === route.submittedBy ? (
+        <AddMorePhotosForm kind="ROUTE" entityId={route.id} />
+      ) : null}
 
       <p className="text-[11.5px] leading-relaxed text-ink-soft">{route.summary}</p>
 

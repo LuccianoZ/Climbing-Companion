@@ -92,6 +92,83 @@ export const SUPPORT_EMAIL = 'support@climbingcompanion.com';
 
 export type MediaModerationStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
+// --- gym badges & streaks (AR-53, BL-x09/x10, Sept 7 2026) -----------------
+
+// GymBadgesController's shape. `gymId` is null once the gym has been
+// hard-deleted -- the badge stays permanent via its own name/initials
+// snapshot regardless (Foundation §8).
+export interface GymBadge {
+  id: string;
+  userId: string;
+  gymId: string | null;
+  gymNameSnapshot: string;
+  gymInitialsSnapshot: string;
+  earnedAt: string;
+}
+
+// GymStreaksService.listVisibleStreaks's joined view -- a streak row alone
+// carries no gym name (no permanence requirement, unlike a badge), so the
+// API joins it in for display.
+export interface GymStreakView {
+  gymId: string;
+  gymName: string;
+  currentStreakMonths: number;
+}
+
+// GET /api/users/:userId/gym-activity. `badgesPublic` and `isOwnProfile` are
+// echoed back so a self-view can render the toggle without a second request.
+export interface GymActivity {
+  badges: GymBadge[];
+  streaks: GymStreakView[];
+  badgesPublic: boolean;
+  isOwnProfile: boolean;
+}
+
+// --- minimal friendship (AR-53, BL-x11, Sept 7 2026) -----------------------
+// Pulled forward from Epic 9 (BL-039/040) because Gym Badge/Streak
+// visibility depends on a friend relation. Directory search (BL-041), DMs
+// and reviews stay Epic 9 -- there is deliberately no "find someone to
+// friend" UI yet (Foundation §21 risk 11).
+
+export type FriendshipStatus = 'PENDING' | 'ACTIVE';
+
+// FriendshipsService.listPendingForUser's joined view, for the "Pending
+// Friend Requests" view Foundation §12 names explicitly.
+export interface PendingFriendRequest {
+  id: string;
+  requesterId: string;
+  requesterEmail: string;
+  requesterDisplayName: string;
+  createdAt: string;
+}
+
+export interface Friendship {
+  id: string;
+  requesterId: string;
+  addresseeId: string;
+  status: FriendshipStatus;
+  createdAt: string;
+  respondedAt: string | null;
+}
+
+// --- outdoor analytics (BL-036/037) ----------------------------------------
+
+export interface GradeDistributionPoint {
+  gradeOrdinal: number;
+  completed: number;
+  attempted: number;
+}
+
+export interface DisciplineAnalytics {
+  completed: number;
+  attempted: number;
+  // completed / (completed + attempted); 0 when there are no logs, never NaN.
+  completionRate: number;
+  gradeDistribution: GradeDistributionPoint[];
+}
+
+export type OutdoorAnalytics = Record<OutdoorDiscipline, DisciplineAnalytics>;
+
 // --- moderation & notifications (Epic 6, BL-026-030) ----------------------
 
 export type NotificationType =
@@ -152,7 +229,14 @@ export interface MapRouteSummary {
   verificationCount: number;
   verificationsRequired: number;
   // BL-x05: true while no ROUTE_SUBMISSION_PHOTO for this route is APPROVED.
+  // AR-54 (Sept 7, 2026): now simply `photoMediaIds.length === 0`.
   photosPending: boolean;
+  // AR-54: ordered (oldest-first) APPROVED photo ids -- fetch each via
+  // GET /api/media/:id for the gallery.
+  photoMediaIds: string[];
+  // AR-54: lets the client show an "add more photos" affordance only to the
+  // original submitter.
+  submittedBy: string;
 }
 
 export interface CragDetail {
@@ -178,7 +262,12 @@ export interface GymDetail {
   operatingHours: OperatingHours;
   ianaTimezone: string;
   // BL-x05: true while no GYM_SUBMISSION_PHOTO for this gym is APPROVED.
+  // AR-54 (Sept 7, 2026): now simply `photoMediaIds.length === 0`.
   photosPending: boolean;
+  // AR-54: ordered (oldest-first) APPROVED photo ids -- see
+  // MapRouteSummary's identical field for why.
+  photoMediaIds: string[];
+  submittedBy: string;
 }
 
 export type PinDetail = CragDetail | GymDetail;

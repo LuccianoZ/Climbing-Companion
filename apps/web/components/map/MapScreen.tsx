@@ -76,7 +76,7 @@ export function MapScreen() {
   const searchParams = useSearchParams();
   const deepLink = searchParams.toString();
   const router = useRouter();
-  const { status: sessionStatus } = useSession();
+  const { status: sessionStatus, user } = useSession();
 
   const [pins, setPins] = useState<MapPin[]>([]);
   const [pinsFailed, setPinsFailed] = useState(false);
@@ -275,6 +275,7 @@ export function MapScreen() {
         <DetailSheet
           state={sheet}
           viewer={viewer}
+          viewerUserId={user?.id ?? null}
           scale={scale}
           onScaleChange={setScale}
           onAction={handleAction}

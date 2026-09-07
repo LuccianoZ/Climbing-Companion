@@ -101,6 +101,83 @@ export async function linkSubmissionPhotos(
   return repo.save(assets);
 }
 
+// Sept 7, 2026 (AR-54): the original submitter may add more photos to their
+// own gym or route after the fact, with no upper cap, once the >= 3 minimum
+// has already been met at submission time. Unlike linkSubmissionPhotos,
+// there is no minimum-count gate here -- a submitter adding a single extra
+// photo is a legitimate call, not a validation error. Added photos keep
+// their default PENDING moderation_status (the submitter is not a
+// moderation authority, unlike admin's syncSubmissionPhotos) -- they surface
+// in the Admin Flag Queue like any other upload.
+export async function appendSubmissionPhotos(params: {
+  manager: EntityManager;
+  mediaIds: string[];
+  ownerUserId: string;
+  purpose:
+    MediaPurpose.ROUTE_SUBMISSION_PHOTO | MediaPurpose.GYM_SUBMISSION_PHOTO;
+  subjectRouteId?: string;
+  subjectGymId?: string;
+}): Promise<MediaAsset[]> {
+  const { manager, ownerUserId, purpose, subjectRouteId, subjectGymId } =
+    params;
+  const uniqueIds = [...new Set(params.mediaIds)];
+  if (uniqueIds.length === 0) {
+    throw new BadRequestException('Select at least one photo to add');
+  }
+
+  const repo = manager.getRepository(MediaAsset);
+  const assets = await repo.find({ where: { id: In(uniqueIds) } });
+  if (assets.length !== uniqueIds.length) {
+    throw new BadRequestException(
+      'One or more photo ids do not resolve to an uploaded image',
+    );
+  }
+
+  for (const asset of assets) {
+    if (asset.ownerUserId !== ownerUserId) {
+      throw new BadRequestException('A photo must have been uploaded by you');
+    }
+    if (asset.purpose !== purpose) {
+      throw new BadRequestException(
+        `Photo "${asset.id}" was not uploaded with purpose ${purpose}`,
+      );
+    }
+    if (asset.subjectRouteId || asset.subjectGymId) {
+      throw new BadRequestException(
+        `Photo "${asset.id}" is already attached to another gym or climb`,
+      );
+    }
+  }
+
+  for (const asset of assets) {
+    asset.subjectRouteId = subjectRouteId ?? null;
+    asset.subjectGymId = subjectGymId ?? null;
+  }
+
+  return repo.save(assets);
+}
+
+// The detail panel's public gallery (Sept 7, 2026 -- fixes a bug where
+// `photosPending` was the only field the map's read endpoints ever returned,
+// so a gallery had nothing to render once photos WERE approved). Ordered
+// oldest-first, same as listSubmissionPhotos. `photosPending` is now simply
+// "this array is empty" -- callers no longer need a second query.
+export async function listApprovedPhotoIds(
+  runner: SqlRunner,
+  subject: { routeId?: string; gymId?: string },
+): Promise<string[]> {
+  const column = subject.routeId ? 'subject_route_id' : 'subject_gym_id';
+  const id = subject.routeId ?? subject.gymId;
+  const rows = (await runner.query(
+    `SELECT "id" FROM "media_assets"
+      WHERE "${column}" = $1::uuid
+        AND "moderation_status" = 'APPROVED'
+      ORDER BY "created_at" ASC`,
+    [id],
+  )) as Array<{ id: string }>;
+  return rows.map((r) => r.id);
+}
+
 export interface SubmissionPhotoView {
   id: string;
   mimeType: string;

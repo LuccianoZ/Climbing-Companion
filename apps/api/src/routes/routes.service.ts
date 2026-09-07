@@ -19,6 +19,7 @@ import {
   type ProximityLocation,
 } from '../common/geo/route-proximity.util';
 import {
+  appendSubmissionPhotos,
   linkSubmissionPhotos,
   listSubmissionPhotos,
   syncSubmissionPhotos,
@@ -27,6 +28,7 @@ import {
 } from '../common/media/link-submission-photos.util';
 import { SubmitRouteDto } from './dto/submit-route.dto';
 import { AdminUpdateRouteDto } from './dto/admin-update-route.dto';
+import { AddRoutePhotosDto } from './dto/add-route-photos.dto';
 
 // Foundation §4 / Architecture §3: a route submission's coordinates are
 // checked against EXISTING CRAG locations (not the submitter's own
@@ -259,6 +261,39 @@ export class RoutesService {
       }
 
       return saved;
+    });
+  }
+
+  // Sept 7, 2026 (AR-54): the original submitter adds more photos to their
+  // own climb, no cap, once the >= 3 minimum was already met at submission.
+  // Added photos enter moderation PENDING like any other upload -- contrast
+  // adminUpdateRoute's syncSubmissionPhotos, which auto-approves.
+  async addPhotos(
+    routeId: string,
+    userId: string,
+    dto: AddRoutePhotosDto,
+  ): Promise<{ added: number }> {
+    return this.dataSource.transaction(async (manager) => {
+      const route = await manager
+        .getRepository(Route)
+        .findOne({ where: { id: routeId } });
+      if (!route) {
+        throw new NotFoundException(`Route "${routeId}" not found`);
+      }
+      if (route.submittedBy !== userId) {
+        throw new ForbiddenException(
+          'Only the original submitter can add more photos to this climb',
+        );
+      }
+
+      const assets = await appendSubmissionPhotos({
+        manager,
+        mediaIds: dto.photoMediaIds,
+        ownerUserId: userId,
+        purpose: MediaPurpose.ROUTE_SUBMISSION_PHOTO,
+        subjectRouteId: routeId,
+      });
+      return { added: assets.length };
     });
   }
 

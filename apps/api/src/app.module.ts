@@ -18,6 +18,12 @@ import { GymCheckinsModule } from './gym-checkins/gym-checkins.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { TestBypassModule } from './auth/test-bypass.module';
+import { GymBadgesModule } from './gym-badges/gym-badges.module';
+import { GymStreaksModule } from './gym-streaks/gym-streaks.module';
+import { FriendshipsModule } from './friendships/friendships.module';
+import { UsersModule } from './users/users.module';
+import { GymActivityModule } from './gym-activity/gym-activity.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -72,6 +78,18 @@ import { TestBypassModule } from './auth/test-bypass.module';
     // in-app notifications table pulled forward from Epic 7 (AR-43).
     NotificationsModule,
     ModerationModule,
+    // Epic 8 (Sept 7, 2026, AR-53): Gym Badges & Streaks replace BL-038's
+    // never-built grade tier (AR-39), plus the minimal friendship slice
+    // (BL-x11) their visibility rules depend on. GymBadgesModule/
+    // GymStreaksModule are also imported directly by GymCheckinsModule for
+    // the mint/record calls inside its own check-in transaction; registered
+    // here too as plain top-level modules, same as every prior epic.
+    GymBadgesModule,
+    GymStreaksModule,
+    UsersModule,
+    FriendshipsModule,
+    GymActivityModule,
+    AnalyticsModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()
     // above in this array -- ConfigModule.forRoot() synchronously loads
     // .env/.env.test into process.env as it's constructed, and
