@@ -14,7 +14,9 @@ import type {
   FlagQueueItem,
   ForceArchiveGymResult,
   ForceArchiveRouteResult,
-  Friendship,
+  CreatedInviteLink,
+  FriendSummary,
+  RedeemInviteResult,
   GradeConsensus,
   GymActivity,
   GymDetail,
@@ -30,7 +32,9 @@ import type {
   ModerateMediaInput,
   ModerationResult,
   OutdoorAnalytics,
-  PendingFriendRequest,
+  CreateReviewInput,
+  ReviewTargetType,
+  ReviewView,
   PinDetail,
   PublicUser,
   RegisterInput,
@@ -522,27 +526,61 @@ export function updateBadgesPublic(
 }
 
 // ---------------------------------------------------------------------------
-// Minimal friendship -- AR-53, BL-x11 (Sept 7 2026)
+// Invite-link friendship -- AR-55, BL-040/041 (Sept 7 2026 -- Part 2)
 // ---------------------------------------------------------------------------
 
-export function sendFriendRequest(addresseeId: string): Promise<Friendship> {
-  return sendJson<Friendship>('POST', '/api/friendships', { addresseeId });
+// The "Your friends" list in Profile.
+export function fetchFriends(signal?: AbortSignal): Promise<FriendSummary[]> {
+  return getJson<FriendSummary[]>('/api/friendships', signal);
 }
 
-export function fetchPendingFriendRequests(
+// Unadd -- unilateral removal of an ACTIVE friendship by either party.
+export function removeFriendship(friendshipId: string): Promise<void> {
+  return sendJson<void>(
+    'DELETE',
+    `/api/friendships/${friendshipId}`,
+    undefined,
+  );
+}
+
+// BL-041: mint a fresh single-use invite link for the current user. The
+// returned `url` is what they send to someone out-of-band.
+export function createFriendInviteLink(): Promise<CreatedInviteLink> {
+  return sendJson<CreatedInviteLink>('POST', '/api/friend-invite-links', {});
+}
+
+// BL-040: redeem a link. 404 = unknown, 410 = consumed/expired, 400 = your
+// own link -- the redeem page turns each into its own message.
+export function redeemFriendInviteLink(
+  token: string,
+): Promise<RedeemInviteResult> {
+  return sendJson<RedeemInviteResult>(
+    'POST',
+    `/api/friend-invite-links/${encodeURIComponent(token)}/redeem`,
+    {},
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Reviews -- BL-045
+// ---------------------------------------------------------------------------
+
+// Public read (Foundation §2: Visitors see reviews).
+export function fetchReviews(
+  targetType: ReviewTargetType,
+  targetId: string,
   signal?: AbortSignal,
-): Promise<PendingFriendRequest[]> {
-  return getJson<PendingFriendRequest[]>('/api/friendships/pending', signal);
+): Promise<ReviewView[]> {
+  return getJson<ReviewView[]>(
+    `/api/reviews?targetType=${targetType}&targetId=${encodeURIComponent(targetId)}`,
+    signal,
+  );
 }
 
-export function acceptFriendRequest(id: string): Promise<Friendship> {
-  return sendJson<Friendship>('PATCH', `/api/friendships/${id}/accept`, {});
-}
-
-// Covers both Decline (a PENDING request) and Unadd (an ACTIVE friendship) --
-// FriendshipsService.remove() on the server tells them apart by status.
-export function removeFriendship(id: string): Promise<void> {
-  return sendJson<void>('DELETE', `/api/friendships/${id}`, undefined);
+export function createReview(
+  input: CreateReviewInput,
+): Promise<{ id: string; body: string; createdAt: string }> {
+  return sendJson('POST', '/api/reviews', input);
 }
 
 // ---------------------------------------------------------------------------

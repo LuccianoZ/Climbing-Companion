@@ -124,32 +124,61 @@ export interface GymActivity {
   isOwnProfile: boolean;
 }
 
-// --- minimal friendship (AR-53, BL-x11, Sept 7 2026) -----------------------
-// Pulled forward from Epic 9 (BL-039/040) because Gym Badge/Streak
-// visibility depends on a friend relation. Directory search (BL-041), DMs
-// and reviews stay Epic 9 -- there is deliberately no "find someone to
-// friend" UI yet (Foundation §21 risk 11).
+// --- invite-link friendship (AR-55, BL-040/041, Sept 7 2026 -- Part 2) -----
+// Friendship is invite-link-based. There is no user directory and no
+// request/accept flow: a climber mints a single-use link (7-day expiry),
+// sends it out-of-band, and the first valid redemption makes the two
+// friends immediately.
 
-export type FriendshipStatus = 'PENDING' | 'ACTIVE';
+// FriendshipsService.listFriendsForUser -- the "Your friends" list in
+// Profile, with the unadd action.
+export interface FriendSummary {
+  friendshipId: string;
+  userId: string;
+  email: string;
+  displayName: string;
+  since: string;
+}
 
-// FriendshipsService.listPendingForUser's joined view, for the "Pending
-// Friend Requests" view Foundation §12 names explicitly.
-export interface PendingFriendRequest {
+// FriendInviteLinksService.create -- POST /api/friend-invite-links.
+export interface CreatedInviteLink {
+  token: string;
+  url: string;
+  expiresAt: string;
+}
+
+// FriendInviteLinksService.redeem -- POST /api/friend-invite-links/:token/redeem.
+export interface RedeemInviteResult {
+  outcome: 'FRIENDED' | 'ALREADY_FRIENDS';
+  friendshipId: string;
+  friendUserId: string;
+}
+
+// --- reviews (BL-045, AR-55 thread) ---------------------------------------
+
+export type ReviewTargetType = 'CRAG' | 'ROUTE' | 'GYM';
+
+// ReviewsService.listForTarget's joined view. `photoMediaId` is non-null
+// only once an admin has approved the photo (§10); `photoPending` flags a
+// still-withheld one.
+export interface ReviewView {
   id: string;
-  requesterId: string;
-  requesterEmail: string;
-  requesterDisplayName: string;
+  authorId: string;
+  authorDisplayName: string;
+  body: string;
+  photoMediaId: string | null;
+  photoPending: boolean;
   createdAt: string;
 }
 
-export interface Friendship {
-  id: string;
-  requesterId: string;
-  addresseeId: string;
-  status: FriendshipStatus;
-  createdAt: string;
-  respondedAt: string | null;
+export interface CreateReviewInput {
+  targetType: ReviewTargetType;
+  targetId: string;
+  body: string;
+  mediaAssetId?: string;
 }
+
+export const MAX_REVIEW_LENGTH = 250;
 
 // --- outdoor analytics (BL-036/037) ----------------------------------------
 
@@ -172,7 +201,9 @@ export type OutdoorAnalytics = Record<OutdoorDiscipline, DisciplineAnalytics>;
 // --- moderation & notifications (Epic 6, BL-026-030) ----------------------
 
 export type NotificationType =
-  | 'FRIEND_REQUEST_RECEIVED'
+  // AR-55 (Sept 7 2026 -- Part 2): renamed from FRIEND_REQUEST_RECEIVED.
+  // Fires when someone redeems your friend-invite link.
+  | 'FRIEND_ADDED'
   | 'IMAGE_REJECTED'
   | 'STRIKE_ISSUED';
 

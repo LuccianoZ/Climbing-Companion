@@ -46,7 +46,11 @@ export type ApiAction =
   | 'MODERATE_MEDIA'
   | 'REPORT_MEDIA'
   | 'NOTIFICATIONS'
-  | 'FRIEND_REQUEST'
+  | 'FRIENDS'
+  | 'CREATE_INVITE'
+  | 'REDEEM_INVITE'
+  | 'REVIEWS'
+  | 'CREATE_REVIEW'
   | 'GYM_ACTIVITY'
   | 'OUTDOOR_ANALYTICS'
   | 'BADGES_PUBLIC'
@@ -199,11 +203,26 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
   NOTIFICATIONS: {
     401: SESSION_EXPIRED,
   },
-  FRIEND_REQUEST: {
-    400: "You can't send a friend request to yourself.",
-    403: 'Only the person a request was sent to can accept or decline it.',
-    404: 'That friend request no longer exists.',
-    409: 'You already have a friendship or pending request with this person.',
+  FRIENDS: {
+    403: 'Only a friend can remove that friendship.',
+    404: 'That friendship no longer exists.',
+    401: SESSION_EXPIRED,
+  },
+  CREATE_INVITE: {
+    401: SESSION_EXPIRED,
+  },
+  REDEEM_INVITE: {
+    400: 'You cannot use your own invite link.',
+    404: 'This invite link is not valid.',
+    410: 'This invite link has already been used or has expired.',
+    401: SESSION_EXPIRED,
+  },
+  REVIEWS: {
+    404: 'That page no longer exists.',
+  },
+  CREATE_REVIEW: {
+    400: 'Check your review — it needs text (up to 250 characters) and no disallowed language.',
+    404: "That climb, crag, or gym no longer exists.",
     401: SESSION_EXPIRED,
   },
   GYM_ACTIVITY: {

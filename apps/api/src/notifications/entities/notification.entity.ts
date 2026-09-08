@@ -7,7 +7,10 @@ import {
 } from 'typeorm';
 
 export enum NotificationType {
-  FRIEND_REQUEST_RECEIVED = 'FRIEND_REQUEST_RECEIVED',
+  // AR-55 (Sept 7 2026 -- Part 2): renamed from FRIEND_REQUEST_RECEIVED.
+  // Fires when someone redeems your friend-invite link; recipient is the
+  // link's author (FriendInviteLinksService.redeem).
+  FRIEND_ADDED = 'FRIEND_ADDED',
   IMAGE_REJECTED = 'IMAGE_REJECTED',
   STRIKE_ISSUED = 'STRIKE_ISSUED',
 }

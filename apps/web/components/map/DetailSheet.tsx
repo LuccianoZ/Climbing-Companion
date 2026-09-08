@@ -20,6 +20,7 @@ import { AddMorePhotosForm } from './AddMorePhotosForm';
 import { GradeScaleToggle } from './GradeScaleToggle';
 import { InRangeActions, type InRangeAction } from './InRangeActions';
 import { PhotoGallery } from './PhotoGallery';
+import { ReviewsSection } from './ReviewsSection';
 import { VoteDistribution } from './VoteDistribution';
 
 // BL-021 + Sept 3 revision (AR-51, BL-x01/x04/x05). The panel header shows
@@ -164,6 +165,14 @@ export function DetailSheet({
                 viewerUserId={viewerUserId}
               />
             )}
+
+            {/* BL-045: reviews live at the bottom of the panel (Foundation
+                §9), on any lifecycle status. Composing needs a session. */}
+            <ReviewsSection
+              targetType={detail.kind}
+              targetId={detail.id}
+              canWrite={viewerUserId !== null}
+            />
           </>
         ) : null}
       </div>

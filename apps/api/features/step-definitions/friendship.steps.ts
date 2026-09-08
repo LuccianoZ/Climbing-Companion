@@ -4,73 +4,67 @@ import { DataSource } from 'typeorm';
 import { AuthWorld } from '../support/world';
 import { findUserIdByEmail } from '../support/seed';
 
-// BL-x11 (AR-53): minimal friendship, pulled forward from Epic 9
-// (BL-039/040) because Gym Badge/Streak visibility depends on it.
+// BL-040/041 (AR-55, Sept 7, 2026 -- Part 2): invite-link friendship. A
+// climber mints a single-use link and the first valid redemption makes the
+// two friends -- no request, no accept.
 
-async function findFriendshipId(
-  dataSource: DataSource,
-  requesterEmail: string,
-  addresseeEmail: string,
-): Promise<string> {
-  const requesterId = await findUserIdByEmail(dataSource, requesterEmail);
-  const addresseeId = await findUserIdByEmail(dataSource, addresseeEmail);
-  const [row] = await dataSource.query(
-    `SELECT id FROM friendships WHERE requester_id = $1 AND addressee_id = $2
-     ORDER BY created_at DESC LIMIT 1`,
-    [requesterId, addresseeId],
+async function redeem(
+  world: AuthWorld,
+  redeemerEmail: string,
+  creatorEmail: string,
+): Promise<void> {
+  const redeemerId = await findUserIdByEmail(
+    world.app.get(DataSource),
+    redeemerEmail,
   );
-  assert.ok(
-    row?.id,
-    `expected a friendship request from ${requesterEmail} to ${addresseeEmail}`,
-  );
-  return row.id as string;
+  const token = world.inviteTokensByCreator[creatorEmail];
+  assert.ok(token, `expected ${creatorEmail} to have created an invite link`);
+  world.response = await world.http
+    .post(`/api/friend-invite-links/${token}/redeem`)
+    .set('X-Test-Mock-Auth', redeemerId);
 }
 
-When(
-  '{string} sends a friend request to {string}',
-  async function (this: AuthWorld, fromEmail: string, toEmail: string) {
-    const fromId = await findUserIdByEmail(this.app.get(DataSource), fromEmail);
-    const toId = await findUserIdByEmail(this.app.get(DataSource), toEmail);
-    this.response = await this.http
-      .post('/api/friendships')
-      .set('X-Test-Mock-Auth', fromId)
-      .send({ addresseeId: toId });
+Given(
+  '{string} creates a friend invite link',
+  async function (this: AuthWorld, email: string) {
+    const userId = await findUserIdByEmail(this.app.get(DataSource), email);
+    const res = await this.http
+      .post('/api/friend-invite-links')
+      .set('X-Test-Mock-Auth', userId);
+    assert.equal(res.status, 201, JSON.stringify(res.body));
+    this.inviteTokensByCreator[email] = res.body.token as string;
+  },
+);
+
+Given(
+  "{string} has already redeemed {string}'s invite link",
+  async function (this: AuthWorld, redeemerEmail: string, creatorEmail: string) {
+    await redeem(this, redeemerEmail, creatorEmail);
+    assert.ok(
+      [200, 201].includes(this.response.status),
+      `expected the priming redemption to succeed: ${JSON.stringify(this.response.body)}`,
+    );
+  },
+);
+
+Given(
+  "{string}'s invite link has expired",
+  async function (this: AuthWorld, creatorEmail: string) {
+    const token = this.inviteTokensByCreator[creatorEmail];
+    assert.ok(token, `expected ${creatorEmail} to have created an invite link`);
+    await this.app
+      .get(DataSource)
+      .query(
+        `UPDATE friend_invite_links SET expires_at = now() - interval '1 day' WHERE token = $1`,
+        [token],
+      );
   },
 );
 
 When(
-  '{string} accepts the friend request from {string}',
-  async function (this: AuthWorld, actingEmail: string, requesterEmail: string) {
-    const dataSource = this.app.get(DataSource);
-    const actingId = await findUserIdByEmail(dataSource, actingEmail);
-    const friendshipId = await findFriendshipId(dataSource, requesterEmail, actingEmail);
-    this.response = await this.http
-      .patch(`/api/friendships/${friendshipId}/accept`)
-      .set('X-Test-Mock-Auth', actingId);
-  },
-);
-
-When(
-  '{string} tries to accept their own request to {string}',
-  async function (this: AuthWorld, requesterEmail: string, addresseeEmail: string) {
-    const dataSource = this.app.get(DataSource);
-    const requesterId = await findUserIdByEmail(dataSource, requesterEmail);
-    const friendshipId = await findFriendshipId(dataSource, requesterEmail, addresseeEmail);
-    this.response = await this.http
-      .patch(`/api/friendships/${friendshipId}/accept`)
-      .set('X-Test-Mock-Auth', requesterId);
-  },
-);
-
-When(
-  '{string} declines the friend request from {string}',
-  async function (this: AuthWorld, actingEmail: string, requesterEmail: string) {
-    const dataSource = this.app.get(DataSource);
-    const actingId = await findUserIdByEmail(dataSource, actingEmail);
-    const friendshipId = await findFriendshipId(dataSource, requesterEmail, actingEmail);
-    this.response = await this.http
-      .delete(`/api/friendships/${friendshipId}`)
-      .set('X-Test-Mock-Auth', actingId);
+  "{string} redeems {string}'s invite link",
+  async function (this: AuthWorld, redeemerEmail: string, creatorEmail: string) {
+    await redeem(this, redeemerEmail, creatorEmail);
   },
 );
 
@@ -86,7 +80,10 @@ When(
          AND ((requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1))`,
       [actingId, otherId],
     );
-    assert.ok(row?.id, `expected an ACTIVE friendship between ${actingEmail} and ${otherEmail}`);
+    assert.ok(
+      row?.id,
+      `expected an ACTIVE friendship between ${actingEmail} and ${otherEmail}`,
+    );
     this.response = await this.http
       .delete(`/api/friendships/${row.id}`)
       .set('X-Test-Mock-Auth', actingId);
@@ -94,8 +91,7 @@ When(
 );
 
 // Shared fixture step, also used by gym-badges-and-streaks.feature: makes
-// two users ACTIVE friends directly, without exercising the request/accept
-// round trip that's already covered by this file's own scenarios.
+// two users ACTIVE friends directly, without minting and redeeming a link.
 Given(
   '{string} and {string} are friends',
   async function (this: AuthWorld, emailA: string, emailB: string) {
@@ -110,75 +106,75 @@ Given(
   },
 );
 
-Then('the friend request succeeds', function (this: AuthWorld) {
+Then('the invite redemption succeeds', function (this: AuthWorld) {
   assert.ok(
     [200, 201, 204].includes(this.response.status),
     JSON.stringify(this.response.body),
   );
 });
 
-Then('the friend request is rejected as forbidden', function (this: AuthWorld) {
-  assert.equal(this.response.status, 403, JSON.stringify(this.response.body));
+Then('the unadd succeeds', function (this: AuthWorld) {
+  assert.equal(this.response.status, 204, JSON.stringify(this.response.body));
 });
 
-Then('the friend request is rejected as a conflict', function (this: AuthWorld) {
-  assert.equal(this.response.status, 409, JSON.stringify(this.response.body));
+Then('the invite redemption is rejected as gone', function (this: AuthWorld) {
+  assert.equal(this.response.status, 410, JSON.stringify(this.response.body));
 });
 
 Then(
-  'a PENDING friendship exists between {string} and {string}',
-  async function (this: AuthWorld, emailA: string, emailB: string) {
-    const dataSource = this.app.get(DataSource);
-    const idA = await findUserIdByEmail(dataSource, emailA);
-    const idB = await findUserIdByEmail(dataSource, emailB);
-    const [row] = await dataSource.query(
-      `SELECT status FROM friendships
-       WHERE (requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)`,
-      [idA, idB],
-    );
-    assert.equal(row?.status, 'PENDING');
+  'the invite redemption is rejected as a bad request',
+  function (this: AuthWorld) {
+    assert.equal(this.response.status, 400, JSON.stringify(this.response.body));
   },
 );
+
+Then('the invite link is now consumed', async function (this: AuthWorld) {
+  const rows = await this.app
+    .get(DataSource)
+    .query(
+      `SELECT consumed_at FROM friend_invite_links WHERE consumed_at IS NOT NULL`,
+    );
+  assert.ok(rows.length >= 1, 'expected the invite link to be marked consumed');
+});
+
+async function friendshipRows(
+  dataSource: DataSource,
+  emailA: string,
+  emailB: string,
+): Promise<Array<{ status: string }>> {
+  const idA = await findUserIdByEmail(dataSource, emailA);
+  const idB = await findUserIdByEmail(dataSource, emailB);
+  return dataSource.query(
+    `SELECT status FROM friendships
+     WHERE (requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)`,
+    [idA, idB],
+  );
+}
 
 Then(
   'an ACTIVE friendship exists between {string} and {string}',
   async function (this: AuthWorld, emailA: string, emailB: string) {
-    const dataSource = this.app.get(DataSource);
-    const idA = await findUserIdByEmail(dataSource, emailA);
-    const idB = await findUserIdByEmail(dataSource, emailB);
-    const [row] = await dataSource.query(
-      `SELECT status FROM friendships
-       WHERE (requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)`,
-      [idA, idB],
-    );
-    assert.equal(row?.status, 'ACTIVE');
+    const rows = await friendshipRows(this.app.get(DataSource), emailA, emailB);
+    assert.equal(rows[0]?.status, 'ACTIVE');
+  },
+);
+
+Then(
+  'exactly one friendship exists between {string} and {string}',
+  async function (this: AuthWorld, emailA: string, emailB: string) {
+    const rows = await friendshipRows(this.app.get(DataSource), emailA, emailB);
+    assert.equal(rows.length, 1, JSON.stringify(rows));
   },
 );
 
 Then(
   'no friendship exists between {string} and {string}',
   async function (this: AuthWorld, emailA: string, emailB: string) {
-    const dataSource = this.app.get(DataSource);
-    const idA = await findUserIdByEmail(dataSource, emailA);
-    const idB = await findUserIdByEmail(dataSource, emailB);
-    const rows = await dataSource.query(
-      `SELECT id FROM friendships
-       WHERE (requester_id = $1 AND addressee_id = $2) OR (requester_id = $2 AND addressee_id = $1)`,
-      [idA, idB],
-    );
+    const rows = await friendshipRows(this.app.get(DataSource), emailA, emailB);
     assert.equal(rows.length, 0);
   },
 );
 
-Then(
-  '{string} has a FRIEND_REQUEST_RECEIVED notification',
-  async function (this: AuthWorld, email: string) {
-    const dataSource = this.app.get(DataSource);
-    const userId = await findUserIdByEmail(dataSource, email);
-    const rows = await dataSource.query(
-      `SELECT id FROM notifications WHERE recipient_user_id = $1 AND type = 'FRIEND_REQUEST_RECEIVED'`,
-      [userId],
-    );
-    assert.ok(rows.length >= 1, `expected a FRIEND_REQUEST_RECEIVED notification for ${email}`);
-  },
-);
+// "{string} has an {word} notification" and "...has no {word}..." are
+// shared steps defined in moderation.steps.ts -- reused here for
+// FRIEND_ADDED rather than redefined.

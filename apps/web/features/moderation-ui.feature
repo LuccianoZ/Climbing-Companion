@@ -19,7 +19,9 @@ Feature: Media & moderation on the frontend
     Then "alerts-list" is on screen
     And "alert-IMAGE_REJECTED" is on screen
     And "alert-STRIKE_ISSUED" is on screen
+    And "alert-FRIEND_ADDED" is on screen
     And "alert-IMAGE_REJECTED" reads "Check your email"
+    And "alert-FRIEND_ADDED" reads "invite link"
 
   Scenario: An empty Alerts tab says so rather than showing a blank list
     Given the climber is signed in
@@ -30,7 +32,7 @@ Feature: Media & moderation on the frontend
   Scenario: Mark all read clears the unread markers
     Given the climber is signed in
     When the climber opens "/alerts"
-    Then 2 alerts are marked unread
+    Then 3 alerts are marked unread
     When the climber taps "alerts-mark-read"
     Then 0 alerts are marked unread
 

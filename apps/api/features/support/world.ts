@@ -56,6 +56,10 @@ export class AuthWorld extends World {
   lastMediaAssetId?: string;
   lastUploaderEmail?: string;
   voidVerifierEmail?: string;
+  // BL-040/041 (AR-55): friend-invite tokens minted during a scenario,
+  // keyed by the creator's email, so a later step can redeem
+  // "<creator>'s invite link" without re-deriving which token that was.
+  inviteTokensByCreator: Record<string, string> = {};
 
   constructor(options: IWorldOptions) {
     super(options);

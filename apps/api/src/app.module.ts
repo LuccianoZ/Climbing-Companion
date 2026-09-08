@@ -21,6 +21,8 @@ import { TestBypassModule } from './auth/test-bypass.module';
 import { GymBadgesModule } from './gym-badges/gym-badges.module';
 import { GymStreaksModule } from './gym-streaks/gym-streaks.module';
 import { FriendshipsModule } from './friendships/friendships.module';
+import { FriendInviteLinksModule } from './friend-invite-links/friend-invite-links.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { UsersModule } from './users/users.module';
 import { GymActivityModule } from './gym-activity/gym-activity.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -88,6 +90,13 @@ import { AnalyticsModule } from './analytics/analytics.module';
     GymStreaksModule,
     UsersModule,
     FriendshipsModule,
+    // Epic 9 (AR-55, Sept 7, 2026 -- Part 2, BL-040/041): invite-link
+    // friendship replaces the retired request/accept flow. Imports
+    // FriendshipsModule + NotificationsModule for its redemption transaction.
+    FriendInviteLinksModule,
+    // Epic 9 (BL-045): reviews on any crag/route/gym regardless of
+    // lifecycle status.
+    ReviewsModule,
     GymActivityModule,
     AnalyticsModule,
     // BL-005 / Architecture.md AR-13: must come after ConfigModule.forRoot()

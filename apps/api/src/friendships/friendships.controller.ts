@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Delete,
   Get,
@@ -7,44 +6,29 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
-  Patch,
-  Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { SessionGuard } from '../auth/session.guard';
 import type { AuthenticatedRequest } from '../auth/session.guard';
-import { SendFriendRequestDto } from './dto/send-friend-request.dto';
 import { FriendshipsService } from './friendships.service';
 
-// BL-x11 (Epic 8, pulled forward from BL-039/040). Every endpoint requires
-// a session -- there is no unauthenticated friendship action.
+// AR-55 (Sept 7, 2026 -- Part 2): friendships are created only through the
+// invite-link flow (see FriendInviteLinksController). What is left here is
+// reading your friends and removing one. Every endpoint requires a session.
 @Controller('friendships')
 @UseGuards(SessionGuard)
 export class FriendshipsController {
   constructor(private readonly friendshipsService: FriendshipsService) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  send(@Body() dto: SendFriendRequestDto, @Req() req: AuthenticatedRequest) {
-    return this.friendshipsService.sendRequest(req.user.id, dto.addresseeId);
+  // The "Your friends" list in Profile (BL-041). With no user directory,
+  // this list plus the unadd action is the whole friend-management surface.
+  @Get()
+  list(@Req() req: AuthenticatedRequest) {
+    return this.friendshipsService.listFriendsForUser(req.user.id);
   }
 
-  @Get('pending')
-  listPending(@Req() req: AuthenticatedRequest) {
-    return this.friendshipsService.listPendingForUser(req.user.id);
-  }
-
-  @Patch(':id/accept')
-  accept(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Req() req: AuthenticatedRequest,
-  ) {
-    return this.friendshipsService.accept(id, req.user.id);
-  }
-
-  // Covers both Decline (a PENDING request) and Unadd (an ACTIVE
-  // friendship) -- FriendshipsService.remove() distinguishes them by status.
+  // Unadd: unilateral removal of an ACTIVE friendship by either party.
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(

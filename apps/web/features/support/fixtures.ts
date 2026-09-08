@@ -346,9 +346,16 @@ export const CHECK_IN_RESULT: CheckInResult = {
 
 import type { AppNotification, FlagQueueItem } from '@/lib/types';
 
-// The two notification kinds Epic 6 raises (Foundation §12). Newest first,
+// The three notification kinds Foundation §12 defines. Newest first,
 // mirroring NotificationsController's ORDER BY created_at DESC.
+// FRIEND_ADDED (AR-55) fires when someone redeems this user's invite link.
 export const NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'n0000000-0000-4000-8000-000000000000',
+    type: 'FRIEND_ADDED',
+    relatedEntityId: 'fr000000-0000-4000-8000-000000000000',
+    createdAt: '2026-09-03T12:00:00.000Z',
+  },
   {
     id: 'n1111111-1111-4111-8111-111111111111',
     type: 'STRIKE_ISSUED',
@@ -360,6 +367,77 @@ export const NOTIFICATIONS: AppNotification[] = [
     type: 'IMAGE_REJECTED',
     relatedEntityId: 'mod22222-2222-4222-8222-222222222222',
     createdAt: '2026-09-01T18:00:00.000Z',
+  },
+];
+
+// --- invite-link friendship (AR-55, BL-040/041) --------------------------
+
+import type {
+  CreatedInviteLink,
+  FriendSummary,
+  RedeemInviteResult,
+  ReviewView,
+} from '@/lib/types';
+
+export const FRIEND_INVITE_LINK: CreatedInviteLink = {
+  token: 'demo-invite-token-abc123',
+  url: 'http://localhost:3000/friends/invite/demo-invite-token-abc123',
+  expiresAt: '2026-09-14T12:00:00.000Z',
+};
+
+export const REDEEM_FRIENDED: RedeemInviteResult = {
+  outcome: 'FRIENDED',
+  friendshipId: 'fr111111-1111-4111-8111-111111111111',
+  friendUserId: 'us222222-2222-4222-8222-222222222222',
+};
+
+export const FRIENDS: FriendSummary[] = [
+  {
+    friendshipId: 'fr111111-1111-4111-8111-111111111111',
+    userId: 'us222222-2222-4222-8222-222222222222',
+    email: 'jordan@example.com',
+    displayName: 'Jordan',
+    since: '2026-09-03T12:00:00.000Z',
+  },
+];
+
+// --- profile data (BL-036/037, BL-x09/x10) -----------------------------
+// Minimal shapes so ProfileScreen's Promise.all resolves -- there was no
+// profile web test before Epic 9, so these are new.
+
+import type { GymActivity, OutdoorAnalytics } from '@/lib/types';
+
+export const GYM_ACTIVITY: GymActivity = {
+  badges: [],
+  streaks: [],
+  badgesPublic: true,
+  isOwnProfile: true,
+};
+
+const EMPTY_DISCIPLINE = {
+  completed: 0,
+  attempted: 0,
+  completionRate: 0,
+  gradeDistribution: [],
+};
+
+export const OUTDOOR_ANALYTICS: OutdoorAnalytics = {
+  SPORT_CLIMBING: EMPTY_DISCIPLINE,
+  BOULDERING: EMPTY_DISCIPLINE,
+  TRADITIONAL_CLIMBING: EMPTY_DISCIPLINE,
+};
+
+// --- reviews (BL-045) ---------------------------------------------------
+
+export const REVIEWS: ReviewView[] = [
+  {
+    id: 'rv111111-1111-4111-8111-111111111111',
+    authorId: 'us333333-3333-4333-8333-333333333333',
+    authorDisplayName: 'Alex',
+    body: 'Steep and pumpy — bring extra draws.',
+    photoMediaId: null,
+    photoPending: false,
+    createdAt: '2026-09-04T15:00:00.000Z',
   },
 ];
 

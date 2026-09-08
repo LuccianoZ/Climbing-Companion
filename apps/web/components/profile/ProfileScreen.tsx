@@ -8,14 +8,15 @@ import { BadgesPublicToggle } from '@/components/profile/BadgesPublicToggle';
 import { GymBadgeShelf } from '@/components/profile/GymBadgeShelf';
 import { GymStreaksList } from '@/components/profile/GymStreaksList';
 import { OutdoorAnalyticsCharts } from '@/components/profile/OutdoorAnalyticsCharts';
-import { PendingFriendRequests } from '@/components/profile/PendingFriendRequests';
+import { FriendsList } from '@/components/profile/FriendsList';
+import { InviteFriendCard } from '@/components/profile/InviteFriendCard';
 import * as api from '@/lib/api';
 import { messageFor } from '@/lib/errors';
 import { useSession } from '@/lib/session';
 import type {
+  FriendSummary,
   GymActivity,
   OutdoorAnalytics,
-  PendingFriendRequest,
 } from '@/lib/types';
 
 // The Profile tab, which is also where BL-003 (logout) lives. Logging out
@@ -28,9 +29,10 @@ import type {
 //
 // Epic 8 (Sept 7, 2026, AR-53) fills in what was previously a placeholder:
 // outdoor analytics (BL-036/037), the Gym Badge shelf and Gym Streaks
-// (BL-x09/x10), the badges-public toggle, and Pending Friend Requests
-// (BL-x11). There is deliberately no "send a friend request" UI here yet --
-// see PendingFriendRequests's own comment for why.
+// (BL-x09/x10), and the badges-public toggle. Epic 9 (AR-55, BL-040/041)
+// replaces the pull-forward "Pending Friend Requests" view with the
+// invite-link model: a "Your friends" list (with unadd) and an
+// InviteFriendCard that mints a link to send out-of-band.
 
 export function ProfileScreen() {
   const { status, user, signOut } = useSession();
@@ -39,9 +41,7 @@ export function ProfileScreen() {
 
   const [activity, setActivity] = useState<GymActivity | null>(null);
   const [analytics, setAnalytics] = useState<OutdoorAnalytics | null>(null);
-  const [pendingRequests, setPendingRequests] = useState<
-    PendingFriendRequest[] | null
-  >(null);
+  const [friends, setFriends] = useState<FriendSummary[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [togglingBadgesPublic, setTogglingBadgesPublic] = useState(false);
@@ -59,13 +59,13 @@ export function ProfileScreen() {
       Promise.all([
         api.fetchGymActivity(userId),
         api.fetchOutdoorAnalytics(userId),
-        api.fetchPendingFriendRequests(),
+        api.fetchFriends(),
       ])
-        .then(([activityRes, analyticsRes, pendingRes]) => {
+        .then(([activityRes, analyticsRes, friendsRes]) => {
           if (!live) return;
           setActivity(activityRes);
           setAnalytics(analyticsRes);
-          setPendingRequests(pendingRes);
+          setFriends(friendsRes);
           setLoadError(null);
         })
         .catch((error: unknown) => {
@@ -108,29 +108,15 @@ export function ProfileScreen() {
     }
   }
 
-  async function onAcceptRequest(id: string) {
+  async function onUnaddFriend(friendshipId: string) {
     setActionError(null);
     try {
-      await api.acceptFriendRequest(id);
-      setPendingRequests((current) =>
-        (current ?? []).filter((r) => r.id !== id),
-      );
-      // Accepting can newly unlock streak visibility with this friend, but
-      // this viewer's own activity doesn't change -- no re-fetch needed.
-    } catch (error) {
-      setActionError(messageFor('FRIEND_REQUEST', error));
-    }
-  }
-
-  async function onDeclineRequest(id: string) {
-    setActionError(null);
-    try {
-      await api.removeFriendship(id);
-      setPendingRequests((current) =>
-        (current ?? []).filter((r) => r.id !== id),
+      await api.removeFriendship(friendshipId);
+      setFriends((current) =>
+        (current ?? []).filter((f) => f.friendshipId !== friendshipId),
       );
     } catch (error) {
-      setActionError(messageFor('FRIEND_REQUEST', error));
+      setActionError(messageFor('FRIENDS', error));
     }
   }
 
@@ -227,19 +213,16 @@ export function ProfileScreen() {
       </section>
 
       <section className="card mt-4 p-4">
-        <p className="label-caps text-[9px] text-ink-faint">
-          Pending Friend Requests
-        </p>
+        <p className="label-caps text-[9px] text-ink-faint">Friends</p>
         <div className="mt-3">
-          {pendingRequests ? (
-            <PendingFriendRequests
-              requests={pendingRequests}
-              onAccept={onAcceptRequest}
-              onDecline={onDeclineRequest}
-            />
+          {friends ? (
+            <FriendsList friends={friends} onUnadd={onUnaddFriend} />
           ) : (
             <p className="text-[12px] text-ink-faint">Loading…</p>
           )}
+        </div>
+        <div className="mt-4 border-t border-line-soft pt-3">
+          <InviteFriendCard />
         </div>
       </section>
 

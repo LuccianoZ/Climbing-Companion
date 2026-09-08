@@ -8,10 +8,10 @@ import { useSession } from '@/lib/session';
 import type { AppNotification, NotificationType } from '@/lib/types';
 
 // The Alerts tab (6-screen mockup's Notifications panel). Foundation §12: it
-// covers exactly three events — friend request received, image rejected,
-// strike issued. Epic 6 raises the last two (BL-028); the first arrives with
-// Epic 7's friendship work, and this screen renders it thinly if it shows up
-// early rather than crashing on an unknown type.
+// covers exactly three events — friend added, image rejected, strike issued.
+// Epic 6 raises the two moderation ones (BL-028); FRIEND_ADDED is raised when
+// someone redeems this user's invite link (BL-040, AR-55). An unknown type
+// renders thinly rather than crashing.
 //
 // The image-rejected and strike cards deliberately do not show the reason:
 // Foundation §12 says both "direct the user to their email for the reasoning".
@@ -57,9 +57,9 @@ const COPY: Record<
     body: 'A moderation strike was issued on your account. Three strikes result in a suspension. Check your email for the reason.',
     tone: 'warn',
   },
-  FRIEND_REQUEST_RECEIVED: {
-    title: 'New friend request',
-    body: 'Someone asked to follow you. Respond from the Friends tab.',
+  FRIEND_ADDED: {
+    title: 'New friend',
+    body: 'Someone used your invite link and is now on your friends list. Find them on your Profile.',
     tone: 'neutral',
   },
 };
@@ -194,7 +194,7 @@ export function AlertsScreen() {
           data-testid="alerts-empty"
           className="mt-6 rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-4 text-center text-[12px] text-ink-soft"
         >
-          Nothing here yet. Friend requests and moderation notices land on this
+          Nothing here yet. New friends and moderation notices land on this
           tab.
         </p>
       ) : null}

@@ -28,6 +28,12 @@ import {
   MEDIA_ASSET,
   MODERATION_RESULT,
   NOTIFICATIONS,
+  FRIENDS,
+  FRIEND_INVITE_LINK,
+  REDEEM_FRIENDED,
+  REVIEWS,
+  GYM_ACTIVITY,
+  OUTDOOR_ANALYTICS,
   SEARCH_TARGET,
   TINY_PNG,
   SUBMIT_GYM_RESULT,
@@ -311,6 +317,21 @@ export class MapUiWorld extends World {
         return { status: 200, body: [SEARCH_TARGET] };
       case 'notifications':
         return { status: 200, body: NOTIFICATIONS };
+      // Epic 9 (AR-55, BL-040/041/045).
+      case 'friends':
+        return { status: 200, body: FRIENDS };
+      case 'friend-remove':
+        return { status: 204, body: {} };
+      case 'friend-invite-create':
+        return { status: 201, body: FRIEND_INVITE_LINK };
+      case 'friend-invite-redeem':
+        return { status: 200, body: REDEEM_FRIENDED };
+      case 'reviews':
+        return { status: 200, body: REVIEWS };
+      case 'user-gym-activity':
+        return { status: 200, body: GYM_ACTIVITY };
+      case 'user-outdoor-analytics':
+        return { status: 200, body: OUTDOOR_ANALYTICS };
       case 'flag-queue':
         return { status: 200, body: FLAG_QUEUE };
       case 'moderate':
@@ -400,6 +421,18 @@ export class MapUiWorld extends World {
 
     // Epic 6 (BL-027-030).
     await on('**/api/notifications**', 'notifications');
+
+    // Epic 9 (AR-55, BL-040/041/045). The '*/redeem' and '/*' patterns are
+    // registered after their bare parents so Playwright's reverse-order
+    // resolution lets the more specific handler win.
+    await on('**/api/reviews**', 'reviews');
+    await on('**/api/friendships', 'friends');
+    await on('**/api/friendships/*', 'friend-remove');
+    await on('**/api/friend-invite-links', 'friend-invite-create');
+    await on('**/api/friend-invite-links/*/redeem', 'friend-invite-redeem');
+    await on('**/api/users/*/gym-activity', 'user-gym-activity');
+    await on('**/api/users/*/outdoor-analytics', 'user-outdoor-analytics');
+
     await on('**/api/admin/flag-queue', 'flag-queue');
     await on('**/api/admin/media/*/moderate', 'moderate');
     await on('**/api/media/*/reports', 'media-report');

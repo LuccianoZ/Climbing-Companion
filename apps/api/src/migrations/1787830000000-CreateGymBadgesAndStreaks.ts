@@ -12,9 +12,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 // null. `gym_streaks` carries no such requirement -- plain ON DELETE
 // CASCADE, since a deleted gym can no longer be checked into and the streak
 // has no permanence guarantee.
-export class CreateGymBadgesAndStreaks1787830000000
-  implements MigrationInterface
-{
+export class CreateGymBadgesAndStreaks1787830000000 implements MigrationInterface {
   name = 'CreateGymBadgesAndStreaks1787830000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
