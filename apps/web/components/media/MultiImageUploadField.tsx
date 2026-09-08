@@ -69,7 +69,7 @@ export function MultiImageUploadField({
 
   return (
     <fieldset className="space-y-2.5" data-testid="submission-photos">
-      <legend className="label-caps text-[9.5px] text-ink-faint">
+      <legend className="label-caps text-caption text-ink-faint">
         Photos * (at least {MIN_SUBMISSION_PHOTOS})
       </legend>
 
@@ -77,7 +77,7 @@ export function MultiImageUploadField({
         data-testid="submission-photo-count"
         data-enough={enough ? 'true' : 'false'}
         className={[
-          'text-[10.5px] font-semibold',
+          'text-caption font-semibold',
           enough ? 'text-moss-deep' : 'text-ink-soft',
         ].join(' ')}
       >
@@ -108,7 +108,7 @@ export function MultiImageUploadField({
                 data-testid={`submission-photo-remove-${index}`}
                 onClick={() => removeSlot(slot.key)}
                 disabled={disabled}
-                className="mt-1 shrink-0 rounded-full border border-line-soft px-2 py-2 text-[10px] text-ink-soft"
+                className="mt-1 shrink-0 rounded-full border border-line-soft px-2 py-2 text-caption text-ink-soft"
               >
                 Remove
               </button>
@@ -123,7 +123,7 @@ export function MultiImageUploadField({
           data-testid="submission-photo-add"
           onClick={addSlot}
           disabled={disabled}
-          className="flex items-center gap-1.5 rounded-[10px] border-[1.5px] border-dashed border-line px-3 py-2 text-[11px] font-semibold text-ink-soft"
+          className="flex items-center gap-1.5 rounded-control border border-dashed border-line px-3 py-2 text-caption font-semibold text-ink-soft"
         >
           <PlusIcon className="h-3.5 w-3.5" />
           Add another photo

@@ -194,7 +194,7 @@ export function SubmitRouteForm() {
         subtitle="It is on the map now, waiting for four climbers to verify it."
       >
         <div data-testid="submit-route-success" className="card-raised space-y-4 p-4">
-          <p className="flex items-center gap-2 text-[13px] font-bold text-moss-deep">
+          <p className="flex items-center gap-2 text-small font-bold text-moss-deep">
             <CheckIcon className="h-4 w-4" />
             {result.route.name} is live
           </p>
@@ -207,7 +207,7 @@ export function SubmitRouteForm() {
           <p
             data-testid="crag-outcome"
             data-crag-created={result.cragCreated ? 'true' : 'false'}
-            className="text-[12px] leading-relaxed text-ink-soft"
+            className="text-small leading-relaxed text-ink-soft"
           >
             {result.cragCreated
               ? `No crag existed within 300m, so "${result.crag.name}" was created around this route. Verifying this route will verify the crag with it.`
@@ -217,7 +217,7 @@ export function SubmitRouteForm() {
           <Link
             href={`/?kind=CRAG&id=${result.crag.id}&lat=${point.latitude}&lng=${point.longitude}&name=${encodeURIComponent(result.crag.name)}`}
             data-testid="view-on-map"
-            className="label-caps block rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-center text-[11.5px] text-paper"
+            className="label-caps block rounded-control border border-ink bg-ink px-4 py-3 text-center text-small text-paper"
           >
             View it on the map
           </Link>
@@ -253,7 +253,7 @@ export function SubmitRouteForm() {
                 data-testid={`discipline-${option}`}
                 onClick={() => changeDiscipline(option)}
                 className={[
-                  'rounded-[10px] border-[1.5px] px-2 py-2.5 text-[11px] font-bold leading-tight',
+                  'rounded-control border px-2 py-2.5 text-caption font-bold leading-tight',
                   active
                     ? 'border-ink bg-ink text-paper'
                     : 'border-line bg-surface text-ink',
@@ -279,7 +279,7 @@ export function SubmitRouteForm() {
           <div className="space-y-1.5">
             <label
               htmlFor="proposedGradeOrdinal"
-              className="label-caps block text-[9.5px] text-ink-faint"
+              className="label-caps block text-caption text-ink-faint"
             >
               Grade *
             </label>
@@ -294,7 +294,7 @@ export function SubmitRouteForm() {
                 )
               }
               className={[
-                'w-full rounded-[10px] border-[1.5px] bg-surface px-3 py-2.5 text-[13px] text-ink outline-none',
+                'w-full rounded-control border bg-surface px-3 py-2.5 text-small text-ink outline-none',
                 fieldErrors.grade ? 'border-clay-deep' : 'border-line',
               ].join(' ')}
             >
@@ -305,14 +305,14 @@ export function SubmitRouteForm() {
                 </option>
               ))}
             </select>
-            <p className="text-[10.5px] text-ink-faint">
+            <p className="text-caption text-ink-faint">
               Your estimate. It is shown as the Proposed Grade until four
               climbers have voted.
             </p>
             {fieldErrors.grade ? (
               <p
                 data-testid="field-error-proposedGradeOrdinal"
-                className="text-[10.5px] text-clay-deep"
+                className="text-caption text-clay-deep"
               >
                 {fieldErrors.grade}
               </p>
@@ -343,9 +343,9 @@ export function SubmitRouteForm() {
           {ropeDiscipline ? (
             <fieldset
               data-testid="rope-details"
-              className="space-y-3 rounded-[12px] border-[1.5px] border-dashed border-line p-3"
+              className="space-y-3 rounded-card border border-dashed border-line p-3"
             >
-              <legend className="label-caps px-1 text-[9px] text-ink-faint">
+              <legend className="label-caps px-1 text-caption text-ink-faint">
                 Rope details (optional)
               </legend>
               <TextField
@@ -372,7 +372,7 @@ export function SubmitRouteForm() {
               defaults empty", and a bolted face climb needing no rack is a
               legitimate empty answer. */}
           <fieldset data-testid="gear-requirements" className="space-y-2">
-            <legend className="label-caps text-[9.5px] text-ink-faint">
+            <legend className="label-caps text-caption text-ink-faint">
               Gear needed (optional)
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -383,7 +383,7 @@ export function SubmitRouteForm() {
                     key={item}
                     data-testid={`gear-option-${item}`}
                     className={[
-                      'flex cursor-pointer items-center gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-[11.5px] font-medium',
+                      'flex cursor-pointer items-center gap-2 rounded-control border px-2.5 py-2 text-small font-medium',
                       checked
                         ? 'border-ink bg-paper text-ink'
                         : 'border-line-soft bg-surface text-ink-soft',
@@ -407,7 +407,7 @@ export function SubmitRouteForm() {
           <div className="space-y-1.5">
             <label
               htmlFor="summary"
-              className="label-caps block text-[9.5px] text-ink-faint"
+              className="label-caps block text-caption text-ink-faint"
             >
               Description &amp; beta *
             </label>
@@ -420,17 +420,17 @@ export function SubmitRouteForm() {
               placeholder="Describe the crux, the holds, or any danger zones…"
               onChange={(event) => setSummary(event.target.value)}
               className={[
-                'w-full rounded-[10px] border-[1.5px] bg-surface px-3 py-2.5 text-[12.5px] leading-relaxed text-ink outline-none placeholder:text-ink-faint',
+                'w-full rounded-control border bg-surface px-3 py-2.5 text-small leading-relaxed text-ink outline-none placeholder:text-ink-faint',
                 fieldErrors.summary ? 'border-clay-deep' : 'border-line',
               ].join(' ')}
             />
             <div className="flex items-start justify-between gap-3">
-              <p className="text-[10.5px] text-clay-deep">
+              <p className="text-caption text-clay-deep">
                 {fieldErrors.summary ?? ''}
               </p>
               <p
                 data-testid="summary-remaining"
-                className="shrink-0 text-[10.5px] text-ink-faint"
+                className="shrink-0 text-caption text-ink-faint"
               >
                 {SUMMARY_MAX - summary.length} left
               </p>
@@ -445,7 +445,7 @@ export function SubmitRouteForm() {
               disabled={pending}
             />
             {fieldErrors.photos ? (
-              <p className="text-[10.5px] text-clay-deep">{fieldErrors.photos}</p>
+              <p className="text-caption text-clay-deep">{fieldErrors.photos}</p>
             ) : null}
           </div>
         </div>
@@ -456,7 +456,7 @@ export function SubmitRouteForm() {
           type="submit"
           data-testid="submit-route"
           disabled={pending}
-          className="w-full rounded-[10px] border-[1.5px] border-clay-deep bg-clay px-4 py-3 text-[13px] font-bold text-ink transition-opacity disabled:opacity-45"
+          className="press display w-full rounded-control border border-clay bg-clay px-4 py-3.5 text-heading leading-none text-paper shadow-accent disabled:opacity-45"
         >
           {pending ? 'Submitting…' : 'Submit route'}
         </button>

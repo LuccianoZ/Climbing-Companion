@@ -152,13 +152,26 @@ function ResizeObserverBridge() {
   return null;
 }
 
+// "You are here", built the way every maps app builds it: a small solid core,
+// a light ring that lifts it off the terrain, and a soft accuracy halo that
+// breathes. The previous version was a flat 14px orange disc with a hard 5px
+// orange ring, which at street zoom read as an unexplained blob roughly the
+// size of a building rather than as a precise position.
+//
+// The pulse is CSS on a class defined in globals.css, not an inline style,
+// because inline animation would escape the global prefers-reduced-motion
+// collapse -- a location marker that throbs forever is exactly the kind of
+// motion someone turns that setting on to stop.
 const viewerIcon = () =>
   L.divIcon({
     className: 'climb-viewer-dot',
     html:
-      '<span data-testid="viewer-dot" class="block h-3.5 w-3.5 rounded-full border-2 border-surface" style="background:var(--color-clay-deep);box-shadow:0 0 0 5px rgba(164,67,47,0.22)"></span>',
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+      '<span data-testid="viewer-dot" class="climb-viewer">' +
+      '<span class="climb-viewer__halo"></span>' +
+      '<span class="climb-viewer__core"></span>' +
+      '</span>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
   });
 
 export default function MapCanvas({
@@ -170,14 +183,17 @@ export default function MapCanvas({
 }: MapCanvasProps) {
   // Rebuilding a divIcon on every render would recreate every marker's DOM
   // on every geolocation tick, which throws away the badge nodes the UI
-  // suite queries mid-assertion. Icons only depend on id/kind/status.
+  // suite queries mid-assertion. Icons only depend on id/kind/status -- and,
+  // since the Sept 8 revamp, on whether the pin is the selected one, which is
+  // why `selectedPinId` joins the dependency list. It changes on tap, not on
+  // every GPS fix, so the memo still holds across location ticks.
   const icons = useMemo(() => {
     const byId = new Map<string, L.DivIcon>();
     for (const pin of pins) {
-      byId.set(pin.id, buildPinIcon(pin));
+      byId.set(pin.id, buildPinIcon(pin, pin.id === selectedPinId));
     }
     return byId;
-  }, [pins]);
+  }, [pins, selectedPinId]);
 
   return (
     <MapContainer
@@ -200,7 +216,15 @@ export default function MapCanvas({
     >
       <AttributionControl position="bottomleft" />
       {/* Free OSM raster tiles -- no API key, no billing account, per
-          BL-019's card. Attribution is a licence requirement, not decoration. */}
+          BL-019's card. Attribution is a licence requirement, not decoration.
+
+          The Sept 8 2026 dark revamp briefly pointed this at CARTO's
+          dark_matter basemap; that endpoint now answers with "API KEY
+          REQUIRED" watermarked across every tile, so it is not the keyless
+          option it used to be. The basemap is darkened in CSS instead --
+          see the .leaflet-tile filter in globals.css -- which keeps BL-019's
+          "no API key" constraint intact and keeps the attribution honest,
+          since the tiles really are still plain OSM. */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

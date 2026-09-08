@@ -15,15 +15,15 @@ export function SuspendedNotice() {
       data-testid="account-suspended"
       className="mx-auto flex min-h-full w-full max-w-[430px] flex-col items-center justify-center gap-5 border-line-soft bg-paper px-8 py-16 text-center sm:border-x"
     >
-      <div className="flex h-20 w-20 items-center justify-center rounded-full border-[1.5px] border-clay-deep bg-clay-wash">
+      <div className="flex h-20 w-20 items-center justify-center rounded-full border border-clay-deep bg-clay-wash">
         <LockIcon className="h-9 w-9 text-clay-deep" />
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-[19px] font-bold tracking-tight text-ink">
+        <h1 className="text-heading font-bold tracking-tight text-ink">
           Account suspended
         </h1>
-        <p className="text-[12.5px] leading-relaxed text-ink-soft">
+        <p className="text-small leading-relaxed text-ink-soft">
           This account has been suspended after reaching the moderation strike
           threshold. The reasoning was sent to your email address.
         </p>
@@ -32,7 +32,7 @@ export function SuspendedNotice() {
       <a
         href={`mailto:${SUPPORT_EMAIL}`}
         data-testid="account-suspended-support"
-        className="rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-2.5 text-[12.5px] font-bold text-paper"
+        className="rounded-control border border-ink bg-ink px-4 py-2.5 text-small font-bold text-paper"
       >
         Contact support
       </a>

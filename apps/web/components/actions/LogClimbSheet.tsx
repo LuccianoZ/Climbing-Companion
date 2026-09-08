@@ -89,7 +89,7 @@ export function LogClimbSheet({
           <ActionSuccess
             message={`Logged as ${result.outcome === 'COMPLETED' ? 'completed' : 'attempted'} at ${formatGrade(result.gradeSnapshotOrdinal, route.discipline, scale)}.`}
           />
-          <p className="rounded-[10px] border-[1.5px] border-line bg-paper px-3 py-2.5 text-[11.5px] leading-snug text-ink-soft">
+          <p className="rounded-control border border-line bg-paper px-3 py-2.5 text-small leading-snug text-ink-soft">
             That grade is a snapshot taken just now. If the community regrades
             this route later, your logbook keeps the grade it was when you
             climbed it.
@@ -98,7 +98,7 @@ export function LogClimbSheet({
             type="button"
             data-testid="log-done"
             onClick={onClose}
-            className="w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[13px] font-bold text-paper"
+            className="w-full rounded-control border border-ink bg-ink px-4 py-3 text-small font-bold text-paper"
           >
             Done
           </button>
@@ -117,16 +117,16 @@ export function LogClimbSheet({
             <>
               <div
                 data-testid="grade-snapshot"
-                className="flex items-center gap-3 rounded-[10px] border-[1.5px] border-line bg-paper px-3 py-2.5"
+                className="flex items-center gap-3 rounded-control border border-line bg-paper px-3 py-2.5"
               >
-                <span className="rounded-[8px] border-[1.5px] border-line bg-surface px-2.5 py-1.5 text-[14px] font-bold text-ink">
+                <span className="rounded-control border border-line bg-surface px-2.5 py-1.5 text-body font-bold text-ink">
                   {formatGrade(
                     route.grade.gradeOrdinal,
                     route.discipline,
                     scale,
                   )}
                 </span>
-                <span className="text-[11.5px] leading-snug text-ink-soft">
+                <span className="text-small leading-snug text-ink-soft">
                   {route.grade.source === 'CONSENSUS'
                     ? 'Consensus grade snapshot'
                     : 'Proposed grade snapshot'}{' '}
@@ -135,7 +135,7 @@ export function LogClimbSheet({
               </div>
 
               <fieldset data-testid="outcome-choice" className="space-y-2">
-                <legend className="label-caps text-[9.5px] text-ink-faint">
+                <legend className="label-caps text-caption text-ink-faint">
                   Outcome *
                 </legend>
                 <div className="grid grid-cols-2 gap-2">
@@ -149,9 +149,9 @@ export function LogClimbSheet({
                         data-testid={`outcome-${option.value}`}
                         onClick={() => setOutcome(option.value)}
                         className={[
-                          'label-caps rounded-[10px] border-[1.5px] px-3 py-3 text-[11px]',
+                          'label-caps rounded-control border px-3 py-3 text-caption',
                           active
-                            ? 'border-clay-deep bg-clay text-ink'
+                            ? 'border-clay-deep bg-clay text-paper'
                             : 'border-line bg-surface text-ink-soft',
                         ].join(' ')}
                       >
@@ -171,7 +171,7 @@ export function LogClimbSheet({
                   silent omission, so this does not read as a bug in review. */}
               <p
                 data-testid="notes-not-stored"
-                className="rounded-[10px] border-[1.5px] border-dashed border-line-soft px-3 py-2.5 text-[10.5px] leading-snug text-ink-faint"
+                className="rounded-control border border-dashed border-line-soft px-3 py-2.5 text-caption leading-snug text-ink-faint"
               >
                 Climb notes aren&apos;t stored — a log is the route, the
                 outcome and the grade at the time, nothing else.

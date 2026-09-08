@@ -42,7 +42,7 @@ export function UnverifiedGymList() {
     return (
       <p
         data-testid="admin-gyms-error"
-        className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+        className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
       >
         Couldn&apos;t load the gym list. Check that the API is running.
       </p>
@@ -53,7 +53,7 @@ export function UnverifiedGymList() {
     return (
       <p
         data-testid="admin-gyms-loading"
-        className="text-[12px] text-ink-faint"
+        className="text-small text-ink-faint"
       >
         Loading gyms…
       </p>
@@ -70,7 +70,7 @@ export function UnverifiedGymList() {
     return (
       <p
         data-testid="admin-gyms-empty"
-        className="rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-3 text-[12px] text-ink-soft"
+        className="rounded-control border border-line bg-surface px-3 py-3 text-small text-ink-soft"
       >
         Every gym on the map is verified. Nothing waiting.
       </p>
@@ -96,15 +96,15 @@ export function UnverifiedGymList() {
               data-gym-id={gym.id}
               className="border-b border-line-soft last:border-b-0"
             >
-              <td className="px-3 py-2.5 text-[12.5px] font-semibold text-ink">
+              <td className="px-3 py-2.5 text-small font-semibold text-ink">
                 {gym.name}
               </td>
               <td className="px-3 py-2.5">
-                <span className="rounded-full border border-line-soft bg-paper px-2 py-0.5 text-[10.5px] font-semibold text-ink-soft">
+                <span className="rounded-full border border-line-soft bg-paper px-2 py-0.5 text-caption font-semibold text-ink-soft">
                   Unverified
                 </span>
               </td>
-              <td className="px-3 py-2.5 font-mono text-[11px] text-ink-faint">
+              <td className="px-3 py-2.5 font-mono text-caption text-ink-faint">
                 {gym.latitude.toFixed(4)}, {gym.longitude.toFixed(4)}
               </td>
               <td className="px-3 py-2.5 text-right">
@@ -112,14 +112,14 @@ export function UnverifiedGymList() {
                   <Link
                     href={`/admin/stewardship/gym/${gym.id}`}
                     data-testid="admin-edit-link"
-                    className="inline-block rounded-[8px] border-[1.5px] border-line-soft px-3 py-1.5 text-[11.5px] font-semibold text-ink-soft"
+                    className="inline-block rounded-control border border-line-soft px-3 py-1.5 text-small font-semibold text-ink-soft"
                   >
                     Edit
                   </Link>
                   <Link
                     href={`/admin/gyms/${gym.id}/verify`}
                     data-testid="admin-verify-link"
-                    className="inline-block rounded-[8px] border-[1.5px] border-ink bg-ink px-3 py-1.5 text-[11.5px] font-semibold text-paper"
+                    className="inline-block rounded-control border border-ink bg-ink px-3 py-1.5 text-small font-semibold text-paper"
                   >
                     Verify directly
                   </Link>
@@ -135,7 +135,7 @@ export function UnverifiedGymList() {
 
 function Th({ children }: { children: React.ReactNode }) {
   return (
-    <th className="label-caps px-3 py-2 text-[9px] text-ink-faint">
+    <th className="label-caps px-3 py-2 text-caption text-ink-faint">
       {children}
     </th>
   );

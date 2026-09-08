@@ -30,7 +30,7 @@ export function GradeScaleToggle({
             data-testid={`grade-scale-${option.toLowerCase()}`}
             onClick={() => onChange(option)}
             className={[
-              'rounded-full px-2.5 py-[3px] text-[10px] font-bold tracking-wide transition-colors',
+              'rounded-full px-2.5 py-[3px] text-caption font-bold tracking-wide transition-colors',
               active ? 'bg-surface text-ink' : 'text-paper/70',
             ].join(' ')}
           >

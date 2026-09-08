@@ -57,7 +57,7 @@ function RedeemBody({ token }: { token: string }) {
         {phase.kind === 'redeeming' ? (
           <p
             data-testid="redeem-pending"
-            className="py-8 text-[12px] text-ink-faint"
+            className="py-8 text-small text-ink-faint"
           >
             Connecting you…
           </p>
@@ -67,13 +67,13 @@ function RedeemBody({ token }: { token: string }) {
           <>
             <h1
               data-testid="redeem-success"
-              className="text-[17px] font-bold tracking-tight text-ink"
+              className="text-heading font-bold tracking-tight text-ink"
             >
               {phase.result.outcome === 'ALREADY_FRIENDS'
                 ? "You're already friends"
                 : "You're now friends"}
             </h1>
-            <p className="text-[12px] leading-relaxed text-ink-soft">
+            <p className="text-small leading-relaxed text-ink-soft">
               {phase.result.outcome === 'ALREADY_FRIENDS'
                 ? 'This link connected you to someone you were already friends with — nothing changed.'
                 : 'You can see them on your friends list now.'}
@@ -81,7 +81,7 @@ function RedeemBody({ token }: { token: string }) {
             <Link
               href="/profile"
               data-testid="redeem-go-profile"
-              className="inline-block rounded-[8px] border-[1.5px] border-line bg-moss-wash px-3 py-1.5 text-[11px] font-bold text-moss-deep"
+              className="inline-block rounded-control border border-line bg-moss-wash px-3 py-1.5 text-caption font-bold text-moss-deep"
             >
               Go to your profile
             </Link>
@@ -92,7 +92,7 @@ function RedeemBody({ token }: { token: string }) {
           <>
             <h1
               data-testid="redeem-error"
-              className="text-[17px] font-bold tracking-tight text-clay-deep"
+              className="text-heading font-bold tracking-tight text-clay-deep"
             >
               {phase.status === 400
                 ? "That's your own link"
@@ -100,7 +100,7 @@ function RedeemBody({ token }: { token: string }) {
                   ? 'This link is no longer valid'
                   : "We couldn't use this link"}
             </h1>
-            <p className="text-[12px] leading-relaxed text-ink-soft">
+            <p className="text-small leading-relaxed text-ink-soft">
               {phase.status === 400
                 ? 'An invite link connects you to someone else — send it to a friend instead.'
                 : phase.status === 410
@@ -110,7 +110,7 @@ function RedeemBody({ token }: { token: string }) {
             <Link
               href="/"
               data-testid="redeem-go-map"
-              className="inline-block rounded-[8px] border-[1.5px] border-line bg-surface px-3 py-1.5 text-[11px] font-bold text-ink-soft"
+              className="inline-block rounded-control border border-line bg-surface px-3 py-1.5 text-caption font-bold text-ink-soft"
             >
               Back to the map
             </Link>

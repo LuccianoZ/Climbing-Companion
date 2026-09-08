@@ -156,7 +156,7 @@ export function ImageUploadField({
         <div
           data-testid="image-upload-preview"
           data-media-asset-id={asset.id}
-          className="flex items-center gap-3 rounded-[12px] border-[1.5px] border-line bg-surface p-2.5"
+          className="flex items-center gap-3 rounded-card border border-line bg-surface p-2.5"
         >
           {/* eslint-disable-next-line @next/next/no-img-element --
               next/image cannot optimise a blob: URL, and this is a local
@@ -164,14 +164,14 @@ export function ImageUploadField({
           <img
             src={previewUrl}
             alt="Selected verification photo"
-            className="h-14 w-14 shrink-0 rounded-[8px] border border-line-soft object-cover"
+            className="h-14 w-14 shrink-0 rounded-control border border-line-soft object-cover"
           />
           <div className="min-w-0 flex-1">
-            <p className="flex items-center gap-1.5 text-[12px] font-semibold text-moss-deep">
+            <p className="flex items-center gap-1.5 text-small font-semibold text-moss-deep">
               <CheckIcon className="h-3.5 w-3.5" />
               Photo uploaded
             </p>
-            <p className="truncate text-[10.5px] text-ink-faint">
+            <p className="truncate text-caption text-ink-faint">
               {fileName} · {formatBytes(asset.byteSize)}
             </p>
           </div>
@@ -191,17 +191,17 @@ export function ImageUploadField({
           htmlFor={inputId}
           data-testid="image-upload-dropzone"
           className={[
-            'flex cursor-pointer flex-col items-center gap-2 rounded-[12px] border-[1.5px] border-dashed border-line px-4 py-6 text-center',
+            'flex cursor-pointer flex-col items-center gap-2 rounded-card border border-dashed border-line px-4 py-6 text-center',
             disabled || pending ? 'opacity-60' : 'bg-surface',
           ].join(' ')}
         >
-          <span className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-line bg-paper">
+          <span className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-paper">
             <CameraIcon className="h-5 w-5 text-ink" />
           </span>
-          <span className="text-[12.5px] font-semibold text-ink">
+          <span className="text-small font-semibold text-ink">
             {pending ? 'Uploading…' : label}
           </span>
-          <span className="text-[10.5px] text-ink-faint">
+          <span className="text-caption text-ink-faint">
             {hint ?? 'Max 5MB (JPEG or PNG only)'}
           </span>
         </label>
@@ -211,7 +211,7 @@ export function ImageUploadField({
         <p
           role="alert"
           data-testid="image-upload-error"
-          className="text-[10.5px] leading-snug text-clay-deep"
+          className="text-caption leading-snug text-clay-deep"
         >
           {error}
         </p>

@@ -111,7 +111,7 @@ export function VerifyRouteSheet({
           {result.cragNewlyVerified ? (
             <p
               data-testid="crag-cascaded"
-              className="rounded-[10px] border-[1.5px] border-line bg-paper px-3 py-2.5 text-[11.5px] leading-snug text-ink-soft"
+              className="rounded-control border border-line bg-paper px-3 py-2.5 text-small leading-snug text-ink-soft"
             >
               This was the founding route of {crag.name}, so the whole crag is
               now verified too.
@@ -121,7 +121,7 @@ export function VerifyRouteSheet({
             type="button"
             data-testid="verify-done"
             onClick={onClose}
-            className="w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[13px] font-bold text-paper"
+            className="w-full rounded-control border border-ink bg-ink px-4 py-3 text-small font-bold text-paper"
           >
             Done
           </button>
@@ -141,8 +141,8 @@ export function VerifyRouteSheet({
           {route ? (
             <>
               <div data-testid="verify-progress" className="space-y-1">
-                <div className="flex items-center justify-between text-[10.5px] text-ink-soft">
-                  <span className="label-caps text-[9px] text-ink-faint">
+                <div className="flex items-center justify-between text-caption text-ink-soft">
+                  <span className="label-caps text-caption text-ink-faint">
                     Verification progress
                   </span>
                   <span>
@@ -171,7 +171,7 @@ export function VerifyRouteSheet({
               <div className="space-y-1.5">
                 <label
                   htmlFor="verifyGradeOrdinal"
-                  className="label-caps block text-[9.5px] text-ink-faint"
+                  className="label-caps block text-caption text-ink-faint"
                 >
                   Your grade for this route *
                 </label>
@@ -186,7 +186,7 @@ export function VerifyRouteSheet({
                         : Number(event.target.value),
                     )
                   }
-                  className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[13px] text-ink outline-none"
+                  className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-small text-ink outline-none"
                 >
                   <option value="">Select grade</option>
                   {gradeOptions(route.discipline, scale).map((option) => (
@@ -195,7 +195,7 @@ export function VerifyRouteSheet({
                     </option>
                   ))}
                 </select>
-                <p className="text-[10.5px] leading-snug text-ink-faint">
+                <p className="text-caption leading-snug text-ink-faint">
                   Currently{' '}
                   {route.grade.source === 'CONSENSUS' ? 'consensus' : 'proposed'}{' '}
                   at{' '}

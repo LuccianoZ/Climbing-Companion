@@ -46,7 +46,7 @@ export function FlagQueue() {
     return (
       <p
         data-testid="flag-queue-error"
-        className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+        className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
       >
         Couldn&apos;t load the flag queue. Check that the API is running.
       </p>
@@ -55,7 +55,7 @@ export function FlagQueue() {
 
   if (items === null) {
     return (
-      <p data-testid="flag-queue-loading" className="text-[12px] text-ink-faint">
+      <p data-testid="flag-queue-loading" className="text-small text-ink-faint">
         Loading the queue…
       </p>
     );
@@ -65,7 +65,7 @@ export function FlagQueue() {
     return (
       <p
         data-testid="flag-queue-empty"
-        className="rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-3 text-[12px] text-ink-soft"
+        className="rounded-control border border-line bg-surface px-3 py-3 text-small text-ink-soft"
       >
         Nothing pending. Every uploaded photo has been reviewed.
       </p>
@@ -91,28 +91,28 @@ export function FlagQueue() {
             <img
               src={`/api/media/${item.mediaAssetId}`}
               alt="Pending upload"
-              className="h-28 w-40 shrink-0 rounded-[8px] border border-line-soft object-cover"
+              className="h-28 w-40 shrink-0 rounded-control border border-line-soft object-cover"
             />
 
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-line-soft bg-paper px-2 py-0.5 text-[10.5px] font-semibold text-ink-soft">
+                <span className="rounded-full border border-line-soft bg-paper px-2 py-0.5 text-caption font-semibold text-ink-soft">
                   {MEDIA_PURPOSE_LABELS[item.purpose]}
                 </span>
                 {isVerificationPhoto(item.purpose) ? (
                   <span
                     data-testid="flag-queue-verification-badge"
-                    className="rounded-full border border-clay-deep bg-clay-wash px-2 py-0.5 text-[10px] font-semibold text-clay-deep"
+                    className="rounded-full border border-clay-deep bg-clay-wash px-2 py-0.5 text-caption font-semibold text-clay-deep"
                   >
                     Rejection strikes uploader (AR-1)
                   </span>
                 ) : null}
-                <span className="font-mono text-[10.5px] text-ink-faint">
+                <span className="font-mono text-caption text-ink-faint">
                   {item.mediaAssetId}
                 </span>
               </div>
 
-              <p className="mt-1 font-mono text-[11px] text-ink-faint">
+              <p className="mt-1 font-mono text-caption text-ink-faint">
                 uploaded {new Date(item.createdAt).toLocaleString()} · owner{' '}
                 {item.ownerUserId}
               </p>
@@ -123,7 +123,7 @@ export function FlagQueue() {
                   className="mt-2 space-y-1 border-l-2 border-clay-deep/40 pl-2"
                 >
                   {item.reports.map((r) => (
-                    <li key={r.id} className="text-[11px] text-ink-soft">
+                    <li key={r.id} className="text-caption text-ink-soft">
                       Reported by {r.reportedBy}
                       {r.reason ? ` — “${r.reason}”` : ''}
                     </li>
@@ -137,7 +137,7 @@ export function FlagQueue() {
                 onClick={() =>
                   setExpanded(open ? null : item.mediaAssetId)
                 }
-                className="mt-2 rounded-[7px] border-[1.5px] border-ink bg-ink px-3 py-1.5 text-[11px] font-semibold text-paper"
+                className="mt-2 rounded-control border border-ink bg-ink px-3 py-1.5 text-caption font-semibold text-paper"
               >
                 {open ? 'Close' : 'Review'}
               </button>

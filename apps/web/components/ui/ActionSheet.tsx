@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from 'react';
 import { CloseIcon } from '@/components/shell/icons';
+import { SheetPanel, SheetScrim } from '@/components/ui/motion';
 
 // AR-25. Every in-range action opens one of these rather than pushing a
 // route. Three reasons, in order of weight:
@@ -46,30 +47,41 @@ export function ActionSheet({
       {/* The scrim is what makes "this is modal" true rather than implied:
           without it a climber can tap a pin behind an open action sheet and
           change the target out from under a half-filled form. */}
-      <div
-        data-testid="action-scrim"
-        onClick={onClose}
-        className="absolute inset-0 z-[1150] bg-ink/35"
-      />
+      <SheetScrim onClick={onClose} />
 
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        data-testid={testId}
-        className="absolute inset-x-0 bottom-0 z-[1200] max-h-[88%] overflow-y-auto rounded-t-[18px] border-t-[1.5px] border-line bg-surface"
+      {/* bg-surface-high, not bg-surface: an action sheet opens *over* the
+          detail sheet, and on a dark ground the only thing that says "this is
+          the layer above" is being lighter than what it covers. */}
+      <SheetPanel
+        onClose={onClose}
+        label={title}
+        testId={testId}
+        className="absolute inset-x-0 bottom-0 z-[1200] max-h-[88%] overflow-y-auto rounded-t-card border-t border-line bg-surface-high shadow-overlay"
       >
-        <div className="sticky top-0 z-10 bg-surface pt-2">
-          <span className="mx-auto block h-1 w-10 rounded-full bg-line-soft" />
-          <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-2.5">
+        {(startDrag) => (
+          <>
+        <div className="sticky top-0 z-10 bg-surface-high pt-2">
+          {/* The grab handle is the drag affordance and the drag *listener*.
+              Binding the gesture to the panel body instead would turn every
+              attempt to scroll a long sheet into a dismiss. Padded well past
+              the visible 4px bar so it clears a 44px touch target. */}
+          <span
+            onPointerDown={startDrag}
+            data-testid="action-grabber"
+            aria-hidden
+            className="mx-auto flex h-5 w-16 cursor-grab touch-none items-center justify-center active:cursor-grabbing"
+          >
+            <span className="block h-1 w-10 rounded-full bg-line" />
+          </span>
+          <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-1.5">
             <div className="min-w-0">
-              <h2 className="text-[17px] font-bold tracking-tight text-ink">
+              <h2 className="text-heading font-bold tracking-tight text-ink">
                 {title}
               </h2>
               {subtitle ? (
                 <p
                   data-testid="action-subtitle"
-                  className="mt-0.5 truncate text-[11.5px] text-ink-soft"
+                  className="mt-0.5 truncate text-small text-ink-soft"
                 >
                   {subtitle}
                 </p>
@@ -80,7 +92,7 @@ export function ActionSheet({
               aria-label="Close"
               data-testid="action-close"
               onClick={onClose}
-              className="shrink-0 rounded-full border border-line-soft p-1 text-ink-soft"
+              className="shrink-0 rounded-full border border-line p-1.5 text-ink-soft transition-colors duration-(--dur-fast) hover:bg-surface hover:text-ink"
             >
               <CloseIcon className="h-4 w-4" />
             </button>
@@ -88,7 +100,9 @@ export function ActionSheet({
         </div>
 
         <div className="space-y-4 px-4 pb-7">{children}</div>
-      </section>
+          </>
+        )}
+      </SheetPanel>
     </>
   );
 }
@@ -104,7 +118,7 @@ export function ActionError({ message }: { message: string | null }) {
     <p
       role="alert"
       data-testid="action-error"
-      className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] leading-snug text-clay-deep"
+      className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small leading-snug text-clay-deep"
     >
       {message}
     </p>
@@ -119,7 +133,7 @@ export function ActionSuccess({ message }: { message: string | null }) {
     <p
       role="status"
       data-testid="action-success"
-      className="rounded-[10px] border-[1.5px] border-line bg-moss-wash px-3 py-2.5 text-[12px] leading-snug text-moss-deep"
+      className="rounded-control border border-line bg-moss-wash px-3 py-2.5 text-small leading-snug text-moss-deep"
     >
       {message}
     </p>
@@ -151,10 +165,14 @@ export function ActionSubmit({
       data-testid={testId}
       disabled={pending || disabled}
       className={[
-        'w-full rounded-[10px] border-[1.5px] px-4 py-3 text-[13px] font-bold transition-opacity disabled:opacity-45',
+        'w-full rounded-card border px-4 py-3.5 text-small font-bold',
+        'transition-[opacity,transform,box-shadow] duration-(--dur-fast) ease-standard',
+        'active:scale-[0.98] disabled:opacity-45 disabled:active:scale-100',
+        // text-paper on the clay fill: post-revamp `ink` is near-white and
+        // would sit on saturated orange at 2.9:1.
         tone === 'clay'
-          ? 'border-clay-deep bg-clay text-ink'
-          : 'border-ink bg-ink text-paper',
+          ? 'border-clay bg-clay text-paper shadow-accent'
+          : 'border-ink bg-ink text-paper shadow-raised',
       ].join(' ')}
     >
       {pending ? pendingLabel : label}

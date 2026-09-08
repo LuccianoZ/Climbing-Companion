@@ -231,7 +231,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
     return (
       <p
         data-testid="entity-editor-error"
-        className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+        className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
       >
         {loadError}
       </p>
@@ -241,10 +241,10 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
   if (gone) {
     return (
       <div data-testid="entity-editor-gone" className="card max-w-xl space-y-3 p-4">
-        <p className="text-[13.5px] font-bold text-clay-deep">{gone}</p>
+        <p className="text-body font-bold text-clay-deep">{gone}</p>
         <Link
           href="/admin/stewardship"
-          className="inline-block rounded-[8px] border-[1.5px] border-ink bg-ink px-3.5 py-2 text-[12px] font-semibold text-paper"
+          className="inline-block rounded-control border border-ink bg-ink px-3.5 py-2 text-small font-semibold text-paper"
         >
           Back to search
         </Link>
@@ -254,7 +254,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
 
   if ((kind === 'gym' && !gymForm) || (kind === 'route' && !routeForm)) {
     return (
-      <p data-testid="entity-editor-loading" className="text-[12px] text-ink-faint">
+      <p data-testid="entity-editor-loading" className="text-small text-ink-faint">
         Loading…
       </p>
     );
@@ -265,7 +265,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
       {flash ? (
         <p
           data-testid="entity-editor-flash"
-          className="rounded-[8px] border-[1.5px] border-moss-deep bg-moss-wash px-3 py-2 text-[12px] text-moss-deep"
+          className="rounded-control border border-moss-deep bg-moss-wash px-3 py-2 text-small text-moss-deep"
         >
           {flash}
         </p>
@@ -274,7 +274,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
       {status === 'ARCHIVED' ? (
         <p
           data-testid="entity-editor-archived"
-          className="rounded-[8px] border-[1.5px] border-line-soft bg-paper px-3 py-2 text-[11.5px] italic text-ink-soft"
+          className="rounded-control border border-line-soft bg-paper px-3 py-2 text-small italic text-ink-soft"
         >
           This entity is archived (hidden from the map). Editing still works;
           use Remove → Restore to bring it back.
@@ -284,7 +284,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
       {kind === 'route' && route?.isFoundingRoute ? (
         <p
           data-testid="entity-editor-founding"
-          className="rounded-[8px] border-[1.5px] border-line-soft bg-paper px-3 py-2 text-[11.5px] text-ink-soft"
+          className="rounded-control border border-line-soft bg-paper px-3 py-2 text-small text-ink-soft"
         >
           This is the founding route of crag{' '}
           <span className="font-semibold">{route.cragName}</span>. Its lifecycle
@@ -315,7 +315,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
         <p
           role="alert"
           data-testid="entity-editor-form-error"
-          className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
         >
           {error}
         </p>
@@ -327,7 +327,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
           data-testid="entity-editor-save"
           disabled={pending || changes.length === 0}
           onClick={() => setShowDiff(true)}
-          className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+          className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
         >
           {changes.length === 0
             ? 'No changes'
@@ -338,7 +338,7 @@ export function EntityEditor({ kind, id }: { kind: Kind; id: string }) {
           data-testid="entity-editor-remove"
           disabled={pending}
           onClick={() => setShowDelete(true)}
-          className="rounded-[8px] border-[1.5px] border-clay-deep px-4 py-2 text-[12px] font-semibold text-clay-deep"
+          className="rounded-control border border-clay-deep px-4 py-2 text-small font-semibold text-clay-deep"
         >
           Remove from map…
         </button>
@@ -432,7 +432,7 @@ function GymFields({
         />
       </div>
       <fieldset className="space-y-2">
-        <legend className="label-caps text-[9.5px] text-ink-faint">
+        <legend className="label-caps text-caption text-ink-faint">
           Disciplines offered
         </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -443,7 +443,7 @@ function GymFields({
                 key={item}
                 data-testid={`editor-gym-discipline-${item}`}
                 className={[
-                  'flex cursor-pointer items-center gap-2 rounded-[8px] border-[1.5px] px-2.5 py-2 text-[11.5px] font-medium',
+                  'flex cursor-pointer items-center gap-2 rounded-control border px-2.5 py-2 text-small font-medium',
                   checked
                     ? 'border-ink bg-paper text-ink'
                     : 'border-line-soft bg-surface text-ink-soft',
@@ -524,7 +524,7 @@ function RouteFields({
       </div>
 
       <div className="space-y-1.5">
-        <span className="label-caps block text-[9.5px] text-ink-faint">
+        <span className="label-caps block text-caption text-ink-faint">
           Discipline
         </span>
         <div className="grid grid-cols-3 gap-2">
@@ -537,7 +537,7 @@ function RouteFields({
               disabled={disabled}
               onClick={() => onChange({ ...form, discipline: option, gradeOrdinal: 0 })}
               className={[
-                'rounded-[10px] border-[1.5px] px-2 py-2 text-[11px] font-bold',
+                'rounded-control border px-2 py-2 text-caption font-bold',
                 option === form.discipline
                   ? 'border-ink bg-ink text-paper'
                   : 'border-line bg-surface text-ink',
@@ -550,14 +550,14 @@ function RouteFields({
       </div>
 
       <label className="block space-y-1.5">
-        <span className="label-caps block text-[9.5px] text-ink-faint">
+        <span className="label-caps block text-caption text-ink-faint">
           Proposed grade
         </span>
         <select
           value={form.gradeOrdinal}
           disabled={disabled}
           onChange={(e) => set('gradeOrdinal', Number(e.target.value))}
-          className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[13px] text-ink"
+          className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-small text-ink"
         >
           {gradeOptions(form.discipline, 'YOSEMITE').map((option) => (
             <option key={option.ordinal} value={option.ordinal}>
@@ -585,7 +585,7 @@ function RouteFields({
       ) : null}
 
       <fieldset className="space-y-2">
-        <legend className="label-caps text-[9.5px] text-ink-faint">
+        <legend className="label-caps text-caption text-ink-faint">
           Gear needed
         </legend>
         <div className="grid grid-cols-2 gap-2">
@@ -596,7 +596,7 @@ function RouteFields({
                 key={item}
                 data-testid={`editor-gear-${item}`}
                 className={[
-                  'flex cursor-pointer items-center gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-[11.5px] font-medium',
+                  'flex cursor-pointer items-center gap-2 rounded-control border px-2.5 py-2 text-small font-medium',
                   checked
                     ? 'border-ink bg-paper text-ink'
                     : 'border-line-soft bg-surface text-ink-soft',
@@ -624,7 +624,7 @@ function RouteFields({
       </fieldset>
 
       <label className="block space-y-1.5">
-        <span className="label-caps block text-[9.5px] text-ink-faint">
+        <span className="label-caps block text-caption text-ink-faint">
           Description &amp; beta
         </span>
         <textarea
@@ -633,7 +633,7 @@ function RouteFields({
           value={form.summary}
           disabled={disabled}
           onChange={(e) => set('summary', e.target.value)}
-          className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[12.5px] leading-relaxed text-ink"
+          className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-small leading-relaxed text-ink"
         />
       </label>
 

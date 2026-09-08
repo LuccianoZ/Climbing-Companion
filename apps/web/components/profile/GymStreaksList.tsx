@@ -9,7 +9,7 @@ export function GymStreaksList({ streaks }: { streaks: GymStreakView[] }) {
     return (
       <p
         data-testid="gym-streaks-empty"
-        className="text-[12px] text-ink-faint"
+        className="text-small text-ink-faint"
       >
         No active streaks yet — check in at the same gym in consecutive
         months to start one.
@@ -23,12 +23,12 @@ export function GymStreaksList({ streaks }: { streaks: GymStreakView[] }) {
         <li
           key={streak.gymId}
           data-testid="gym-streak-row"
-          className="flex items-center justify-between rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2"
+          className="flex items-center justify-between rounded-control border border-line bg-surface px-3 py-2"
         >
-          <span className="text-[12px] font-bold text-ink">
+          <span className="text-small font-bold text-ink">
             {streak.gymName}
           </span>
-          <span className="text-[12px] font-extrabold text-clay-deep">
+          <span className="text-small font-extrabold text-clay-deep">
             {streak.currentStreakMonths}-month streak
           </span>
         </li>

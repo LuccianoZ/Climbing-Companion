@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useSession } from '@/lib/session';
+import { ScreenTransition } from '@/components/ui/motion';
 import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons';
 
 // The chrome every climber-facing screen shares: a brand bar and a bottom tab
@@ -59,26 +60,44 @@ export function AppShell({
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[430px] flex-col border-line-soft bg-paper sm:border-x">
-      <header className="z-[1200] flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-3">
+      {/* The hazard strip. Four pixels of accent across the top of every
+          screen -- the athletic-signage motif, and the cheapest possible way
+          to make the whole app read as one branded object rather than as a
+          dark background. */}
+      <span
+        aria-hidden
+        className="hatch h-1 w-full shrink-0 bg-clay animate-wipe"
+      />
+
+      {/* Topographic contour texture: what makes the chrome belong to a
+          climbing product rather than a generic dark app. */}
+      <header className="topo z-[1200] flex shrink-0 select-none items-center gap-2 border-b border-line-soft bg-surface px-4 py-3">
         <span className="flex w-9 shrink-0 justify-start">
           {isAdmin ? (
             <Link
               href="/admin"
               aria-label="Admin dashboard"
               data-testid="admin-entry"
-              className="rounded-[8px] border-[1.5px] border-line bg-paper p-1.5 text-clay-deep"
+              className="press rounded-control bg-clay p-2 text-paper"
             >
               <ShieldIcon className="h-[18px] w-[18px]" />
             </Link>
           ) : null}
         </span>
 
-        <span className="label-caps flex-1 text-center text-[14px] text-ink">
-          Climbing Companion
+        {/* Left-aligned, not centred. A centred wordmark between two reserved
+            slots is a caption; hard against the edge at display size it is a
+            masthead. The slash is the condensed-signage tic that keeps it from
+            reading as plain uppercase text. */}
+        <span className="flex flex-1 items-baseline gap-1.5">
+          <span className="display text-title leading-none text-ink">
+            CLIMBING
+          </span>
+          <span className="display text-title leading-none text-clay">
+            /COMPANION
+          </span>
         </span>
 
-        {/* Mirrors the admin slot so the title is centred in the header, not
-            in whatever space the left button happens to leave. */}
         <span className="w-9 shrink-0" aria-hidden />
       </header>
 
@@ -86,15 +105,21 @@ export function AppShell({
         className={
           bleed
             ? 'relative min-h-0 flex-1 overflow-hidden'
-            : 'min-h-0 flex-1 overflow-y-auto px-4 py-5'
+            : 'topo min-h-0 flex-1 overflow-y-auto px-4 py-6'
         }
       >
-        {children}
+        {/* The map is exempt: it owns its own viewport, holds a Leaflet
+            instance and a geolocation watch, and translating it on every tab
+            return would re-trigger a resize measurement for no gain. Ordinary
+            pages get the transition. */}
+        {bleed ? children : (
+          <ScreenTransition routeKey={pathname}>{children}</ScreenTransition>
+        )}
       </main>
 
       <nav
         aria-label="Primary"
-        className="z-[1200] flex shrink-0 items-stretch justify-around border-t border-line bg-surface px-1 pt-1.5 pb-2"
+        className="glass z-[1200] flex shrink-0 select-none items-stretch justify-around border-x-0 border-b-0 px-2 pt-2 pb-3"
       >
         {tabs.map(({ href, label, Icon }) => {
           const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
@@ -104,20 +129,23 @@ export function AppShell({
               href={href}
               aria-current={active ? 'page' : undefined}
               data-testid={`tab-${label.toLowerCase().replace(/\s+/g, '-')}`}
-              className="flex flex-1 flex-col items-center gap-1 py-1 text-ink"
+              // 44px minimum touch target (plugin priority 2). The old tab was
+              // a 32px chip over a 10px label and missed it on both axes.
+              className={[
+                'press relative flex min-h-[54px] flex-1 flex-col items-center justify-center gap-1.5 py-1.5',
+                'rounded-control transition-colors duration-(--dur-fast) ease-standard',
+                // Accent as a FIELD: the current tab is a solid block of chalk
+                // orange with dark content on it, not an outlined icon with a
+                // tinted wash behind it. This is the single clearest place the
+                // register shows up, because it is on screen constantly.
+                active ? 'field-accent' : 'text-ink-faint',
+              ].join(' ')}
             >
+              <Icon className="h-[21px] w-[21px]" />
               <span
                 className={[
-                  'flex h-8 w-9 items-center justify-center rounded-lg transition-colors',
-                  active ? 'bg-clay text-ink' : 'text-ink-soft',
-                ].join(' ')}
-              >
-                <Icon className="h-[21px] w-[21px]" />
-              </span>
-              <span
-                className={[
-                  'text-[10px] leading-none',
-                  active ? 'font-semibold text-ink' : 'text-ink-soft',
+                  'label-caps leading-none',
+                  active ? 'text-paper' : 'text-ink-faint',
                 ].join(' ')}
               >
                 {label}
@@ -144,9 +172,9 @@ export function TabPlaceholder({
 }) {
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold tracking-tight text-ink">{title}</h1>
-      <p className="mt-2 text-sm leading-relaxed text-ink-soft">{children}</p>
-      <p className="label-caps mt-5 inline-block rounded-full border border-line-soft bg-surface px-3 py-1.5 text-[10px] text-ink-faint">
+      <h1 className="text-title font-bold tracking-tight text-ink">{title}</h1>
+      <p className="mt-2 text-body leading-relaxed text-ink-soft">{children}</p>
+      <p className="label-caps mt-5 inline-block rounded-full border border-line-soft bg-surface px-3 py-1.5 text-caption text-ink-faint">
         {owningStory}
       </p>
     </AppShell>

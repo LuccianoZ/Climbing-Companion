@@ -40,7 +40,7 @@ export function RouteChoice({
     return (
       <p
         data-testid="route-choice-empty"
-        className="rounded-[10px] border-[1.5px] border-line-soft bg-paper px-3 py-2.5 text-[11.5px] leading-snug text-ink-soft"
+        className="rounded-control border border-line-soft bg-paper px-3 py-2.5 text-small leading-snug text-ink-soft"
       >
         {emptyHint ?? 'There is no route here you can do this to.'}
       </p>
@@ -60,11 +60,11 @@ export function RouteChoice({
       <div
         data-testid="route-choice-single"
         data-route-id={only.id}
-        className="rounded-[10px] border-[1.5px] border-line bg-paper px-3 py-2.5"
+        className="rounded-control border border-line bg-paper px-3 py-2.5"
       >
-        <p className="label-caps text-[9px] text-ink-faint">Route</p>
-        <p className="text-[13px] font-bold text-ink">{only.name}</p>
-        <p className="text-[10.5px] text-ink-soft">
+        <p className="label-caps text-caption text-ink-faint">Route</p>
+        <p className="text-small font-bold text-ink">{only.name}</p>
+        <p className="text-caption text-ink-soft">
           {DISCIPLINE_LABELS[only.discipline]} ·{' '}
           {formatGrade(only.grade.gradeOrdinal, only.discipline, scale)}
         </p>
@@ -74,7 +74,7 @@ export function RouteChoice({
 
   return (
     <fieldset data-testid="route-choice" className="space-y-2">
-      <legend className="label-caps text-[9.5px] text-ink-faint">
+      <legend className="label-caps text-caption text-ink-faint">
         Which route?
       </legend>
       <div className="space-y-1.5">
@@ -88,7 +88,7 @@ export function RouteChoice({
               data-route-id={route.id}
               data-disabled={disabled ? 'true' : 'false'}
               className={[
-                'flex items-start gap-2.5 rounded-[10px] border-[1.5px] px-3 py-2.5',
+                'flex items-start gap-2.5 rounded-control border px-3 py-2.5',
                 disabled
                   ? 'cursor-not-allowed border-line-soft bg-paper opacity-60'
                   : checked
@@ -106,10 +106,10 @@ export function RouteChoice({
                 className="mt-0.5 h-3.5 w-3.5 accent-[color:var(--color-clay-deep)]"
               />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-bold text-ink">
+                <span className="block truncate text-small font-bold text-ink">
                   {route.name}
                 </span>
-                <span className="block text-[10.5px] text-ink-soft">
+                <span className="block text-caption text-ink-soft">
                   {DISCIPLINE_LABELS[route.discipline]} ·{' '}
                   {formatGrade(route.grade.gradeOrdinal, route.discipline, scale)}
                   {disabled && disabledHint ? ` · ${disabledHint}` : ''}

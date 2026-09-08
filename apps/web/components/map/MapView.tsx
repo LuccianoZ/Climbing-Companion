@@ -19,7 +19,7 @@ const MapCanvas = dynamic<MapCanvasProps>(() => import('./MapCanvas'), {
       data-testid="map-loading"
       className="flex h-full w-full items-center justify-center bg-paper"
     >
-      <span className="label-caps text-[11px] text-ink-faint">Loading map…</span>
+      <span className="label-caps text-caption text-ink-faint">Loading map…</span>
     </div>
   ),
 });

@@ -43,12 +43,12 @@ export function StewardshipSearch() {
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Search a gym or climb by name…"
           data-testid="stewardship-search-input"
-          className="min-w-0 flex-1 rounded-[8px] border-[1.5px] border-line bg-surface px-3 py-2 text-[13px] text-ink"
+          className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 text-small text-ink"
         />
         <button
           type="submit"
           disabled={searching}
-          className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+          className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
         >
           {searching ? 'Searching…' : 'Search'}
         </button>
@@ -57,7 +57,7 @@ export function StewardshipSearch() {
       {error ? (
         <p
           data-testid="stewardship-search-error"
-          className="rounded-[8px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2 text-[12px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2 text-small text-clay-deep"
         >
           {error}
         </p>
@@ -66,7 +66,7 @@ export function StewardshipSearch() {
       {results && results.length === 0 ? (
         <p
           data-testid="stewardship-search-empty"
-          className="rounded-[8px] border-[1.5px] border-line bg-surface px-3 py-3 text-[12px] text-ink-soft"
+          className="rounded-control border border-line bg-surface px-3 py-3 text-small text-ink-soft"
         >
           No gym or climb matches &ldquo;{term.trim()}&rdquo;. Archived entities
           do not appear in search — open one by its id if you know it.
@@ -84,17 +84,17 @@ export function StewardshipSearch() {
                 className="card flex items-center justify-between gap-3 p-3 hover:bg-paper"
               >
                 <div className="min-w-0">
-                  <p className="truncate text-[13px] font-bold text-ink">
+                  <p className="truncate text-small font-bold text-ink">
                     {row.name}
                   </p>
-                  <p className="font-mono text-[10px] text-ink-faint">
+                  <p className="font-mono text-caption text-ink-faint">
                     {row.kind} · {row.latitude.toFixed(4)},{' '}
                     {row.longitude.toFixed(4)}
                   </p>
                 </div>
                 <span
                   className={[
-                    'shrink-0 rounded-full border px-2 py-0.5 text-[9.5px] font-semibold italic',
+                    'shrink-0 rounded-full border px-2 py-0.5 text-caption font-semibold italic',
                     row.status === 'VERIFIED'
                       ? 'border-moss-deep bg-moss-wash text-moss-deep'
                       : 'border-line-soft bg-paper text-ink-soft',
@@ -108,7 +108,7 @@ export function StewardshipSearch() {
         </ul>
       ) : null}
 
-      <p className="text-[10.5px] text-ink-faint">
+      <p className="text-caption text-ink-faint">
         Editing takes effect immediately after you confirm. Deleting is
         permanent and requires typing DELETE; archiving is reversible.
       </p>

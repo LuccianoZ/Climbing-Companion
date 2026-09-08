@@ -91,10 +91,10 @@ export function ModerationDecisionPanel({
       onSubmit={onSubmit}
       data-testid="moderation-decision"
       data-media-id={item.mediaAssetId}
-      className="space-y-3 rounded-[8px] border border-line-soft bg-paper p-3"
+      className="space-y-3 rounded-control border border-line-soft bg-paper p-3"
     >
       <fieldset className="space-y-1.5">
-        <legend className="label-caps text-[9px] text-ink-faint">Decision</legend>
+        <legend className="label-caps text-caption text-ink-faint">Decision</legend>
         <div className="flex flex-wrap gap-1.5">
           <ActionButton
             current={action}
@@ -137,7 +137,7 @@ export function ModerationDecisionPanel({
       {isReject ? (
         <div className="space-y-2">
           <label className="block">
-            <span className="label-caps text-[9px] text-ink-faint">
+            <span className="label-caps text-caption text-ink-faint">
               Reason preset {reasonRequired ? '*' : '(optional)'}
             </span>
             <select
@@ -146,7 +146,7 @@ export function ModerationDecisionPanel({
               onChange={(e) =>
                 setPreset(e.target.value as ModerationReasonPreset | '')
               }
-              className="mt-1 w-full rounded-[8px] border-[1.5px] border-line-soft bg-surface px-2.5 py-2 text-[12px] text-ink"
+              className="mt-1 w-full rounded-control border border-line-soft bg-surface px-2.5 py-2 text-small text-ink"
             >
               <option value="">— none —</option>
               {PRESETS.map((p) => (
@@ -158,7 +158,7 @@ export function ModerationDecisionPanel({
           </label>
 
           <label className="block">
-            <span className="label-caps text-[9px] text-ink-faint">
+            <span className="label-caps text-caption text-ink-faint">
               Reason text{' '}
               {preset === 'OTHER' ? '*' : '(fills the email to the user)'}
             </span>
@@ -168,21 +168,21 @@ export function ModerationDecisionPanel({
               onChange={(e) => setText(e.target.value)}
               maxLength={MODERATION_REASON_MAX_LENGTH}
               rows={2}
-              className="mt-1 w-full rounded-[8px] border-[1.5px] border-line-soft bg-surface px-2.5 py-2 text-[12px] text-ink"
+              className="mt-1 w-full rounded-control border border-line-soft bg-surface px-2.5 py-2 text-small text-ink"
             />
-            <span className="text-[10px] text-ink-faint">
+            <span className="text-caption text-ink-faint">
               {text.length}/{MODERATION_REASON_MAX_LENGTH}
             </span>
           </label>
 
           {strikes ? (
-            <p className="text-[11px] text-clay-deep">
+            <p className="text-caption text-clay-deep">
               The uploader is emailed and receives a strike. Three strikes
               auto-suspend the account.
             </p>
           ) : null}
           {bans ? (
-            <p className="text-[11px] text-clay-deep">
+            <p className="text-caption text-clay-deep">
               The uploader is suspended immediately and emailed the reason.
             </p>
           ) : null}
@@ -193,7 +193,7 @@ export function ModerationDecisionPanel({
         <p
           role="alert"
           data-testid="moderation-error"
-          className="rounded-[8px] border-[1.5px] border-clay-deep bg-clay-wash px-2.5 py-2 text-[11.5px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-2.5 py-2 text-small text-clay-deep"
         >
           {error}
         </p>
@@ -203,7 +203,7 @@ export function ModerationDecisionPanel({
         type="submit"
         data-testid="moderation-submit"
         disabled={pending || missingReason || otherNeedsText}
-        className="rounded-[8px] border-[1.5px] border-ink bg-ink px-3.5 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+        className="rounded-control border border-ink bg-ink px-3.5 py-2 text-small font-bold text-paper disabled:opacity-45"
       >
         {pending ? 'Applying…' : 'Apply decision'}
       </button>
@@ -230,7 +230,7 @@ function ActionButton({
       aria-pressed={active}
       onClick={() => onPick(value)}
       className={[
-        'rounded-[7px] border-[1.5px] px-2.5 py-1.5 text-[11px] font-semibold',
+        'rounded-control border px-2.5 py-1.5 text-caption font-semibold',
         active
           ? 'border-ink bg-ink text-paper'
           : 'border-line-soft bg-surface text-ink-soft',

@@ -62,9 +62,9 @@ export function AddMorePhotosForm({
   return (
     <div
       data-testid="add-more-photos"
-      className="space-y-2 rounded-[12px] border-[1.5px] border-dashed border-line-soft p-3"
+      className="space-y-2 rounded-card border border-dashed border-line-soft p-3"
     >
-      <p className="label-caps text-[9px] text-ink-faint">Add more photos</p>
+      <p className="label-caps text-caption text-ink-faint">Add more photos</p>
       <ImageUploadField
         purpose={purpose}
         label="Add a photo"
@@ -76,13 +76,13 @@ export function AddMorePhotosForm({
       {status === 'saved' ? (
         <p
           data-testid="add-more-photos-success"
-          className="text-[11px] font-medium text-moss-deep"
+          className="text-caption font-medium text-moss-deep"
         >
           Photo added — pending admin approval.
         </p>
       ) : null}
       {status === 'error' && error ? (
-        <p role="alert" className="text-[11px] text-clay-deep">
+        <p role="alert" className="text-caption text-clay-deep">
           {error}
         </p>
       ) : null}

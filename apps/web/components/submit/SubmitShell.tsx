@@ -26,7 +26,8 @@ export function SubmitShell({
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[430px] flex-col border-line-soft bg-paper sm:border-x">
-      <header className="flex shrink-0 items-center gap-3 border-b border-line bg-surface px-4 py-3">
+      <span aria-hidden className="hatch h-1 w-full shrink-0 bg-clay" />
+      <header className="topo flex shrink-0 items-center gap-3 border-b border-line-soft bg-surface px-4 py-3">
         <button
           type="button"
           aria-label="Go back"
@@ -36,17 +37,17 @@ export function SubmitShell({
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </button>
-        <span className="label-caps flex-1 text-center text-[15px] text-ink">
+        <span className="display flex-1 text-center text-heading text-ink">
           Climbing Companion
         </span>
         <span className="h-5 w-5" aria-hidden />
       </header>
 
       <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
-        <h1 className="text-[21px] font-bold tracking-tight text-ink">
+        <h1 className="display text-title text-ink">
           {title}
         </h1>
-        <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
+        <p className="mt-1 text-small leading-relaxed text-ink-soft">
           {subtitle}
         </p>
         <div className="mt-4">{children}</div>

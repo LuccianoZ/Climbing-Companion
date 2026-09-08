@@ -19,7 +19,7 @@ export default function MapPage() {
             data-testid="map-booting"
             className="flex h-full w-full items-center justify-center bg-paper"
           >
-            <span className="label-caps text-[11px] text-ink-faint">
+            <span className="label-caps text-caption text-ink-faint">
               Loading map…
             </span>
           </div>

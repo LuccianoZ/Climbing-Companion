@@ -130,11 +130,11 @@ export function SubmitGymForm() {
           data-testid="submit-gym-success"
           className="card-raised space-y-4 p-4"
         >
-          <p className="flex items-center gap-2 text-[13px] font-bold text-moss-deep">
+          <p className="flex items-center gap-2 text-small font-bold text-moss-deep">
             <CheckIcon className="h-4 w-4" />
             {result.name} is live
           </p>
-          <p className="text-[12px] leading-relaxed text-ink-soft">
+          <p className="text-small leading-relaxed text-ink-soft">
             {verified
               ? 'Your photos are published straight away. The disciplines and hours you entered are authoritative.'
               : 'Your photos are pending admin approval — the detail panel shows that until one is approved. Verifiers confirm your information rather than re-entering it.'}
@@ -142,7 +142,7 @@ export function SubmitGymForm() {
           <Link
             href={`/?kind=GYM&id=${result.id}&lat=${point.latitude}&lng=${point.longitude}&name=${encodeURIComponent(result.name)}`}
             data-testid="view-on-map"
-            className="label-caps block rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-center text-[11.5px] text-paper"
+            className="label-caps block rounded-control border border-ink bg-ink px-4 py-3 text-center text-small text-paper"
           >
             View it on the map
           </Link>
@@ -197,7 +197,7 @@ export function SubmitGymForm() {
           />
 
           <fieldset data-testid="gym-disciplines-choice" className="space-y-2">
-            <legend className="label-caps text-[9.5px] text-ink-faint">
+            <legend className="label-caps text-caption text-ink-faint">
               Disciplines offered *
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -208,7 +208,7 @@ export function SubmitGymForm() {
                     key={item}
                     data-testid={`gym-discipline-${item}`}
                     className={[
-                      'flex cursor-pointer items-center gap-2 rounded-[10px] border-[1.5px] px-2.5 py-2 text-[11.5px] font-medium',
+                      'flex cursor-pointer items-center gap-2 rounded-control border px-2.5 py-2 text-small font-medium',
                       checked
                         ? 'border-ink bg-paper text-ink'
                         : 'border-line-soft bg-surface text-ink-soft',
@@ -227,7 +227,7 @@ export function SubmitGymForm() {
               })}
             </div>
             {fieldErrors.disciplines ? (
-              <p className="text-[10.5px] text-clay-deep">
+              <p className="text-caption text-clay-deep">
                 {fieldErrors.disciplines}
               </p>
             ) : null}
@@ -243,7 +243,7 @@ export function SubmitGymForm() {
               disabled={pending}
             />
             {fieldErrors.photos ? (
-              <p className="text-[10.5px] text-clay-deep">{fieldErrors.photos}</p>
+              <p className="text-caption text-clay-deep">{fieldErrors.photos}</p>
             ) : null}
           </div>
         </div>
@@ -254,7 +254,7 @@ export function SubmitGymForm() {
           type="submit"
           data-testid="submit-gym"
           disabled={pending}
-          className="w-full rounded-[10px] border-[1.5px] border-clay-deep bg-clay px-4 py-3 text-[13px] font-bold text-ink transition-opacity disabled:opacity-45"
+          className="press display w-full rounded-control border border-clay bg-clay px-4 py-3.5 text-heading leading-none text-paper shadow-accent disabled:opacity-45"
         >
           {pending ? 'Submitting…' : 'Submit gym'}
         </button>

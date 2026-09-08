@@ -27,14 +27,14 @@ function ModalShell({
       data-testid={testId}
       className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/40 p-4"
     >
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[14px] border-[1.5px] border-line bg-surface p-5 shadow-[4px_4px_0_var(--color-line)]">
+      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-surface p-5 shadow-overlay">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <h2 className="text-[16px] font-bold text-ink">{title}</h2>
+          <h2 className="text-heading font-bold text-ink">{title}</h2>
           <button
             type="button"
             aria-label="Close"
             onClick={onCancel}
-            className="rounded-full border border-line-soft px-2 text-[13px] text-ink-soft"
+            className="rounded-full border border-line-soft px-2 text-small text-ink-soft"
           >
             ×
           </button>
@@ -72,24 +72,24 @@ export function ChangeDiffModal({
       testId="change-diff-modal"
     >
       {changes.length === 0 ? (
-        <p className="text-[12.5px] text-ink-soft">
+        <p className="text-small text-ink-soft">
           Nothing has changed. Close this and edit a field first.
         </p>
       ) : (
         <>
           <table
             data-testid="change-diff-table"
-            className="w-full border-collapse text-left text-[11.5px]"
+            className="w-full border-collapse text-left text-small"
           >
             <thead>
               <tr className="border-b-[1.5px] border-line">
-                <th className="label-caps py-1.5 pr-2 text-[8.5px] text-ink-faint">
+                <th className="label-caps py-1.5 pr-2 text-caption text-ink-faint">
                   Field
                 </th>
-                <th className="label-caps py-1.5 pr-2 text-[8.5px] text-ink-faint">
+                <th className="label-caps py-1.5 pr-2 text-caption text-ink-faint">
                   Was
                 </th>
-                <th className="label-caps py-1.5 text-[8.5px] text-ink-faint">
+                <th className="label-caps py-1.5 text-caption text-ink-faint">
                   Now
                 </th>
               </tr>
@@ -117,7 +117,7 @@ export function ChangeDiffModal({
           </table>
 
           <label className="mt-4 block">
-            <span className="text-[11.5px] text-ink-soft">
+            <span className="text-small text-ink-soft">
               Type <span className="font-mono font-bold">SAVE</span> to apply
               these changes.
             </span>
@@ -126,7 +126,7 @@ export function ChangeDiffModal({
               onChange={(e) => setTyped(e.target.value)}
               data-testid="change-diff-confirm-input"
               autoComplete="off"
-              className="mt-1 w-full rounded-[8px] border-[1.5px] border-line bg-surface px-3 py-2 font-mono text-[13px] text-ink"
+              className="mt-1 w-full rounded-control border border-line bg-surface px-3 py-2 font-mono text-small text-ink"
             />
           </label>
 
@@ -136,14 +136,14 @@ export function ChangeDiffModal({
               data-testid="change-diff-apply"
               disabled={!ready || pending}
               onClick={onConfirm}
-              className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+              className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
             >
               {pending ? 'Applying…' : 'Apply changes'}
             </button>
             <button
               type="button"
               onClick={onCancel}
-              className="rounded-[8px] border border-line-soft px-3 py-2 text-[12px] text-ink-soft"
+              className="rounded-control border border-line-soft px-3 py-2 text-small text-ink-soft"
             >
               Keep editing
             </button>
@@ -186,7 +186,7 @@ export function DeleteEntityModal({
       {cascadeNote ? (
         <p
           data-testid="delete-cascade-note"
-          className="mb-3 rounded-[8px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2 text-[11.5px] text-clay-deep"
+          className="mb-3 rounded-control border border-clay-deep bg-clay-wash px-3 py-2 text-small text-clay-deep"
         >
           {cascadeNote}
         </p>
@@ -194,11 +194,11 @@ export function DeleteEntityModal({
 
       <div className="space-y-4">
         {archived ? (
-          <div className="rounded-[10px] border-[1.5px] border-line-soft p-3">
-            <p className="text-[12px] font-semibold text-ink">
+          <div className="rounded-control border border-line-soft p-3">
+            <p className="text-small font-semibold text-ink">
               Currently archived
             </p>
-            <p className="mt-0.5 text-[11px] text-ink-soft">
+            <p className="mt-0.5 text-caption text-ink-soft">
               It is hidden from the map but the row and its history are intact.
             </p>
             <button
@@ -206,17 +206,17 @@ export function DeleteEntityModal({
               data-testid="delete-modal-restore"
               disabled={pending}
               onClick={onRestore}
-              className="mt-2 rounded-[8px] border-[1.5px] border-ink bg-ink px-3.5 py-1.5 text-[11.5px] font-bold text-paper disabled:opacity-45"
+              className="mt-2 rounded-control border border-ink bg-ink px-3.5 py-1.5 text-small font-bold text-paper disabled:opacity-45"
             >
               Restore to the map
             </button>
           </div>
         ) : (
-          <div className="rounded-[10px] border-[1.5px] border-line-soft p-3">
-            <p className="text-[12px] font-semibold text-ink">
+          <div className="rounded-control border border-line-soft p-3">
+            <p className="text-small font-semibold text-ink">
               Archive (reversible)
             </p>
-            <p className="mt-0.5 text-[11px] text-ink-soft">
+            <p className="mt-0.5 text-caption text-ink-soft">
               Hides it from the map and search. The row and every log stay. You
               can restore it later.
             </p>
@@ -225,23 +225,23 @@ export function DeleteEntityModal({
               data-testid="delete-modal-archive"
               disabled={pending}
               onClick={onArchive}
-              className="mt-2 rounded-[8px] border-[1.5px] border-line px-3.5 py-1.5 text-[11.5px] font-bold text-ink disabled:opacity-45"
+              className="mt-2 rounded-control border border-line px-3.5 py-1.5 text-small font-bold text-ink disabled:opacity-45"
             >
               Archive it
             </button>
           </div>
         )}
 
-        <div className="rounded-[10px] border-[1.5px] border-clay-deep p-3">
-          <p className="text-[12px] font-semibold text-clay-deep">
+        <div className="rounded-control border border-clay-deep p-3">
+          <p className="text-small font-semibold text-clay-deep">
             Delete permanently
           </p>
-          <p className="mt-0.5 text-[11px] text-ink-soft">
+          <p className="mt-0.5 text-caption text-ink-soft">
             Erases the row and its verifications, votes and logs. This cannot be
             undone.
           </p>
           <label className="mt-2 block">
-            <span className="text-[11px] text-ink-soft">
+            <span className="text-caption text-ink-soft">
               Type <span className="font-mono font-bold">DELETE</span> to
               confirm.
             </span>
@@ -250,7 +250,7 @@ export function DeleteEntityModal({
               onChange={(e) => setTyped(e.target.value)}
               data-testid="delete-confirm-input"
               autoComplete="off"
-              className="mt-1 w-full rounded-[8px] border-[1.5px] border-clay-deep bg-surface px-3 py-2 font-mono text-[13px] text-ink"
+              className="mt-1 w-full rounded-control border border-clay-deep bg-surface px-3 py-2 font-mono text-small text-ink"
             />
           </label>
           <button
@@ -258,7 +258,7 @@ export function DeleteEntityModal({
             data-testid="delete-modal-delete"
             disabled={!canDelete || pending}
             onClick={onDelete}
-            className="mt-2 rounded-[8px] border-[1.5px] border-clay-deep bg-clay-deep px-3.5 py-1.5 text-[11.5px] font-bold text-paper disabled:opacity-45"
+            className="mt-2 rounded-control border border-clay-deep bg-clay-deep px-3.5 py-1.5 text-small font-bold text-paper disabled:opacity-45"
           >
             {pending ? 'Deleting…' : 'Delete permanently'}
           </button>

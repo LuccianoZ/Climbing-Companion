@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { CloseIcon } from '@/components/shell/icons';
+import { ExpandableSheet, Pop, StaggerItem, StaggerList } from '@/components/ui/motion';
 import { formatGrade, type GradeScale } from '@/lib/grades';
 import { distanceMeters, formatDistance, isWithinProximity } from '@/lib/geo';
 import {
@@ -90,31 +91,70 @@ export function DetailSheet({
   const hasRoutes = detail?.kind === 'CRAG' ? detail.routes.length > 0 : false;
 
   return (
-    <section
-      role="dialog"
-      aria-label="Location details"
-      data-testid="detail-sheet"
-      data-detail-kind={detail?.kind ?? 'PENDING'}
-      className="pointer-events-auto absolute inset-x-0 bottom-0 z-[1100] max-h-[72%] overflow-y-auto rounded-t-[18px] border-t-[1.5px] border-line bg-surface shadow-[0_-6px_0_rgba(20,17,15,0.08)]"
+    // inset-0, not bottom-0 + max-h: the panel is now as tall as the map area
+    // and is translated down to its resting position, so dragging the handle
+    // up fills the screen the way a maps app does. Capping it at 72% was the
+    // reason a gym's hours, photos and reviews had to be read through a
+    // letterbox.
+    <ExpandableSheet
+      onClose={onClose}
+      label="Location details"
+      testId="detail-sheet"
+      data={{ 'data-detail-kind': detail?.kind ?? 'PENDING' }}
+      className="pointer-events-auto absolute inset-0 z-[1100] flex flex-col overflow-hidden rounded-t-card border-t border-line bg-surface shadow-overlay"
     >
-      <div className="sticky top-0 z-10 bg-surface pt-2">
-        <span className="mx-auto block h-1 w-10 rounded-full bg-line-soft" />
-        <div className="flex items-start justify-between gap-3 px-4 pb-3 pt-2.5">
-          <div className="min-w-0">
-            {/* BL-x01: name above the italicised status pill. */}
-            <h2 className="label-caps truncate text-[15px] text-ink">
-              {state.status === 'ready' ? state.detail.name : state.name}
-            </h2>
-            {detail ? (
-              <StatusPill status={detail.status} context="header" />
+      {({ startDrag, expanded }) => (
+        <>
+      <div className="shrink-0 bg-surface pt-2">
+        {/* Drag lives on the handle only -- the panel below it scrolls a
+            crag's full route list, and a body-wide listener would eat that. */}
+        <span
+          onPointerDown={startDrag}
+          data-testid="detail-grabber"
+          aria-hidden
+          className="mx-auto flex h-6 w-20 cursor-grab touch-none select-none items-center justify-center active:cursor-grabbing"
+        >
+          <span className="block h-1 w-10 rounded-full bg-line" />
+        </span>
+        {/* The header is the sheet's hero, not a caption. The name runs at
+            display size in the condensed face -- a crag called "Devil's
+            Staircase" should read like a place you are standing in, not like
+            a table row -- and the distance is promoted to a STAT, because it
+            is the number the entire product gates on. */}
+        <div
+          className={[
+            'flex items-start justify-between gap-3 px-5',
+            expanded ? 'pb-0 pt-1' : 'pb-1 pt-2',
+          ].join(' ')}
+        >
+          <div className="min-w-0 flex-1">
+            {/* BL-x01: name above the italicised status pill.
+
+                Expanded, the header compacts: the name drops a step and the
+                pill moves up beside it. The hero treatment earns its space
+                while the sheet is resting over the map and the name is the
+                only thing to read; once the panel is full the content below
+                is what the climber came for, and 40px of title plus a 56px
+                distance figure is just a wall to scroll past. font-size and
+                line-height both animate, so it eases rather than snaps. */}
+            <div className={expanded ? 'flex items-center gap-2.5' : ''}>
+              <h2
+                className={[
+                  'display truncate text-ink transition-[font-size,line-height] duration-(--dur-base) ease-standard',
+                  expanded ? 'text-title' : 'text-display',
+                ].join(' ')}
+              >
+                {state.status === 'ready' ? state.detail.name : state.name}
+              </h2>
+              {detail && expanded ? (
+                <StatusPill status={detail.status} context="header" compact />
+              ) : null}
+            </div>
+            {detail && !expanded ? (
+              <div className="mt-2">
+                <StatusPill status={detail.status} context="header" />
+              </div>
             ) : null}
-            <p className="mt-1 text-[11px] text-ink-soft">
-              {distance !== null
-                ? `Distance: ${formatDistance(distance)}`
-                : viewer === null
-                  ? 'Location unavailable'
-                  : '—'}
-            </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {detail?.kind === 'CRAG' ? (
@@ -125,23 +165,56 @@ export function DetailSheet({
               aria-label="Close details"
               data-testid="detail-close"
               onClick={onClose}
-              className="rounded-full border border-line-soft p-1 text-ink-soft"
+              className="press rounded-control border border-line p-1.5 text-ink-soft"
             >
               <CloseIcon className="h-4 w-4" />
             </button>
           </div>
         </div>
+
+        {/* Distance as a headline figure with a hairline label under it. The
+            old treatment ("Distance: 120m" at 11px) buried the one number a
+            climber is actually checking when they open this panel. */}
+        <div
+          className={[
+            'flex items-end gap-2 px-5',
+            expanded ? 'pb-2 pt-0' : 'pb-4 pt-1',
+          ].join(' ')}
+        >
+          <span
+            className={[
+              'stat transition-[font-size,line-height] duration-(--dur-base) ease-standard',
+              expanded ? 'text-title' : 'text-stat',
+              inRange ? 'text-moss-deep' : 'text-ink',
+            ].join(' ')}
+          >
+            {distance !== null ? formatDistance(distance) : '—'}
+          </span>
+          <span
+            className={[
+              'label-caps',
+              expanded ? 'pb-0.5' : 'pb-1.5',
+              inRange ? 'text-moss-deep' : 'text-ink-faint',
+            ].join(' ')}
+          >
+            {distance === null && viewer === null
+              ? 'No location'
+              : inRange
+                ? 'In range'
+                : 'Away'}
+          </span>
+        </div>
       </div>
 
-      <div className="space-y-4 px-4 pb-6">
+      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
         {state.status === 'loading' ? (
-          <p data-testid="detail-loading" className="py-6 text-center text-xs text-ink-faint">
+          <p data-testid="detail-loading" className="py-6 text-center text-small text-ink-faint">
             Loading details…
           </p>
         ) : null}
 
         {state.status === 'error' ? (
-          <p data-testid="detail-error" className="py-6 text-center text-xs text-clay-deep">
+          <p data-testid="detail-error" className="py-6 text-center text-small text-clay-deep">
             We couldn&apos;t load this location. It may have been archived.
           </p>
         ) : null}
@@ -176,7 +249,9 @@ export function DetailSheet({
           </>
         ) : null}
       </div>
-    </section>
+        </>
+      )}
+    </ExpandableSheet>
   );
 }
 
@@ -186,13 +261,23 @@ export function DetailSheet({
 export function StatusPill({
   status,
   context,
+  compact = false,
 }: {
   status: PinDetail['status'];
+  // Decides the test id and therefore the pill's identity to the UI suite --
+  // `header` is the detail panel's own pill (Foundation section 9), `row` is a
+  // route row's. Never switch this to change appearance; use `compact`.
   context: 'header' | 'row';
+  compact?: boolean;
 }) {
   const verified = status === 'VERIFIED';
-  const size = context === 'header' ? 'text-[10px] px-2 py-[2px]' : 'text-[8.5px] px-1.5 py-[1px]';
+  // Uppercase condensed at both sizes -- this is signage, not a sentence.
+  const size =
+    context === 'header' && !compact
+      ? 'display not-italic text-caption tracking-[0.12em] px-2.5 py-1'
+      : 'display not-italic text-caption tracking-[0.1em] px-1.5 py-[2px]';
   return (
+    <Pop className={context === 'header' ? 'mt-1 inline-block' : 'inline-block'}>
     <span
       data-testid={
         context === 'header'
@@ -203,16 +288,21 @@ export function StatusPill({
       }
       data-verified={verified ? 'true' : 'false'}
       className={[
-        context === 'header' ? 'mt-1 ' : '',
-        'inline-flex items-center gap-1 rounded-full border font-semibold italic',
+        'inline-flex items-center gap-1.5 font-semibold italic',
         size,
+        // Accent as a field: verified is a solid affirmative block with dark
+        // text on it, not an outlined badge. Never colour alone -- the italic
+        // word is required by Foundation section 9 and rides along regardless.
+        // Unverified stays deliberately flat and unfilled: the absence of a
+        // field is what reads as "not yet endorsed".
         verified
-          ? 'border-moss-deep bg-moss-wash text-moss-deep'
-          : 'border-line-soft bg-paper text-ink-soft',
+          ? 'field-affirm'
+          : 'border border-dormant/45 bg-transparent text-ink-soft',
       ].join(' ')}
     >
       {verified ? 'Verified' : 'Unverified'}
     </span>
+    </Pop>
   );
 }
 
@@ -221,7 +311,7 @@ function PhotosPendingNotice() {
   return (
     <p
       data-testid="photos-pending"
-      className="rounded-[10px] border-[1.5px] border-dashed border-line bg-paper px-3 py-2 text-[11px] font-medium text-ink-soft"
+      className="rounded-control border border-dashed border-line bg-paper px-3 py-2 text-caption font-medium text-ink-soft"
     >
       Photos pending admin approval
     </p>
@@ -247,18 +337,18 @@ function GymBody({
       ) : null}
 
       <div data-testid="gym-disciplines">
-        <p className="label-caps text-[9.5px] text-ink-faint">
+        <p className="label-caps text-caption text-ink-faint">
           Disciplines offered
         </p>
         {gym.disciplinesOffered.length === 0 ? (
-          <p className="mt-1.5 text-xs text-ink-faint">None listed.</p>
+          <p className="mt-1.5 text-small text-ink-faint">None listed.</p>
         ) : (
           <ul className="mt-1.5 flex flex-wrap gap-1.5">
             {gym.disciplinesOffered.map((discipline: GymDiscipline) => (
               <li
                 key={discipline}
                 data-testid="gym-discipline"
-                className="rounded-full border border-line bg-paper px-2.5 py-1 text-[11px] font-medium text-ink"
+                className="chip border border-line bg-paper text-ink"
               >
                 {GYM_DISCIPLINE_LABELS[discipline] ?? discipline}
               </li>
@@ -295,13 +385,13 @@ function OperatingHoursView({
   return (
     <div data-testid="gym-hours">
       <div className="flex items-center justify-between">
-        <p className="label-caps text-[9.5px] text-ink-faint">Hours</p>
+        <p className="label-caps text-caption text-ink-faint">Hours</p>
         {openNow !== null ? (
           <span
             data-testid="gym-open-now"
             data-open={openNow ? 'true' : 'false'}
             className={[
-              'rounded-full border px-2 py-[1px] text-[9px] font-bold uppercase',
+              'rounded-full border px-2 py-[1px] text-caption font-bold uppercase',
               openNow
                 ? 'border-moss-deep bg-moss-wash text-moss-deep'
                 : 'border-line-soft bg-paper text-ink-soft',
@@ -311,7 +401,7 @@ function OperatingHoursView({
           </span>
         ) : null}
       </div>
-      <ul className="mt-1.5 space-y-0.5 text-[11px]">
+      <ul className="mt-1.5 space-y-0.5 text-caption">
         {WEEKDAY_LABELS.map((label, day) => {
           const ranges = hours[String(day)] ?? [];
           return (
@@ -328,7 +418,7 @@ function OperatingHoursView({
           );
         })}
       </ul>
-      <p className="mt-1 text-[9.5px] text-ink-faint">
+      <p className="mt-1 text-caption text-ink-faint">
         Shown in the gym&apos;s local time ({timezone}).
       </p>
       {/* AR-51 BL-x08 / §13: hours corrections are handled by email, not an
@@ -337,7 +427,7 @@ function OperatingHoursView({
       <a
         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent('Gym hours correction')}`}
         data-testid="gym-hours-support"
-        className="mt-1 block text-[9.5px] text-ink-soft underline decoration-line-soft underline-offset-2"
+        className="mt-1 block text-caption text-ink-soft underline decoration-line-soft underline-offset-2"
       >
         Hours wrong? Email support to update them.
       </a>
@@ -408,25 +498,33 @@ function CragBody({
 }) {
   if (routes.length === 0) {
     return (
-      <p data-testid="crag-no-routes" className="text-xs text-ink-faint">
+      <p data-testid="crag-no-routes" className="text-small text-ink-faint">
         No visible routes at this crag.
       </p>
     );
   }
 
   return (
-    <div data-testid="crag-routes" className="space-y-3">
-      <p className="label-caps text-[9.5px] text-ink-faint">
-        Routes ({routes.length})
-      </p>
-      {routes.map((route) => (
-        <RouteCard
-          key={route.id}
-          route={route}
-          scale={scale}
-          viewerUserId={viewerUserId}
-        />
-      ))}
+    <div data-testid="crag-routes">
+      {/* Section marker: a thick accent rule with the count as a figure, in
+          place of the old 9.5px grey caption nobody's eye stopped on. */}
+      <div className="rule-accent mb-3 flex items-baseline gap-2">
+        <span className="stat text-title text-ink">{routes.length}</span>
+        <span className="label-caps text-ink-faint">
+          {routes.length === 1 ? 'Route' : 'Routes'}
+        </span>
+      </div>
+      <StaggerList className="space-y-2">
+        {routes.map((route) => (
+          <StaggerItem key={route.id}>
+            <RouteCard
+              route={route}
+              scale={scale}
+              viewerUserId={viewerUserId}
+            />
+          </StaggerItem>
+        ))}
+      </StaggerList>
     </div>
   );
 }
@@ -450,26 +548,34 @@ function RouteCard({
       data-testid="route-card"
       data-route-name={route.name}
       data-route-status={route.status}
-      className="card space-y-3 p-3"
+      // No card box. A bordered card per route inside a bordered panel inside
+      // a sheet was three frames around one row; a left rule and a divider do
+      // the same grouping and let the grade breathe.
+      className="space-y-3 border-l-2 border-line-soft py-2 pl-3"
     >
       <header className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="truncate text-[13.5px] font-bold text-ink">{route.name}</h3>
-          {/* BL-x01: the same italicised pill, on each route row. */}
-          <StatusPill status={route.status} context="row" />
-          <p className="label-caps mt-0.5 text-[9px] text-ink-faint">
+        <div className="min-w-0 flex-1">
+          <h3 className="display truncate text-heading text-ink">{route.name}</h3>
+          <p className="label-caps mt-0.5 text-ink-faint">
             {DISCIPLINE_LABELS[route.discipline]}
           </p>
+          {/* BL-x01: the same italicised pill, on each route row. */}
+          <div className="mt-1.5">
+            <StatusPill status={route.status} context="row" />
+          </div>
         </div>
+        {/* The grade IS the content of a route row -- it is what a climber
+            scans the list for -- so it is set as a figure, not boxed in a
+            bordered chip at 13px. */}
         <span
           data-testid="route-grade"
           data-grade-source={route.grade.source}
-          className="shrink-0 rounded-[8px] border-[1.5px] border-line bg-paper px-2 py-1 text-center"
+          className="shrink-0 text-right"
         >
-          <span className="block text-[13px] font-bold leading-none text-ink">
+          <span className="stat block text-title text-clay-deep">
             {formatGrade(route.grade.gradeOrdinal, route.discipline, scale)}
           </span>
-          <span className="label-caps mt-0.5 block text-[7.5px] text-ink-faint">
+          <span className="label-caps mt-1 block text-ink-faint">
             {route.grade.source === 'CONSENSUS' ? 'Consensus' : 'Proposed'}
           </span>
         </span>
@@ -484,18 +590,18 @@ function RouteCard({
         <AddMorePhotosForm kind="ROUTE" entityId={route.id} />
       ) : null}
 
-      <p className="text-[11.5px] leading-relaxed text-ink-soft">{route.summary}</p>
+      <p className="text-small leading-relaxed text-ink-soft">{route.summary}</p>
 
       {route.gearRequirements.length > 0 ? (
         <div data-testid="route-gear">
-          <p className="label-caps text-[9px] text-ink-faint">Gear</p>
+          <p className="label-caps text-ink-faint">Gear</p>
           <ul className="mt-1 flex flex-wrap gap-1.5">
             {route.gearRequirements.map((item) => (
               <li
                 key={item}
                 data-testid="gear-chip"
                 data-gear={item}
-                className="rounded-full border border-line bg-paper px-2.5 py-1 text-[11px] font-medium text-ink"
+                className="rounded-full border border-line bg-paper px-2.5 py-1 text-caption font-medium text-ink"
               >
                 {GEAR_REQUIREMENT_LABELS[item] ?? item}
               </li>
@@ -508,7 +614,7 @@ function RouteCard({
       (route.boltCount !== null || route.minRopeLengthM !== null) ? (
         <dl
           data-testid="route-rope-details"
-          className="flex gap-4 text-[11px] text-ink-soft"
+          className="flex gap-4 text-caption text-ink-soft"
         >
           {route.boltCount !== null ? (
             <div className="flex gap-1.5">
@@ -526,8 +632,8 @@ function RouteCard({
       ) : null}
 
       <div data-testid="verification-progress" className="space-y-1">
-        <div className="flex items-center justify-between text-[10px] text-ink-soft">
-          <span className="label-caps text-[9px] text-ink-faint">
+        <div className="flex items-center justify-between text-caption text-ink-soft">
+          <span className="label-caps text-caption text-ink-faint">
             Verification progress
           </span>
           <span data-testid="verification-count">

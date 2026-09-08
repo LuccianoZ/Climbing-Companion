@@ -71,7 +71,7 @@ export function CheckInSheet({
             type="button"
             data-testid="check-in-done"
             onClick={onClose}
-            className="w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[13px] font-bold text-paper"
+            className="w-full rounded-control border border-ink bg-ink px-4 py-3 text-small font-bold text-paper"
           >
             Done
           </button>
@@ -80,7 +80,7 @@ export function CheckInSheet({
         <form noValidate onSubmit={onSubmit} className="space-y-4">
           <p
             data-testid="check-in-copy"
-            className="text-[11.5px] leading-relaxed text-ink-soft"
+            className="text-small leading-relaxed text-ink-soft"
           >
             Confirm you&apos;re at {gym.name} right now. Check-ins aren&apos;t
             limited to once — drop by as often as you like.

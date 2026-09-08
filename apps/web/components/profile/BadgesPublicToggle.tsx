@@ -16,9 +16,9 @@ export function BadgesPublicToggle({
 }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="text-[12px] text-ink-soft">
+      <span className="text-small text-ink-soft">
         Show badges publicly
-        <span className="block text-[10px] text-ink-faint">
+        <span className="block text-caption text-ink-faint">
           Friends can always see your badges either way.
         </span>
       </span>
@@ -39,7 +39,7 @@ export function BadgesPublicToggle({
               data-testid={`badges-public-${option ? 'on' : 'off'}`}
               onClick={() => onChange(option)}
               className={[
-                'rounded-full px-2.5 py-[3px] text-[10px] font-bold tracking-wide transition-colors disabled:opacity-50',
+                'rounded-full px-2.5 py-[3px] text-caption font-bold tracking-wide transition-colors disabled:opacity-50',
                 active ? 'bg-surface text-ink' : 'text-paper/70',
               ].join(' ')}
             >

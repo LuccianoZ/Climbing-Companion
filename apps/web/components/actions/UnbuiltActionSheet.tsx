@@ -33,12 +33,12 @@ export function UnbuiltActionSheet({
       testId="unbuilt-action-sheet"
       onClose={onClose}
     >
-      <p className="text-[12.5px] leading-relaxed text-ink-soft">
+      <p className="text-small leading-relaxed text-ink-soft">
         {description}
       </p>
       <p
         data-testid="owning-story"
-        className="label-caps inline-block rounded-full border border-line-soft bg-paper px-3 py-1.5 text-[10px] text-ink-faint"
+        className="label-caps inline-block rounded-full border border-line-soft bg-paper px-3 py-1.5 text-caption text-ink-faint"
       >
         {owningStory}
       </p>
@@ -46,7 +46,7 @@ export function UnbuiltActionSheet({
         type="button"
         data-testid="unbuilt-dismiss"
         onClick={onClose}
-        className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-4 py-3 text-[13px] font-bold text-ink"
+        className="w-full rounded-control border border-line bg-surface px-4 py-3 text-small font-bold text-ink"
       >
         Close
       </button>

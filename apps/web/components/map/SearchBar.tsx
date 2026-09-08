@@ -81,8 +81,10 @@ export function SearchBar({
 
   return (
     <div className="pointer-events-auto">
-      <label className="flex items-center gap-2 rounded-[12px] border-[1.5px] border-line bg-surface px-3 py-2.5 shadow-[2px_2px_0_var(--color-line)]">
-        <SearchIcon className="h-4 w-4 shrink-0 text-ink-soft" />
+      {/* glass + full pill: this floats over terrain, so it blurs what is
+          behind it rather than hiding it behind an opaque slab. */}
+      <label className="glass flex items-center gap-2.5 rounded-control px-4 py-3.5 shadow-overlay">
+        <SearchIcon className="h-[18px] w-[18px] shrink-0 text-clay-deep" />
         <span className="sr-only">Search routes, crags and gyms</span>
         <input
           ref={inputRef}
@@ -96,19 +98,19 @@ export function SearchBar({
             setDismissed(false);
           }}
           placeholder="Search routes, crags, gyms"
-          className="w-full bg-transparent text-[13px] text-ink outline-none placeholder:text-ink-faint"
+          className="w-full bg-transparent text-body text-ink outline-none placeholder:text-ink-faint"
         />
       </label>
 
       {visible ? (
         <ul
           data-testid="search-results"
-          className="mt-2 max-h-64 overflow-y-auto rounded-[12px] border-[1.5px] border-line bg-surface"
+          className="glass mt-1.5 max-h-64 overflow-y-auto rounded-card shadow-overlay"
         >
           {results.items.length === 0 ? (
             <li
               data-testid="search-empty"
-              className="px-3 py-3 text-[12px] text-ink-faint"
+              className="px-4 py-4 text-small text-ink-faint"
             >
               {results.failed
                 ? 'Search is unavailable right now.'
@@ -139,10 +141,10 @@ export function SearchBar({
                     )}
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[12.5px] font-semibold text-ink">
+                    <span className="block truncate text-small font-semibold text-ink">
                       {result.name}
                     </span>
-                    <span className="label-caps block text-[8.5px] text-ink-faint">
+                    <span className="label-caps block text-caption text-ink-faint">
                       {KIND_LABELS[result.kind]}
                       {result.status === 'UNVERIFIED' ? ' · Unverified' : ''}
                     </span>

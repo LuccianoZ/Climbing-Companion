@@ -62,7 +62,7 @@ export function OperatingHoursEditor({
 
   return (
     <fieldset className="space-y-2" data-testid="operating-hours">
-      <legend className="label-caps text-[9.5px] text-ink-faint">
+      <legend className="label-caps text-caption text-ink-faint">
         Operating hours * (all seven days)
       </legend>
 
@@ -76,10 +76,10 @@ export function OperatingHoursEditor({
               key={day}
               data-testid={`hours-day-${day}`}
               data-mode={mode}
-              className="rounded-[10px] border-[1.5px] border-line-soft bg-surface p-2.5"
+              className="rounded-control border border-line-soft bg-surface p-2.5"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[12px] font-bold text-ink">{label}</span>
+                <span className="text-small font-bold text-ink">{label}</span>
                 <div
                   role="group"
                   aria-label={`${label} mode`}
@@ -94,7 +94,7 @@ export function OperatingHoursEditor({
                       disabled={disabled}
                       onClick={() => setMode(day, m)}
                       className={[
-                        'rounded-[7px] border px-2 py-1 text-[9.5px] font-bold uppercase tracking-wide',
+                        'rounded-control border px-2 py-1 text-caption font-bold uppercase tracking-wide',
                         mode === m
                           ? 'border-ink bg-ink text-paper'
                           : 'border-line-soft bg-surface text-ink-soft',
@@ -112,7 +112,7 @@ export function OperatingHoursEditor({
                     <div
                       key={index}
                       data-testid={`hours-range-${day}-${index}`}
-                      className="flex items-center gap-1.5 text-[11px]"
+                      className="flex items-center gap-1.5 text-caption"
                     >
                       <input
                         type="time"
@@ -127,7 +127,7 @@ export function OperatingHoursEditor({
                             ),
                           )
                         }
-                        className="rounded-[7px] border-[1.5px] border-line bg-surface px-1.5 py-1 text-ink"
+                        className="rounded-control border border-line bg-surface px-1.5 py-1 text-ink"
                       />
                       <span className="text-ink-faint">to</span>
                       <input
@@ -143,7 +143,7 @@ export function OperatingHoursEditor({
                             ),
                           )
                         }
-                        className="rounded-[7px] border-[1.5px] border-line bg-surface px-1.5 py-1 text-ink"
+                        className="rounded-control border border-line bg-surface px-1.5 py-1 text-ink"
                       />
                       {ranges.length > 1 ? (
                         <button
@@ -156,7 +156,7 @@ export function OperatingHoursEditor({
                               ranges.filter((_, i) => i !== index),
                             )
                           }
-                          className="rounded-full border border-line-soft px-1.5 text-[10px] text-ink-soft"
+                          className="rounded-full border border-line-soft px-1.5 text-caption text-ink-soft"
                         >
                           ×
                         </button>
@@ -173,12 +173,12 @@ export function OperatingHoursEditor({
                         { opens: '17:00', closes: '21:00', fullDay: false },
                       ])
                     }
-                    className="text-[10px] font-semibold text-clay-deep"
+                    className="text-caption font-semibold text-clay-deep"
                   >
                     + split shift
                   </button>
                   {ranges.some((r) => r.closes < r.opens) ? (
-                    <p className="text-[9.5px] text-ink-faint">
+                    <p className="text-caption text-ink-faint">
                       A closing time earlier than the opening time means the
                       range runs past midnight.
                     </p>

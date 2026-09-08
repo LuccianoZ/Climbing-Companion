@@ -9,7 +9,7 @@ export function GymBadgeShelf({ badges }: { badges: GymBadge[] }) {
     return (
       <p
         data-testid="gym-badge-shelf-empty"
-        className="text-[12px] text-ink-faint"
+        className="text-small text-ink-faint"
       >
         No gym badges yet — check in at a gym to earn your first one.
       </p>
@@ -23,12 +23,12 @@ export function GymBadgeShelf({ badges }: { badges: GymBadge[] }) {
           key={badge.id}
           data-testid="gym-badge"
           title={badge.gymNameSnapshot}
-          className="flex h-16 w-16 flex-col items-center justify-center rounded-full border-[1.5px] border-line bg-clay-wash text-clay-deep"
+          className="flex h-16 w-16 flex-col items-center justify-center rounded-full border border-line bg-clay-wash text-clay-deep"
         >
-          <span className="text-[15px] font-extrabold tracking-tight">
+          <span className="text-body font-extrabold tracking-tight">
             {badge.gymInitialsSnapshot}
           </span>
-          <span className="text-[9px] font-bold text-ink-soft">
+          <span className="text-caption font-bold text-ink-soft">
             {new Date(badge.earnedAt).getFullYear()}
           </span>
         </div>

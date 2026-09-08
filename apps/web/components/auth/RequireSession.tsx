@@ -50,7 +50,7 @@ export function RequireSession({
         {fallback ?? (
           <p
             data-testid="session-loading"
-            className="py-10 text-center text-[11px] text-ink-faint"
+            className="py-10 text-center text-caption text-ink-faint"
           >
             Checking your session…
           </p>
@@ -63,7 +63,7 @@ export function RequireSession({
     return (
       <p
         data-testid="session-redirecting"
-        className="py-10 text-center text-[11px] text-ink-faint"
+        className="py-10 text-center text-caption text-ink-faint"
       >
         Taking you to login…
       </p>
@@ -76,8 +76,8 @@ export function RequireSession({
         data-testid="admin-forbidden"
         className="card space-y-2 p-5 text-center"
       >
-        <h2 className="text-[15px] font-bold text-ink">Admins only</h2>
-        <p className="text-[12px] leading-relaxed text-ink-soft">
+        <h2 className="text-body font-bold text-ink">Admins only</h2>
+        <p className="text-small leading-relaxed text-ink-soft">
           This area is for system administrators. If you think that&apos;s
           wrong, ask an admin to check your account role.
         </p>

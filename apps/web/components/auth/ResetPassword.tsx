@@ -43,12 +43,12 @@ export function ResetPassword() {
     return (
       <AuthShell backHref="/login" backLabel="Back to login">
         <div className="card-raised space-y-4 p-5 text-center">
-          <h1 className="text-[19px] font-bold tracking-tight text-ink">
+          <h1 className="text-heading font-bold tracking-tight text-ink">
             Reset link incomplete
           </h1>
           <p
             data-testid="reset-missing-token"
-            className="text-[12px] leading-relaxed text-ink-soft"
+            className="text-small leading-relaxed text-ink-soft"
           >
             This page needs the link from your reset email. Open that link
             directly, or request a new one.
@@ -56,7 +56,7 @@ export function ResetPassword() {
           <Link
             href="/forgot-password"
             data-testid="request-new-link"
-            className="label-caps block rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[11.5px] text-paper"
+            className="label-caps block rounded-control border border-ink bg-ink px-4 py-3 text-small text-paper"
           >
             Request a new link
           </Link>
@@ -101,10 +101,10 @@ export function ResetPassword() {
     <AuthShell backHref="/login" backLabel="Back to login">
       <div className="card-raised space-y-5 p-5">
         <div className="space-y-2 text-center">
-          <h1 className="text-[20px] font-bold tracking-tight text-ink">
+          <h1 className="text-heading font-bold tracking-tight text-ink">
             Choose a new password
           </h1>
-          <p className="text-[12px] leading-relaxed text-ink-soft">
+          <p className="text-small leading-relaxed text-ink-soft">
             Once you set it, you&apos;ll be signed out everywhere and can log
             in again.
           </p>

@@ -21,7 +21,7 @@ export function VoteDistribution({
 }) {
   if (grade.distribution.length === 0) {
     return (
-      <p data-testid="vote-distribution-empty" className="text-xs text-ink-faint">
+      <p data-testid="vote-distribution-empty" className="text-small text-ink-faint">
         No grade votes yet — showing the submitter&apos;s proposed grade.
       </p>
     );
@@ -31,7 +31,7 @@ export function VoteDistribution({
 
   return (
     <div data-testid="vote-distribution" className="space-y-1.5">
-      <p className="label-caps text-[9.5px] text-ink-faint">
+      <p className="label-caps text-caption text-ink-faint">
         Community grade consensus
       </p>
       {grade.distribution.map((entry) => (
@@ -41,7 +41,7 @@ export function VoteDistribution({
           data-grade-ordinal={entry.gradeOrdinal}
           className="flex items-center gap-2"
         >
-          <span className="w-11 shrink-0 text-[11px] font-semibold text-ink">
+          <span className="w-11 shrink-0 text-caption font-semibold text-ink">
             {formatGrade(entry.gradeOrdinal, discipline, scale)}
           </span>
           <span className="h-2 flex-1 overflow-hidden rounded-full bg-line-soft">
@@ -50,7 +50,7 @@ export function VoteDistribution({
               style={{ width: `${Math.max(6, (entry.voteCount / peak) * 100)}%` }}
             />
           </span>
-          <span className="w-5 shrink-0 text-right text-[11px] text-ink-soft">
+          <span className="w-5 shrink-0 text-right text-caption text-ink-soft">
             {entry.voteCount}
           </span>
         </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon, CrosshairIcon, LockIcon } from '@/components/shell/icons';
+import { CrosshairIcon, LockIcon } from '@/components/shell/icons';
 import { PROXIMITY_METERS } from '@/lib/geo';
 import type { MapPinKind } from '@/lib/types';
 
@@ -47,11 +47,13 @@ export function InRangeActions({
     return (
       <div
         data-testid="actions-locked"
-        className="flex items-start gap-2.5 rounded-[10px] border-[1.5px] border-clay-deep bg-clay-deep px-3 py-2.5 text-paper"
+        className="flex items-start gap-3 rounded-card border-l-4 border-clay bg-clay-wash px-4 py-3.5"
       >
-        <LockIcon className="mt-[1px] h-4 w-4 shrink-0" />
-        <p className="text-[11.5px] leading-snug">
-          <span className="label-caps block text-[10px]">Action locked</span>
+        <LockIcon className="mt-[3px] h-[18px] w-[18px] shrink-0 text-clay-deep" />
+        <p className="text-small leading-snug text-ink-soft">
+          <span className="display block text-heading leading-none text-clay-deep">
+            Action locked
+          </span>
           You must be within {PROXIMITY_METERS} meters of this location to
           verify, vote or log climbs.
         </p>
@@ -63,14 +65,10 @@ export function InRangeActions({
 
   return (
     <div data-testid="actions-unlocked" className="space-y-2.5">
-      <div className="flex items-center gap-2 rounded-[10px] border-[1.5px] border-line bg-moss-wash px-3 py-2">
-        <CheckIcon className="h-4 w-4 shrink-0 text-moss-deep" />
-        <p className="text-[11.5px] font-semibold leading-snug text-ink">
-          In range — actions unlocked
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
+      {/* flex-wrap, not a fixed 2-column grid: a verified gym offers exactly
+          one action, and a lone button in a 2-col grid sits at half width
+          looking like something failed to render beside it. */}
+      <div className="flex flex-wrap gap-2">
         {canVerify && (isCrag ? hasRoutes : true) ? (
           <ActionButton
             testId="action-verify"
@@ -114,7 +112,7 @@ export function InRangeActions({
       {!canVerify ? (
         <p
           data-testid="nothing-to-verify"
-          className="text-[10.5px] leading-snug text-ink-faint"
+          className="text-caption leading-snug text-ink-faint"
         >
           {isCrag
             ? 'Every route here is verified — nothing left to confirm.'
@@ -140,8 +138,8 @@ function ActionButton({
 }) {
   const toneClass = {
     ink: 'bg-ink text-paper border-ink',
-    clay: 'bg-clay-deep text-paper border-clay-deep',
-    outline: 'bg-surface text-ink border-line',
+    clay: 'field-accent border-clay shadow-accent',
+    outline: 'bg-transparent text-ink border-line',
   }[tone];
 
   return (
@@ -149,7 +147,9 @@ function ActionButton({
       type="button"
       data-testid={testId}
       onClick={onClick}
-      className={`flex items-center justify-center gap-1.5 rounded-[10px] border-[1.5px] px-3 py-2.5 text-[12px] font-semibold ${toneClass}`}
+      // min-h-11 is the 44px touch floor; these are tapped one-handed at a
+      // crag, often in gloves.
+      className={`press display flex min-h-12 min-w-[45%] flex-1 items-center justify-center gap-2 rounded-control border px-3 py-3 text-heading leading-none ${toneClass}`}
     >
       {icon}
       {label}

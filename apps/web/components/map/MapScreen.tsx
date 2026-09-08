@@ -240,7 +240,7 @@ export function MapScreen() {
         {pinsFailed ? (
           <p
             data-testid="pins-error"
-            className="pointer-events-auto mt-2 rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2 text-[11.5px] text-clay-deep"
+            className="pointer-events-auto mt-2 rounded-control border-l-4 border-clay bg-clay-wash px-3.5 py-3 text-small text-clay-deep shadow-raised"
           >
             Couldn&apos;t load map pins. Check that the API is running.
           </p>
@@ -248,7 +248,7 @@ export function MapScreen() {
         {viewerState.status === 'denied' ? (
           <p
             data-testid="location-denied"
-            className="pointer-events-auto mt-2 rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2 text-[11.5px] text-ink-soft"
+            className="glass pointer-events-auto mt-2 rounded-control border-l-4 border-l-dormant px-3.5 py-3 text-small text-ink-soft shadow-raised"
           >
             Location access is off, so in-range actions stay locked. Turn it
             on in your browser settings to verify, vote or log climbs.
@@ -262,8 +262,8 @@ export function MapScreen() {
         data-testid="recentre"
         onClick={recentreOnViewer}
         disabled={!viewer}
-        className="absolute right-3 z-[1000] rounded-full border-[1.5px] border-line bg-surface p-2.5 text-ink shadow-[2px_2px_0_var(--color-line)] disabled:opacity-40"
-        style={{ bottom: sheet ? 'calc(72% + 12px)' : '16px' }}
+        className="glass press absolute right-3 z-[1000] rounded-control p-3.5 text-ink shadow-overlay disabled:opacity-40"
+        style={{ bottom: sheet ? 'calc(64% + 12px)' : '16px' }}
       >
         <CrosshairIcon className="h-5 w-5" />
       </button>

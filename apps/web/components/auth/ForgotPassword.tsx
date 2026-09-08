@@ -55,16 +55,16 @@ export function ForgotPassword() {
       <div className="card-raised space-y-5 p-5 text-center">
         <span
           aria-hidden
-          className="mx-auto flex h-16 w-16 items-center justify-center rounded-[18px] border-[1.5px] border-line bg-clay-wash"
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-card border border-line bg-clay-wash"
         >
           <KeyIcon className="h-7 w-7 text-clay-deep" />
         </span>
 
         <div className="space-y-2">
-          <h1 className="text-[20px] font-bold tracking-tight text-ink">
+          <h1 className="text-heading font-bold tracking-tight text-ink">
             Forgot password?
           </h1>
-          <p className="text-[12px] leading-relaxed text-ink-soft">
+          <p className="text-small leading-relaxed text-ink-soft">
             Enter your email address and we&apos;ll send you a link to reset
             your password.
           </p>
@@ -109,7 +109,7 @@ export function ForgotPassword() {
           <Link
             href="/login"
             data-testid="return-to-login"
-            className="text-[11px] text-ink-soft underline decoration-line-soft underline-offset-4"
+            className="text-caption text-ink-soft underline decoration-line-soft underline-offset-4"
           >
             Return to login
           </Link>

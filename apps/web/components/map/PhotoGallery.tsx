@@ -27,7 +27,7 @@ export function PhotoGallery({ photoIds }: { photoIds: string[] }) {
   return (
     <div
       data-testid="photo-gallery"
-      className="relative overflow-hidden rounded-[12px] border-[1.5px] border-line bg-paper"
+      className="relative overflow-hidden rounded-card border border-line bg-paper"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- streamed from
           our own gateway (GET /api/media/:id), which next/image can't
@@ -62,7 +62,7 @@ export function PhotoGallery({ photoIds }: { photoIds: string[] }) {
           </button>
           <span
             data-testid="photo-gallery-position"
-            className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-[10px] font-bold text-paper"
+            className="absolute bottom-2 right-2 rounded-full bg-ink/70 px-2 py-0.5 text-caption font-bold text-paper"
           >
             {current + 1} / {photoIds.length}
           </span>

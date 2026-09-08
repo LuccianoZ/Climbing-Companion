@@ -119,7 +119,7 @@ export function AuthGateway({ mode }: { mode: AuthMode }) {
         <div
           role="tablist"
           aria-label="Login or register"
-          className="flex rounded-full border-[1.5px] border-line bg-paper p-1"
+          className="flex rounded-control border border-line bg-paper p-1"
         >
           <ModeTab
             href={`/login${switchQuery}`}
@@ -199,7 +199,7 @@ export function AuthGateway({ mode }: { mode: AuthMode }) {
             <Link
               href="/forgot-password"
               data-testid="forgot-password-link"
-              className="text-[11px] text-ink-soft underline decoration-line-soft underline-offset-4"
+              className="text-caption text-ink-soft underline decoration-line-soft underline-offset-4"
             >
               Forgot your chalk bag? (Reset password)
             </Link>
@@ -235,7 +235,7 @@ function ModeTab({
       data-testid={testId}
       replace
       className={[
-        'flex-1 rounded-full py-2 text-center text-[12px] font-bold transition-colors',
+        'press display flex-1 rounded-control py-2.5 text-center text-heading leading-none transition-colors duration-(--dur-fast)',
         active ? 'bg-ink text-paper' : 'text-ink-soft',
       ].join(' ')}
     >

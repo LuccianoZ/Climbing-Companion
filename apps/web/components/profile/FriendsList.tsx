@@ -26,7 +26,7 @@ export function FriendsList({
 
   if (friends.length === 0) {
     return (
-      <p data-testid="friends-empty" className="text-[12px] text-ink-faint">
+      <p data-testid="friends-empty" className="text-small text-ink-faint">
         No friends yet. Send someone your invite link to connect.
       </p>
     );
@@ -40,13 +40,13 @@ export function FriendsList({
           <li
             key={friend.friendshipId}
             data-testid="friend-row"
-            className="flex items-center justify-between gap-2 rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2"
+            className="flex items-center justify-between gap-2 rounded-control border border-line bg-surface px-3 py-2"
           >
             <div className="min-w-0">
-              <p className="truncate text-[12px] font-bold text-ink">
+              <p className="truncate text-small font-bold text-ink">
                 {friend.displayName}
               </p>
-              <p className="truncate text-[10px] text-ink-faint">
+              <p className="truncate text-caption text-ink-faint">
                 {friend.email}
               </p>
             </div>
@@ -55,7 +55,7 @@ export function FriendsList({
               data-testid="unadd-friend"
               disabled={busy}
               onClick={() => handleUnadd(friend.friendshipId)}
-              className="shrink-0 rounded-[8px] border-[1.5px] border-line bg-surface px-2.5 py-1 text-[11px] font-bold text-ink-soft disabled:opacity-50"
+              className="shrink-0 rounded-control border border-line bg-surface px-2.5 py-1 text-caption font-bold text-ink-soft disabled:opacity-50"
             >
               {busy ? 'Removing…' : 'Unadd'}
             </button>

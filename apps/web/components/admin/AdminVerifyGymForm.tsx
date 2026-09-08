@@ -81,7 +81,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
     return (
       <p
         data-testid="admin-gym-load-error"
-        className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+        className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
       >
         Couldn&apos;t load that gym. It may have been archived.
       </p>
@@ -90,7 +90,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
 
   if (!gym) {
     return (
-      <p data-testid="admin-gym-loading" className="text-[12px] text-ink-faint">
+      <p data-testid="admin-gym-loading" className="text-small text-ink-faint">
         Loading gym…
       </p>
     );
@@ -99,10 +99,10 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
   if (done) {
     return (
       <div data-testid="admin-verify-success" className="card max-w-xl space-y-3 p-4">
-        <p className="text-[13.5px] font-bold text-moss-deep">
+        <p className="text-body font-bold text-moss-deep">
           {gym.name} is verified.
         </p>
-        <p className="text-[12px] leading-relaxed text-ink-soft">
+        <p className="text-small leading-relaxed text-ink-soft">
           It now lists{' '}
           {disciplines.map((item) => GYM_DISCIPLINE_LABELS[item]).join(', ')},
           and is flagged as verified directly by an admin rather than by four
@@ -111,7 +111,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
         <Link
           href="/admin/gyms"
           data-testid="admin-back-to-queue"
-          className="inline-block rounded-[8px] border-[1.5px] border-ink bg-ink px-3.5 py-2 text-[12px] font-semibold text-paper"
+          className="inline-block rounded-control border border-ink bg-ink px-3.5 py-2 text-small font-semibold text-paper"
         >
           Back to the queue
         </Link>
@@ -124,16 +124,16 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
   if (gym.status === 'VERIFIED') {
     return (
       <div data-testid="admin-already-verified" className="card max-w-xl space-y-3 p-4">
-        <p className="text-[13.5px] font-bold text-ink">
+        <p className="text-body font-bold text-ink">
           {gym.name} is already verified.
         </p>
-        <p className="text-[12px] leading-relaxed text-ink-soft">
+        <p className="text-small leading-relaxed text-ink-soft">
           Re-verification is unavailable once a gym reaches VERIFIED, whether
           it got there through four climbers or an admin.
         </p>
         <Link
           href="/admin/gyms"
-          className="inline-block rounded-[8px] border-[1.5px] border-line px-3.5 py-2 text-[12px] font-semibold text-ink"
+          className="inline-block rounded-control border border-line px-3.5 py-2 text-small font-semibold text-ink"
         >
           Back to the queue
         </Link>
@@ -150,15 +150,15 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
       className="card max-w-xl space-y-4 p-4"
     >
       <div>
-        <p className="label-caps text-[9px] text-ink-faint">Gym</p>
-        <p className="text-[15px] font-bold text-ink">{gym.name}</p>
-        <p className="font-mono text-[11px] text-ink-faint">
+        <p className="label-caps text-caption text-ink-faint">Gym</p>
+        <p className="text-body font-bold text-ink">{gym.name}</p>
+        <p className="font-mono text-caption text-ink-faint">
           {gym.latitude.toFixed(5)}, {gym.longitude.toFixed(5)}
         </p>
       </div>
 
       <fieldset data-testid="admin-discipline-choice" className="space-y-2">
-        <legend className="label-caps text-[9.5px] text-ink-faint">
+        <legend className="label-caps text-caption text-ink-faint">
           Disciplines offered *
         </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -169,7 +169,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
                 key={item}
                 data-testid={`admin-discipline-${item}`}
                 className={[
-                  'flex cursor-pointer items-center gap-2 rounded-[8px] border-[1.5px] px-2.5 py-2 text-[11.5px] font-medium',
+                  'flex cursor-pointer items-center gap-2 rounded-control border px-2.5 py-2 text-small font-medium',
                   checked
                     ? 'border-ink bg-paper text-ink'
                     : 'border-line-soft bg-surface text-ink-soft',
@@ -187,7 +187,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
             );
           })}
         </div>
-        <p className="text-[10.5px] leading-snug text-ink-faint">
+        <p className="text-caption leading-snug text-ink-faint">
           Entered directly, not aggregated — this path exists precisely for
           gyms with no community verifications to union.
         </p>
@@ -197,7 +197,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
         <p
           role="alert"
           data-testid="admin-verify-error"
-          className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
         >
           {error}
         </p>
@@ -207,7 +207,7 @@ export function AdminVerifyGymForm({ gymId }: { gymId: string }) {
         type="submit"
         data-testid="admin-verify-submit"
         disabled={pending || disciplines.length === 0}
-        className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2.5 text-[12.5px] font-bold text-paper disabled:opacity-45"
+        className="rounded-control border border-ink bg-ink px-4 py-2.5 text-small font-bold text-paper disabled:opacity-45"
       >
         {pending ? 'Verifying…' : 'Verify gym directly'}
       </button>

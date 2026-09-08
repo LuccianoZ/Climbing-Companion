@@ -67,18 +67,18 @@ export function ReviewsSection({
 
   return (
     <div data-testid="reviews-section" className="space-y-3">
-      <p className="label-caps text-[9.5px] text-ink-faint">
+      <p className="label-caps text-caption text-ink-faint">
         Reviews{reviews ? ` (${reviews.length})` : ''}
       </p>
 
       {loadError ? (
-        <p data-testid="reviews-error" className="text-[11px] text-clay-deep">
+        <p data-testid="reviews-error" className="text-caption text-clay-deep">
           {loadError}
         </p>
       ) : null}
 
       {reviews && reviews.length === 0 ? (
-        <p data-testid="reviews-empty" className="text-[11px] text-ink-faint">
+        <p data-testid="reviews-empty" className="text-caption text-ink-faint">
           No reviews yet.
         </p>
       ) : null}
@@ -89,9 +89,9 @@ export function ReviewsSection({
             <li
               key={review.id}
               data-testid="review-row"
-              className="rounded-[10px] border-[1.5px] border-line bg-paper px-3 py-2"
+              className="rounded-control border border-line bg-paper px-3 py-2"
             >
-              <p className="text-[12px] leading-relaxed text-ink">
+              <p className="text-small leading-relaxed text-ink">
                 {review.body}
               </p>
               {review.photoMediaId ? (
@@ -103,18 +103,18 @@ export function ReviewsSection({
                     src={`/api/media/${review.photoMediaId}`}
                     alt="Review photo"
                     data-testid="review-photo"
-                    className="mt-1.5 aspect-[4/3] w-full rounded-[8px] object-cover"
+                    className="mt-1.5 aspect-[4/3] w-full rounded-control object-cover"
                   />
                 </>
               ) : review.photoPending ? (
                 <p
                   data-testid="review-photo-pending"
-                  className="mt-1.5 text-[10px] text-ink-faint"
+                  className="mt-1.5 text-caption text-ink-faint"
                 >
                   Photo pending admin approval
                 </p>
               ) : null}
-              <p className="mt-1 text-[9.5px] text-ink-faint">
+              <p className="mt-1 text-caption text-ink-faint">
                 {review.authorDisplayName} ·{' '}
                 {new Date(review.createdAt).toLocaleDateString()}
               </p>
@@ -132,10 +132,10 @@ export function ReviewsSection({
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Share how it went…"
             rows={3}
-            className="w-full rounded-[8px] border-[1.5px] border-line bg-surface px-2.5 py-1.5 text-[12px] text-ink"
+            className="w-full rounded-control border border-line bg-surface px-2.5 py-1.5 text-small text-ink"
           />
           <div className="flex items-center justify-between">
-            <span className="text-[9.5px] text-ink-faint">
+            <span className="text-caption text-ink-faint">
               {draft.trim().length}/{MAX_REVIEW_LENGTH}
             </span>
             <button
@@ -143,7 +143,7 @@ export function ReviewsSection({
               data-testid="review-submit"
               disabled={submitting || draft.trim().length === 0}
               onClick={submit}
-              className="rounded-[8px] border-[1.5px] border-line bg-moss-wash px-3 py-1 text-[11px] font-bold text-moss-deep disabled:opacity-50"
+              className="rounded-control border border-line bg-moss-wash px-3 py-1 text-caption font-bold text-moss-deep disabled:opacity-50"
             >
               {submitting ? 'Posting…' : 'Post review'}
             </button>
@@ -151,7 +151,7 @@ export function ReviewsSection({
           {submitError ? (
             <p
               data-testid="review-submit-error"
-              className="text-[11px] text-clay-deep"
+              className="text-caption text-clay-deep"
             >
               {submitError}
             </p>

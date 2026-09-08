@@ -109,12 +109,12 @@ export function UserAudit() {
           onChange={(e) => setIdInput(e.target.value)}
           placeholder="User ID (uuid)"
           data-testid="user-audit-id"
-          className="min-w-0 flex-1 rounded-[8px] border-[1.5px] border-line bg-surface px-3 py-2 font-mono text-[12px] text-ink"
+          className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 font-mono text-small text-ink"
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+          className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
         >
           {loading ? 'Loading…' : 'Look up'}
         </button>
@@ -123,7 +123,7 @@ export function UserAudit() {
       {loadError ? (
         <p
           data-testid="user-audit-error"
-          className="rounded-[8px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2 text-[12px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2 text-small text-clay-deep"
         >
           {loadError}
         </p>
@@ -151,7 +151,7 @@ export function UserAudit() {
           {flash ? (
             <p
               data-testid="user-audit-flash"
-              className="rounded-[8px] border-[1.5px] border-moss-deep bg-moss-wash px-3 py-2 text-[12px] text-moss-deep"
+              className="rounded-control border border-moss-deep bg-moss-wash px-3 py-2 text-small text-moss-deep"
             >
               {flash}
             </p>
@@ -163,7 +163,7 @@ export function UserAudit() {
             className="card space-y-3 p-4"
           >
             <fieldset className="space-y-1.5">
-              <legend className="label-caps text-[9px] text-ink-faint">
+              <legend className="label-caps text-caption text-ink-faint">
                 Action
               </legend>
               <div className="flex flex-wrap gap-1.5">
@@ -175,7 +175,7 @@ export function UserAudit() {
                     data-testid={`accountability-action-${a}`}
                     onClick={() => setAction(a)}
                     className={[
-                      'rounded-[7px] border-[1.5px] px-2.5 py-1.5 text-[11px] font-semibold',
+                      'rounded-control border px-2.5 py-1.5 text-caption font-semibold',
                       action === a
                         ? 'border-ink bg-ink text-paper'
                         : 'border-line-soft bg-surface text-ink-soft',
@@ -196,13 +196,13 @@ export function UserAudit() {
             />
 
             {action === 'RESTORE_ACCOUNT' ? (
-              <p className="text-[11px] text-ink-soft">
+              <p className="text-caption text-ink-soft">
                 Unified reversal: lifts any suspension and resets the strike
                 count to zero.
               </p>
             ) : null}
             {action === 'BAN_OUTRIGHT' ? (
-              <p className="text-[11px] text-clay-deep">
+              <p className="text-caption text-clay-deep">
                 Suspends immediately, independent of the strike count. The user
                 is emailed and gets no in-app notification.
               </p>
@@ -212,7 +212,7 @@ export function UserAudit() {
               <p
                 role="alert"
                 data-testid="accountability-error"
-                className="rounded-[8px] border-[1.5px] border-clay-deep bg-clay-wash px-2.5 py-2 text-[11.5px] text-clay-deep"
+                className="rounded-control border border-clay-deep bg-clay-wash px-2.5 py-2 text-small text-clay-deep"
               >
                 {actionError}
               </p>
@@ -222,18 +222,18 @@ export function UserAudit() {
               type="submit"
               data-testid="accountability-submit"
               disabled={applying}
-              className="rounded-[8px] border-[1.5px] border-ink bg-ink px-4 py-2 text-[12px] font-bold text-paper disabled:opacity-45"
+              className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
             >
               {applying ? 'Applying…' : `Apply ${ACCOUNTABILITY_ACTION_LABELS[action]}`}
             </button>
           </form>
 
           <section data-testid="user-audit-history">
-            <p className="label-caps text-[9px] text-ink-faint">
+            <p className="label-caps text-caption text-ink-faint">
               Strike & ban history ({audit.history.length})
             </p>
             {audit.history.length === 0 ? (
-              <p className="mt-1.5 text-[12px] text-ink-faint">
+              <p className="mt-1.5 text-small text-ink-faint">
                 No accountability actions on record.
               </p>
             ) : (
@@ -243,19 +243,19 @@ export function UserAudit() {
                     key={entry.id}
                     data-testid="audit-history-row"
                     data-action={entry.actionType}
-                    className="card p-3 text-[11.5px]"
+                    className="card p-3 text-small"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="font-bold text-ink">
                         {ACCOUNTABILITY_ACTION_LABELS[entry.actionType]}
                       </span>
-                      <span className="font-mono text-[10px] text-ink-faint">
+                      <span className="font-mono text-caption text-ink-faint">
                         {new Date(entry.createdAt).toLocaleString()}
                       </span>
                     </div>
                     <p className="mt-1 text-ink-soft">{entry.reasonText}</p>
                     {entry.triggeringMediaActionId ? (
-                      <p className="mt-0.5 text-[10px] text-ink-faint">
+                      <p className="mt-0.5 text-caption text-ink-faint">
                         From a photo rejection.
                       </p>
                     ) : null}
@@ -289,11 +289,11 @@ function Stat({
         : 'text-ink';
   return (
     <div>
-      <p className="label-caps text-[9px] text-ink-faint">{label}</p>
+      <p className="label-caps text-caption text-ink-faint">{label}</p>
       <p
         className={[
           'mt-0.5 font-bold',
-          mono ? 'break-all font-mono text-[11px]' : 'text-[15px]',
+          mono ? 'break-all font-mono text-caption' : 'text-body',
           toneClass,
         ].join(' ')}
       >

@@ -53,12 +53,12 @@ function DisciplinePanel({
       className="card p-4"
     >
       <div className="flex items-baseline justify-between gap-2">
-        <h3 className="text-[13px] font-extrabold text-ink">
+        <h3 className="text-small font-extrabold text-ink">
           {DISCIPLINE_LABELS[discipline]}
         </h3>
         <span
           data-testid={`analytics-summary-${discipline}`}
-          className="text-[11px] text-ink-soft"
+          className="text-caption text-ink-soft"
         >
           {data.completed} sent
           {totalLogs > 0
@@ -68,7 +68,7 @@ function DisciplinePanel({
       </div>
 
       {chartData.length === 0 ? (
-        <p className="mt-3 text-[12px] text-ink-faint">
+        <p className="mt-3 text-small text-ink-faint">
           No logs yet for this discipline.
         </p>
       ) : (
@@ -131,7 +131,7 @@ export function OutdoorAnalyticsCharts({
   return (
     <div data-testid="outdoor-analytics" className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="label-caps text-[9px] text-ink-faint">
+        <p className="rule-accent label-caps text-ink-faint">
           Outdoor Analytics
         </p>
         <GradeScaleToggle scale={scale} onChange={setScale} />

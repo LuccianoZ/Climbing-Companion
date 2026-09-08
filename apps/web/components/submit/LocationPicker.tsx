@@ -32,7 +32,7 @@ const LocationPickerCanvas = dynamic<LocationPickerCanvasProps>(
         data-testid="picker-loading"
         className="flex h-full w-full items-center justify-center bg-paper"
       >
-        <span className="label-caps text-[10px] text-ink-faint">
+        <span className="label-caps text-caption text-ink-faint">
           Loading map…
         </span>
       </div>
@@ -97,7 +97,7 @@ export function LocationPicker({
 
   return (
     <div className="space-y-1.5">
-      <span className="label-caps block text-[9.5px] text-ink-faint">
+      <span className="label-caps block text-caption text-ink-faint">
         Location coordinates *
       </span>
 
@@ -105,7 +105,7 @@ export function LocationPicker({
         data-testid="location-picker"
         data-placed={placed ? 'true' : 'false'}
         className={[
-          'overflow-hidden rounded-[12px] border-[1.5px]',
+          'overflow-hidden rounded-card border',
           error ? 'border-clay-deep' : 'border-line',
         ].join(' ')}
       >
@@ -123,7 +123,7 @@ export function LocationPicker({
             disabled={!locationAvailable}
             aria-label="Use my current location"
             data-testid="use-my-location"
-            className="absolute bottom-2.5 right-2.5 z-[500] rounded-full border-[1.5px] border-line bg-surface p-2 text-ink shadow-[2px_2px_0_var(--color-line)] disabled:opacity-40"
+            className="absolute bottom-2.5 right-2.5 z-[500] rounded-full border border-line bg-surface p-2 text-ink shadow-raised disabled:opacity-40"
           >
             <CrosshairIcon className="h-4 w-4" />
           </button>
@@ -153,7 +153,7 @@ export function LocationPicker({
 
       <p
         data-testid="location-picker-hint"
-        className="text-[10.5px] leading-snug text-ink-faint"
+        className="text-caption leading-snug text-ink-faint"
       >
         {constrainTo
           ? `The pin has to be within ${constrainTo.radiusMeters}m of where you are — the circle shows how far you can move it. Drag past the edge and it snaps back.`
@@ -167,7 +167,7 @@ export function LocationPicker({
       {error ? (
         <p
           data-testid="field-error-location"
-          className="text-[10.5px] leading-snug text-clay-deep"
+          className="text-caption leading-snug text-clay-deep"
         >
           {error}
         </p>
@@ -208,7 +208,7 @@ function CoordinateField({
 
   return (
     <label className="block">
-      <span className="label-caps block text-[8.5px] text-ink-faint">
+      <span className="label-caps block text-caption text-ink-faint">
         {label}
       </span>
       <input
@@ -217,7 +217,7 @@ function CoordinateField({
         value={text}
         data-testid={`coordinate-${name}`}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full bg-transparent py-1 text-[12px] font-semibold text-ink outline-none"
+        className="w-full bg-transparent py-1 text-small font-semibold text-ink outline-none"
       />
     </label>
   );

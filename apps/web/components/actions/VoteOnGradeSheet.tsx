@@ -98,7 +98,7 @@ export function VoteOnGradeSheet({
             type="button"
             data-testid="vote-done"
             onClick={onClose}
-            className="w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[13px] font-bold text-paper"
+            className="w-full rounded-control border border-ink bg-ink px-4 py-3 text-small font-bold text-paper"
           >
             Done
           </button>
@@ -118,7 +118,7 @@ export function VoteOnGradeSheet({
               <div className="space-y-1.5">
                 <label
                   htmlFor="voteGradeOrdinal"
-                  className="label-caps block text-[9.5px] text-ink-faint"
+                  className="label-caps block text-caption text-ink-faint"
                 >
                   How hard did it feel? *
                 </label>
@@ -133,7 +133,7 @@ export function VoteOnGradeSheet({
                         : Number(event.target.value),
                     )
                   }
-                  className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[13px] text-ink outline-none"
+                  className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-small text-ink outline-none"
                 >
                   <option value="">Select grade</option>
                   {gradeOptions(route.discipline, scale).map((option) => (
@@ -142,7 +142,7 @@ export function VoteOnGradeSheet({
                     </option>
                   ))}
                 </select>
-                <p className="text-[10.5px] leading-snug text-ink-faint">
+                <p className="text-caption leading-snug text-ink-faint">
                   If you have voted on this route before, this replaces your
                   earlier vote rather than adding a second one.
                 </p>

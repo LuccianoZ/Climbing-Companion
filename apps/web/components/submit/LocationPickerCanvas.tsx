@@ -138,7 +138,7 @@ const pickerIcon = () =>
   L.divIcon({
     className: 'climb-picker-pin',
     html:
-      '<span data-testid="picker-pin" class="block h-[26px] w-[26px] -translate-x-1/2 -translate-y-full rounded-full rounded-bl-none border-[1.5px] border-[color:var(--color-line)] rotate-45" style="background:var(--color-clay-deep)"></span>',
+      '<span data-testid="picker-pin" class="block h-[26px] w-[26px] -translate-x-1/2 -translate-y-full rounded-full rounded-bl-none border border-[color:var(--color-line)] rotate-45" style="background:var(--color-clay-deep)"></span>',
     iconSize: [26, 26],
     iconAnchor: [0, 0],
   });

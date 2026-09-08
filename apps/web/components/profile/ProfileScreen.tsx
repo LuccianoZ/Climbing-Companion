@@ -125,7 +125,7 @@ export function ProfileScreen() {
       <AppShell>
         <p
           data-testid={status === 'loading' ? 'session-loading' : 'session-redirecting'}
-          className="py-10 text-center text-[11px] text-ink-faint"
+          className="py-10 text-center text-caption text-ink-faint"
         >
           {status === 'loading' ? 'Checking your session…' : 'Taking you to login…'}
         </p>
@@ -142,20 +142,20 @@ export function ProfileScreen() {
         data-testid="profile-logout"
         onClick={onSignOut}
         disabled={signingOut}
-        className="flex items-center gap-2 rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2 text-[12px] font-bold text-clay-deep disabled:opacity-45"
+        className="flex items-center gap-2 rounded-control border border-line bg-surface px-3 py-2 text-small font-bold text-clay-deep disabled:opacity-45"
       >
         <SignOutIcon className="h-4 w-4" />
         {signingOut ? 'Logging out…' : 'Log out'}
       </button>
 
-      <div data-testid="profile-account" className="card mt-4 p-4">
-        <p className="label-caps text-[9px] text-ink-faint">Signed in as</p>
-        <p className="mt-1 text-[17px] font-bold tracking-tight text-ink">
+      <div data-testid="profile-account" className="mt-5">
+        <p className="rule-accent label-caps text-ink-faint">Signed in as</p>
+        <p className="mt-1 text-heading font-bold tracking-tight text-ink">
           {user.displayName}
         </p>
-        <p className="text-[12px] text-ink-soft">{user.email}</p>
+        <p className="text-small text-ink-soft">{user.email}</p>
         {user.role === 'SYSTEM_ADMIN' ? (
-          <p className="label-caps mt-3 inline-block rounded-full border border-line-soft bg-paper px-2.5 py-1 text-[9px] text-clay-deep">
+          <p className="label-caps mt-3 inline-block rounded-full border border-line-soft bg-paper px-2.5 py-1 text-caption text-clay-deep">
             System admin
           </p>
         ) : null}
@@ -164,7 +164,7 @@ export function ProfileScreen() {
       {loadError ? (
         <p
           data-testid="profile-load-error"
-          className="mt-4 rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+          className="mt-4 rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
         >
           {loadError}
         </p>
@@ -173,15 +173,15 @@ export function ProfileScreen() {
       {actionError ? (
         <p
           data-testid="profile-action-error"
-          className="mt-4 rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+          className="mt-4 rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
         >
           {actionError}
         </p>
       ) : null}
 
-      <section className="card mt-4 p-4">
+      <section className="mt-7">
         <div className="flex items-center justify-between">
-          <p className="label-caps text-[9px] text-ink-faint">Gym Badges</p>
+          <p className="rule-accent label-caps text-ink-faint">Gym Badges</p>
         </div>
         {activity ? (
           <>
@@ -197,28 +197,28 @@ export function ProfileScreen() {
             </div>
           </>
         ) : (
-          <p className="mt-3 text-[12px] text-ink-faint">Loading…</p>
+          <p className="mt-3 text-small text-ink-faint">Loading…</p>
         )}
       </section>
 
-      <section className="card mt-4 p-4">
-        <p className="label-caps text-[9px] text-ink-faint">Gym Streaks</p>
+      <section className="mt-7">
+        <p className="rule-accent label-caps text-ink-faint">Gym Streaks</p>
         <div className="mt-3">
           {activity ? (
             <GymStreaksList streaks={activity.streaks} />
           ) : (
-            <p className="text-[12px] text-ink-faint">Loading…</p>
+            <p className="text-small text-ink-faint">Loading…</p>
           )}
         </div>
       </section>
 
-      <section className="card mt-4 p-4">
-        <p className="label-caps text-[9px] text-ink-faint">Friends</p>
+      <section className="mt-7">
+        <p className="rule-accent label-caps text-ink-faint">Friends</p>
         <div className="mt-3">
           {friends ? (
             <FriendsList friends={friends} onUnadd={onUnaddFriend} />
           ) : (
-            <p className="text-[12px] text-ink-faint">Loading…</p>
+            <p className="text-small text-ink-faint">Loading…</p>
           )}
         </div>
         <div className="mt-4 border-t border-line-soft pt-3">
@@ -230,7 +230,7 @@ export function ProfileScreen() {
         {analytics ? (
           <OutdoorAnalyticsCharts analytics={analytics} />
         ) : (
-          <p className="text-[12px] text-ink-faint">Loading analytics…</p>
+          <p className="text-small text-ink-faint">Loading analytics…</p>
         )}
       </div>
     </AppShell>

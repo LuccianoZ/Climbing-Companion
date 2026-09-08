@@ -2,29 +2,40 @@ import L from 'leaflet';
 import type { MapPin } from '@/lib/types';
 
 // BL-020 + Sept 3 revision (AR-51, BL-x01): crags and gyms are visually
-// distinct (two silhouettes, not just two colours), and every pin now
-// carries the entity NAME above an *italicised* two-state status pill --
-// muted green "Verified" or translucent grey "Unverified". The pill is
-// shown for verified pins too now, not only unverified. (Owner shortened
-// the wording from "... by Community" on Sept 3.)
+// distinct (two silhouettes, not just two colours), and every pin carries the
+// entity NAME and an *italicised* two-state status pill -- "Verified" or
+// "Unverified". The pill is shown for verified pins too, not only unverified.
 //
 // Built as Leaflet divIcons (real DOM) rather than image markers: the label
 // and pill are text that must stay legible and assertable by the Playwright
-// suite, and the translucent treatment is a live CSS opacity rather than a
-// second set of PNGs that would drift from the palette.
+// suite, and the state treatment is live CSS rather than a second set of PNGs
+// that would drift from the palette.
 //
 // Every element carries a data attribute the suite reads
 // (data-pin-kind / data-pin-status / data-testid) so scenarios read the DOM
 // contract rather than screenshotting colours.
+//
+// REDESIGNED Sept 8 2026. The previous pin stacked three bordered boxes --
+// a 32px body, a bordered name chip, then a bordered pill -- so ten pins on
+// screen produced thirty competing rectangles and the map read as a list. Now:
+//
+//   * a 22px marker, sized against a building footprint at street zoom rather
+//     than against the sheet it opens;
+//   * SHAPE carries the crag/gym distinction (round vs square), because a
+//     12px glyph inside a 22px marker is unreadable on a real screen;
+//   * the name and status sit directly on the terrain with no plate, kept
+//     legible by a carried text-shadow instead of a background;
+//   * an accent ring on the selected pin, a state the old design could not
+//     express at all.
 
 const CRAG_GLYPH =
-  '<path d="m3 19 6.5-11L14 15l2.5-4L21 19H3Z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>';
+  '<path d="m3 19 6.5-11L14 15l2.5-4L21 19H3Z" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/>';
 
 const GYM_GLYPH =
-  '<rect x="4" y="4.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/>' +
-  '<circle cx="9" cy="9" r="1.2" fill="currentColor"/>' +
-  '<circle cx="15" cy="12.5" r="1.2" fill="currentColor"/>' +
-  '<circle cx="9.5" cy="15.5" r="1.2" fill="currentColor"/>';
+  '<rect x="4" y="4.5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2.1"/>' +
+  '<circle cx="9" cy="9" r="1.3" fill="currentColor"/>' +
+  '<circle cx="15" cy="12.5" r="1.3" fill="currentColor"/>' +
+  '<circle cx="9.5" cy="15.5" r="1.3" fill="currentColor"/>';
 
 export const VERIFIED_BADGE_TEXT = 'Verified';
 export const UNVERIFIED_BADGE_TEXT = 'Unverified';
@@ -37,49 +48,109 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;');
 }
 
-export function buildPinIcon(pin: MapPin): L.DivIcon {
+export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
   const unverified = pin.status === 'UNVERIFIED';
   const glyph = pin.kind === 'CRAG' ? CRAG_GLYPH : GYM_GLYPH;
 
-  const shapeClass =
-    pin.kind === 'CRAG' ? 'rounded-full rounded-br-[4px]' : 'rounded-[7px]';
-
-  const bodyStyle = unverified
-    ? 'background:var(--color-dormant);opacity:0.55;border-color:var(--color-ink);'
+  // Crags are a solid accent disc; gyms are a dark square outlined in accent.
+  // Fill, shape and glyph all differ, so the distinction survives colour-blind
+  // vision and a greyscale screenshot alike.
+  // BL-020 / Foundation section 9: an UNVERIFIED pin is literally translucent
+  // grey -- the dormant token as the FILL, at reduced opacity. Both halves
+  // matter and both are asserted by map-ui.feature; a grey outline around a
+  // transparent body is not the same treatment and does not read as "not yet
+  // endorsed" against a dark basemap.
+  const fill = unverified
+    ? 'background:var(--color-dormant);opacity:0.6;' +
+      'border-color:rgba(255,255,255,0.5);'
     : pin.kind === 'CRAG'
-      ? 'background:var(--color-clay);border-color:var(--color-ink);'
-      : 'background:var(--color-ink);border-color:var(--color-ink);';
+      ? 'background:var(--color-clay);border-color:rgba(255,255,255,0.92);'
+      : 'background:var(--color-surface-high);border-color:var(--color-clay-deep);';
+
+  // A tight contact shadow only. The old pin carried a 14px coloured glow,
+  // which on a dark basemap bled into its neighbours and made a cluster look
+  // like one smeared light source.
+  const shade = 'box-shadow:0 1px 4px rgba(0,0,0,0.75);';
+
+  const ring = selected
+    ? 'box-shadow:0 0 0 3px color-mix(in srgb, var(--color-clay) 45%, transparent),0 2px 8px rgba(0,0,0,0.8);'
+    : '';
 
   const glyphColor = unverified
-    ? 'var(--color-ink)'
+    ? 'var(--color-dormant)'
     : pin.kind === 'CRAG'
-      ? 'var(--color-ink)'
-      : 'var(--color-paper)';
+      ? 'var(--color-paper)'
+      : 'var(--color-clay-deep)';
 
-  // BL-x01: name label, then the italicised status pill under it.
-  const pillStyle = unverified
-    ? 'background:var(--color-surface);border-color:var(--color-line-soft);color:var(--color-ink-soft);opacity:0.9;'
-    : 'background:var(--color-moss-wash);border-color:var(--color-moss-deep);color:var(--color-moss-deep);';
-  const pillText = unverified ? UNVERIFIED_BADGE_TEXT : VERIFIED_BADGE_TEXT;
+  const bodySize = selected ? 28 : 22;
+  const glyphSize = selected ? 16 : 13;
 
+  // SHAPE is the primary crag/gym distinction, not the glyph. At 22px a
+  // 12px line icon collapses into a smudge -- checked against a real render --
+  // so the silhouette has to carry it: crags are round, gyms are square. The
+  // glyph stays for the selected/zoomed case and for anyone reading the DOM,
+  // and colour is the third, redundant channel. Foundation section 9's "two
+  // silhouettes, not just two colours" is satisfied more literally this way.
+  const shape = pin.kind === 'CRAG' ? 'border-radius:50%;' : 'border-radius:3px;';
+
+  const body =
+    `<span data-testid="pin-body" ` +
+    `class="flex items-center justify-center border-2" ` +
+    `style="width:${bodySize}px;height:${bodySize}px;${shape}` +
+    `${fill}${ring || shade}">` +
+    `<svg viewBox="0 0 24 24" style="width:${glyphSize}px;height:${glyphSize}px;` +
+    `color:${glyphColor}" aria-hidden="true">${glyph}</svg>` +
+    `</span>`;
+
+  // The label sits straight on the terrain with no chip, plate or border --
+  // that is the single biggest reason the map read as a list of cards. Legibility
+  // comes from a carried text-shadow (.climb-pin__label in globals.css), the way
+  // every maps app labels a POI.
+  //
+  // Status is the label's own colour plus the italic word, which Foundation
+  // section 9 requires on the pin; the pill keeps its testid and data attribute
+  // because the suite asserts on both.
+  const nameColor = unverified ? 'var(--color-ink-soft)' : '#fff';
+  const statusColor = unverified
+    ? 'var(--color-dormant)'
+    : 'var(--color-moss-deep)';
+
+  // A compact translucent backing, not the old bordered chip.
+  //
+  // Plate-free labels read beautifully on an empty map and fall apart the
+  // moment two pins are close: with a crag and a gym 80m apart, the names and
+  // both "Verified" pills pile into an illegible smudge, because Leaflet does
+  // no label decluttering. A shadow alone cannot separate text from text.
+  // This is the minimum that keeps overlapping labels individually readable
+  // while staying far from the three-stacked-boxes design it replaced -- no
+  // border, no hard edge, just enough ground to sit on.
   const label =
-    `<span data-testid="pin-name" class="mt-1 max-w-[132px] truncate rounded-[6px] border border-line bg-surface px-1.5 py-[2px] text-[9px] font-bold leading-tight text-ink">${escapeHtml(pin.name)}</span>` +
-    `<span data-testid="pin-status-pill" data-pin-verified="${unverified ? 'false' : 'true'}" class="mt-[3px] whitespace-nowrap rounded-full border px-1.5 py-[1px] text-[8px] font-semibold italic leading-none" style="${pillStyle}">${pillText}</span>`;
+    `<span class="climb-pin__label mt-1 flex max-w-[140px] flex-col items-center rounded-[2px] px-1.5 py-0.5 leading-tight" ` +
+    `style="background:color-mix(in srgb, var(--color-paper) 72%, transparent)">` +
+    `<span data-testid="pin-name" class="max-w-full truncate text-[11px] font-semibold" style="color:${nameColor}">${escapeHtml(pin.name)}</span>` +
+    `<span data-testid="pin-status-pill" data-pin-verified="${unverified ? 'false' : 'true'}" ` +
+    `class="text-[9px] font-medium italic" style="color:${statusColor}">${pillTextFor(unverified)}</span>` +
+    `</span>`;
 
   const html =
-    `<div class="flex flex-col items-center" data-testid="map-pin" data-pin-id="${escapeHtml(pin.id)}" data-pin-kind="${pin.kind}" data-pin-status="${pin.status}" data-pin-name="${escapeHtml(pin.name)}">` +
-    `<span data-testid="pin-body" class="flex h-8 w-8 items-center justify-center border-[1.5px] ${shapeClass}" style="${bodyStyle}">` +
-    `<svg viewBox="0 0 24 24" class="h-[18px] w-[18px]" style="color:${glyphColor}" aria-hidden="true">${glyph}</svg>` +
-    `</span>` +
+    `<div class="flex flex-col items-center" data-testid="map-pin" ` +
+    `data-pin-id="${escapeHtml(pin.id)}" data-pin-kind="${pin.kind}" ` +
+    `data-pin-status="${pin.status}" data-pin-selected="${selected ? 'true' : 'false'}" ` +
+    `data-pin-name="${escapeHtml(pin.name)}">` +
+    body +
     label +
     `</div>`;
 
   return L.divIcon({
     html,
     className: 'climb-pin',
-    // Taller now that every pin carries a name + pill under the body.
-    iconSize: [160, 74],
-    iconAnchor: [80, 32],
-    popupAnchor: [0, -32],
+    iconSize: [150, 60],
+    // Anchor on the marker's centre, which is where the coordinate actually is.
+    iconAnchor: [75, bodySize / 2],
+    popupAnchor: [0, -bodySize / 2],
   });
+}
+
+function pillTextFor(unverified: boolean): string {
+  return unverified ? UNVERIFIED_BADGE_TEXT : VERIFIED_BADGE_TEXT;
 }

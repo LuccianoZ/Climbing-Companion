@@ -42,7 +42,7 @@ export function InviteFriendCard() {
 
   return (
     <div data-testid="invite-friend" className="space-y-2">
-      <p className="text-[12px] leading-relaxed text-ink-soft">
+      <p className="text-small leading-relaxed text-ink-soft">
         Send a friend a one-time invite link. When they open it while signed
         in, you&apos;re connected — no username needed.
       </p>
@@ -52,7 +52,7 @@ export function InviteFriendCard() {
         data-testid="generate-invite"
         onClick={generate}
         disabled={pending}
-        className="rounded-[8px] border-[1.5px] border-line bg-moss-wash px-3 py-1.5 text-[11px] font-bold text-moss-deep disabled:opacity-50"
+        className="rounded-control border border-line bg-moss-wash px-3 py-1.5 text-caption font-bold text-moss-deep disabled:opacity-50"
       >
         {pending ? 'Generating…' : link ? 'Generate a new link' : 'Generate invite link'}
       </button>
@@ -60,7 +60,7 @@ export function InviteFriendCard() {
       {error ? (
         <p
           data-testid="invite-error"
-          className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2 text-[12px] text-clay-deep"
+          className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2 text-small text-clay-deep"
         >
           {error}
         </p>
@@ -73,18 +73,18 @@ export function InviteFriendCard() {
             readOnly
             value={link.url}
             onFocus={(e) => e.currentTarget.select()}
-            className="w-full rounded-[8px] border-[1.5px] border-line bg-paper px-2.5 py-1.5 font-mono text-[11px] text-ink"
+            className="w-full rounded-control border border-line bg-paper px-2.5 py-1.5 font-mono text-caption text-ink"
           />
           <div className="flex items-center gap-2">
             <button
               type="button"
               data-testid="copy-invite"
               onClick={copy}
-              className="rounded-[8px] border-[1.5px] border-line bg-surface px-2.5 py-1 text-[11px] font-bold text-ink-soft"
+              className="rounded-control border border-line bg-surface px-2.5 py-1 text-caption font-bold text-ink-soft"
             >
               {copied ? 'Copied' : 'Copy link'}
             </button>
-            <span className="text-[10px] text-ink-faint">
+            <span className="text-caption text-ink-faint">
               Expires{' '}
               {new Date(link.expiresAt).toLocaleDateString()} · one use
             </span>

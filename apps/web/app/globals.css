@@ -5,54 +5,141 @@
 @import "leaflet/dist/leaflet.css";
 
 /*
- * Climbing Companion design tokens (Epic 4, BL-019-022).
+ * Climbing Companion design language — "bold sport".
  *
- * Lifted from the approved mockups: a warm paper ground rather than white,
- * hard-edged cards outlined in near-black with an offset shadow, black as
- * the primary action color, terracotta as the accent/attention color, and
- * mint for "you're good to go" affirmations. Foundation §17's DoD calls for
- * mobile-first on climber-facing surfaces, so every size here is tuned for
- * a phone first and simply centers itself on wider screens.
+ * Rewritten Sept 8 2026, second pass. The first dark pass kept the original
+ * layout and only swapped colours, which correctly read as "the same app with
+ * the lights off". This pass changes the language itself, to the register the
+ * Owner picked: athletic, confident, high-contrast — the one gym signage and
+ * race bibs are set in.
  *
- * Deliberately NOT theme-reactive: the mockups are a single committed light
- * design, and a half-derived dark palette would make the translucent-grey
- * UNVERIFIED pin treatment (BL-020) ambiguous against a dark map. Revisit
- * as its own story if dark mode is ever scoped.
+ * The four rules that make it that register rather than a generic dark theme:
+ *
+ *   1. ACCENT AS A FIELD, NOT AS TRIM. Chalk orange is used as large blocks
+ *      of colour with dark text on top — headers, primary actions, section
+ *      markers — never as a 1px outline or a tiny badge. A saturated colour
+ *      used sparingly reads as a warning; used at scale it reads as energy.
+ *   2. HARD EDGES. Radii are near-zero on structural surfaces. Soft 16px
+ *      cards are the house style of every SaaS dashboard; square edges are
+ *      what makes this look like equipment.
+ *   3. NUMBERS ARE THE HERO. A grade, a distance, a streak — these are the
+ *      content. They are set enormous in the condensed face with a tiny
+ *      uppercase label beneath, not inline in a sentence.
+ *   4. NO BOXES AROUND EVERYTHING. Grouping is done with space, a rule, or a
+ *      full-bleed band. A bordered card inside a bordered panel inside a
+ *      bordered sheet is what made the old UI read as a stack of receipts.
+ *
+ * TOKEN NAMES ARE STILL FROZEN — see the note below; only values and the
+ * utility layer change. That is what lets a language this different land
+ * across 84 files without rewriting each one.
  */
 
 @theme {
-  --color-paper: #f5f1e8;
-  --color-surface: #ffffff;
-  --color-ink: #14110f;
-  --color-ink-soft: #5c554e;
-  --color-ink-faint: #8d857c;
-  --color-line: #14110f;
-  --color-line-soft: #ded6c8;
+  /* --- Ground and elevation -----------------------------------------------
+     Names are ROLES, not lightnesses: `paper` is the page ground, `ink` is
+     whatever sits legibly on it, `line` is structure, `surface` is a raised
+     panel, `clay` is accent, `moss` is affirmative, `dormant` is unverified.
+     Keeping the names is what re-themes ~800 call sites from this one file.
 
-  /* Accent -- active tab, primary submit, check-in, attention states. */
-  --color-clay: #e2896b;
-  --color-clay-deep: #a4432f;
-  --color-clay-wash: #f7ded4;
+     Pushed deeper and cooler than the first pass. A bold accent needs a near
+     black to sit against; #0b1220 was already grey enough to mute it. */
+  --color-paper: #070b13;
+  --color-surface: #10161f;
+  --color-surface-high: #1a2230;
 
-  /* Affirmative -- verified, in-range, unlocked. */
-  --color-moss: #7fdba0;
-  --color-moss-deep: #1f7a45;
-  --color-moss-wash: #dff5e7;
+  /* --- Foreground --------------------------------------------------------- */
+  --color-ink: #f4f7fa;
+  --color-ink-soft: #a7b5c6;
+  --color-ink-faint: #7e8da0;
 
-  /* The translucent-grey treatment BL-020 requires for UNVERIFIED pins. */
-  --color-dormant: #9b968f;
+  /* --- Structure ----------------------------------------------------------- */
+  --color-line: #2a3546;
+  --color-line-soft: #1a222e;
 
-  /* BL-036/037's Attempted series, paired against --color-clay-deep for
-     Completed. Validated with the dataviz skill's palette checker
-     (node validate_palette.js "#a4432f,#2a78d6" --mode light): passes
-     lightness band, chroma floor, CVD separation (deltaE 25.1 deutan) and
-     contrast. clay-deep alone failed against every other existing token
-     here (ink-soft reads as gray; moss-deep is a red/green CVD collision). */
-  --color-chart-attempted: #2a78d6;
+  /* --- Accent: chalk orange ------------------------------------------------
+     Hotter than the first pass (#ea580c -> #ff5a1f). At field scale the older
+     burnt orange read as brick; this one reads as hi-vis, which is the point.
+
+     `clay-deep` is the TEXT/BORDER role (52 + 40 call sites) so on a dark
+     ground it is the LIGHTEST of the family — emphasis inverts with theme.
+     #ff8a3d on paper is 8.4:1. `clay` is the FILL: anything sitting on it
+     uses `text-paper`, never `text-ink`. */
+  --color-clay: #ff5a1f;
+  --color-clay-deep: #ff8a3d;
+  --color-clay-wash: #2b1207;
+
+  /* --- Affirmative: verified, in-range, unlocked --------------------------- */
+  --color-moss: #22c55e;
+  --color-moss-deep: #3ddc84;
+  --color-moss-wash: #06241a;
+
+  /* --- Unverified ----------------------------------------------------------
+     Foundation section 9's "translucent grey". Never the only signal for
+     status — the italic word rides along with it everywhere. */
+  --color-dormant: #7d8b9e;
+
+  /* --- Charts --------------------------------------------------------------
+     Attempted, paired against --color-clay-deep for Completed. Orange vs blue
+     is the canonical protan/deutan-safe pair and both are light-on-dark.
+     Re-validate in DARK mode before adding a third series. */
+  --color-chart-attempted: #4da3ff;
 
   --font-sans: 'Space Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Barlow Condensed', 'Space Grotesk Variable', ui-sans-serif,
+    system-ui, sans-serif;
 
-  --radius-card: 14px;
+  /* --- Type scale ----------------------------------------------------------
+     Wider than the first pass at both ends. The complaint that type still read
+     flat was a range problem, not a size problem: 34/22/17/15 is only a 2.2x
+     spread, and the eye reads that as one voice. 56 -> 11 is 5x, and the
+     condensed face is what makes 56px fit on a 390px phone at all.
+
+     `stat` is its own step because a grade or a distance is a graphic element,
+     not a heading. */
+  --text-stat: 56px;
+  --text-stat--line-height: 0.86;
+  --text-stat--letter-spacing: -0.025em;
+  --text-display: 40px;
+  --text-display--line-height: 0.92;
+  --text-display--letter-spacing: -0.015em;
+  --text-title: 27px;
+  --text-title--line-height: 1.02;
+  --text-title--letter-spacing: -0.01em;
+  --text-heading: 19px;
+  --text-heading--line-height: 1.2;
+  --text-body: 15px;
+  --text-body--line-height: 1.55;
+  --text-small: 13px;
+  --text-small--line-height: 1.45;
+  --text-caption: 11px;
+  --text-caption--line-height: 1.25;
+  --text-caption--letter-spacing: 0.1em;
+
+  /* --- Radii ---------------------------------------------------------------
+     Near-square on structure. The pill radius survives only for true chips,
+     where a capsule is the form itself rather than a softened rectangle. */
+  --radius-chip: 999px;
+  --radius-control: 3px;
+  --radius-card: 4px;
+  --radius-sheet: 4px;
+
+  /* --- Motion --------------------------------------------------------------
+     Mirrored as JS numbers in components/ui/motion.tsx (Framer Motion cannot
+     read a custom property). CHANGE BOTH. Exits are always faster than
+     entrances or back/forward feels sluggish. */
+  --ease-standard: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-instant: 110ms;
+  --dur-fast: 170ms;
+  --dur-base: 250ms;
+  --dur-slow: 420ms;
+
+  /* --- Elevation -----------------------------------------------------------
+     Depth on a near-black ground comes from a hard contact shadow, not a wide
+     soft one — a big blur just fogs the surface it sits on. */
+  --shadow-raised: 0 1px 0 rgba(255, 255, 255, 0.05), 0 6px 16px rgba(0, 0, 0, 0.65);
+  --shadow-overlay: 0 -1px 0 rgba(255, 255, 255, 0.07), 0 -12px 44px rgba(0, 0, 0, 0.8);
+  --shadow-accent: 0 4px 20px rgba(255, 90, 31, 0.4);
 }
 
 html,
@@ -65,44 +152,310 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  /* The phone frame is the design; on a desktop viewport the app centers
-     rather than stretching a mobile-first layout across 1600px. */
   overscroll-behavior: none;
+  color-scheme: dark;
 }
 
+/* ============================================================================
+   TYPE
+   ========================================================================= */
+
+/* The display voice: condensed, uppercase, tight. Every headline and every
+   number uses it; body copy never does. */
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+/* A number as a graphic element — a grade, a distance, a count. Tabular
+   figures so a changing value does not shift the ones beside it. */
+@utility stat {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 0.86;
+  letter-spacing: -0.025em;
+}
+
+/* The tiny uppercase label that sits under a stat or above a section. */
+@utility label-caps {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+  font-size: var(--text-caption);
+  line-height: 1.25;
+}
+
+/* ============================================================================
+   FIELDS AND SURFACES
+   Rule 1: accent is a field. Rule 4: stop boxing everything.
+   ========================================================================= */
+
+/* A full-bleed accent band. This is the primary way emphasis is expressed —
+   a header, a live state, a called-out figure. Dark text on hot orange, which
+   is a 6.3:1 pairing, unlike white-on-orange at 2.9:1. */
+@utility field-accent {
+  background: var(--color-clay);
+  color: var(--color-paper);
+}
+
+@utility field-affirm {
+  background: var(--color-moss);
+  color: var(--color-paper);
+}
+
+/* A section marker: a thick accent rule with the label hard against it.
+   Replaces the bordered card header the old UI used to open every section. */
+@utility rule-accent {
+  border-left: 4px solid var(--color-clay);
+  padding-left: 0.625rem;
+}
+
+/* Kept for the places a genuine panel is still the right answer — a form, a
+   queue row. Flat and square: a hairline, no gradient, no lift. */
 @utility card {
   background: var(--color-surface);
-  border: 1.5px solid var(--color-line);
+  border: 1px solid var(--color-line-soft);
   border-radius: var(--radius-card);
 }
 
 @utility card-raised {
   background: var(--color-surface);
-  border: 1.5px solid var(--color-line);
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-card);
-  box-shadow: 3px 3px 0 var(--color-line);
+  box-shadow: var(--shadow-raised);
 }
 
-@utility label-caps {
+/* Floating controls over the map. Blur separates them from terrain without an
+   opaque slab hiding it. */
+@utility glass {
+  background: color-mix(in srgb, var(--color-surface) 84%, transparent);
+  backdrop-filter: blur(16px) saturate(1.4);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--color-line) 100%, white 6%);
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: var(--radius-chip);
+  padding: 0.1875rem 0.5625rem;
+  font-family: var(--font-display);
+  font-size: var(--text-caption);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 700;
+  letter-spacing: 0.09em;
+  line-height: 1.3;
+  white-space: nowrap;
 }
 
-/* Leaflet paints its own white ground and grey attribution bar; both fight
-   the paper palette above, so they are restated once rather than fought
-   inline on every map instance. */
+/* ============================================================================
+   TEXTURE — the personality layer
+   ========================================================================= */
+
+/* Topographic contour lines. Stronger than the first pass, which was so faint
+   it may as well not have shipped. Drawn in white and composited over whatever
+   ground it sits on, so it survives a palette change. */
+@utility topo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1.4'%3E%3Cpath d='M-30 40C50 4 120 76 190 44S320 6 390 40'/%3E%3Cpath d='M-30 82C50 46 120 118 190 86S320 48 390 82'/%3E%3Cpath d='M-30 128C46 96 118 158 190 132S322 96 390 128'/%3E%3Cpath d='M-30 180C40 156 116 200 190 182S324 152 390 180'/%3E%3Cpath d='M-30 232C44 208 118 250 190 232S322 202 390 232'/%3E%3Cpath d='M-30 284C50 250 120 320 190 288S320 250 390 284'/%3E%3Cpath d='M-30 330C50 296 120 366 190 334S320 296 390 330'/%3E%3C/g%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+/* Diagonal hazard stripes — the athletic-signage motif. Used on accent fields
+   and section edges, never behind text. */
+@utility hatch {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    color-mix(in srgb, var(--color-paper) 22%, transparent) 0 6px,
+    transparent 6px 12px
+  );
+}
+
+/* ============================================================================
+   INTERACTION
+   ========================================================================= */
+
+/* Keyboard focus must stay visible everywhere (plugin priority 1). Scoped to
+   :focus-visible so a pointer tap leaves no ring. */
+:focus-visible {
+  outline: 2px solid var(--color-clay-deep);
+  outline-offset: 2px;
+}
+
+/* Rule 2 of the register: things respond physically to a press. Applied by
+   utility rather than remembered per component.
+
+   The &:active nests inside the single @utility -- Tailwind v4 rejects a
+   pseudo-class in a utility NAME (`@utility press:active` is a build error),
+   but nested selectors inside the body are fine. */
+@utility press {
+  transition: transform var(--dur-instant) var(--ease-standard);
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+/* ============================================================================
+   MOTION PRIMITIVES
+   Shared keyframes so timing lives with the tokens, not per component.
+   ========================================================================= */
+
+@keyframes cc-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cc-rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+}
+
+/* An accent field wiping in from the left. The signature entrance of this
+   register — a band of colour arriving rather than fading up. */
+@keyframes cc-wipe-in {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes cc-locate {
+  0%,
+  100% {
+    transform: scale(0.72);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 0.1;
+  }
+}
+
+@utility animate-rise {
+  animation: cc-rise-in var(--dur-base) var(--ease-spring) both;
+}
+
+@utility animate-fade {
+  animation: cc-fade-in var(--dur-fast) var(--ease-standard) both;
+}
+
+@utility animate-wipe {
+  animation: cc-wipe-in var(--dur-slow) var(--ease-standard) both;
+}
+
+/* One global kill switch. The app had no reduced-motion handling at all before
+   the revamp, and a per-component opt-in drifts the moment someone adds a
+   component and forgets. Durations collapse to effectively instant while still
+   firing transition/animation end events, so logic waiting on them survives.
+   Framer Motion animates inline styles and is NOT caught by this — see
+   useReducedMotion() in components/ui/motion.tsx. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   LEAFLET
+   ========================================================================= */
+
 .leaflet-container {
   background: var(--color-paper);
   font-family: var(--font-sans);
 }
 
+/* Dark basemap without a tile-provider API key.
+   A light raster basemap under a dark UI is the loudest way a dark theme reads
+   as unfinished, but every hosted dark basemap worth using now wants a key
+   (CARTO's dark_matter watermarks "API KEY REQUIRED" across each tile as of
+   this writing), and BL-019 fixed the choice as keyless OSM. So the standard
+   tiles are re-lit here.
+
+   Order matters, and was arrived at by looking at the result: the obvious
+   `invert + hue-rotate(180deg)` recipe leaves OSM's landcover green a murky
+   olive, because inverting green gives magenta and rotating back lands on a
+   washed yellow-green. Flattening to greyscale FIRST throws that hue away, so
+   the invert yields clean dark monochrome; sepia + hue-rotate then re-tints
+   toward the app's slate. Confine it to tiles — filtering .leaflet-container
+   would invert the markers and controls drawn on top. */
+.leaflet-tile {
+  filter: grayscale(1) invert(1) brightness(0.62) contrast(1.1) sepia(0.45)
+    hue-rotate(175deg) saturate(1.4);
+}
+
 .leaflet-control-attribution {
-  background: rgba(245, 241, 232, 0.85) !important;
+  background: rgba(7, 11, 19, 0.85) !important;
   color: var(--color-ink-faint) !important;
   font-size: 10px !important;
 }
 
 .leaflet-control-attribution a {
   color: var(--color-ink-soft) !important;
+}
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-line-soft);
+}
+
+.leaflet-bar a:hover {
+  background: var(--color-surface-high);
+}
+
+/* The viewer's own position. Three layers: a breathing accuracy halo, a core,
+   and the ring the core's border provides. Sized in px rather than utility
+   classes because Leaflet inserts this markup itself (see MapCanvas). */
+.climb-viewer {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 28px;
+}
+
+.climb-viewer__halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--color-clay);
+  opacity: 0.2;
+  animation: cc-locate 2.4s var(--ease-standard) infinite;
+}
+
+.climb-viewer__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 13px;
+  height: 13px;
+  margin: -6.5px 0 0 -6.5px;
+  border-radius: 50%;
+  background: var(--color-clay);
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+
+/* Map pin labels sit directly on terrain with no plate behind them, so they
+   need a carried shadow to stay legible over both a dark ridge and a pale
+   road. Two offsets rather than a blur: a blur at this size turns to mush. */
+.climb-pin__label {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.95),
+    0 0 6px rgba(0, 0, 0, 0.85);
 }

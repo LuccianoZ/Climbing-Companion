@@ -49,7 +49,7 @@ export function GymDisputeQueue() {
     return (
       <p
         data-testid="dispute-queue-error"
-        className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+        className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
       >
         {error}
       </p>
@@ -58,7 +58,7 @@ export function GymDisputeQueue() {
 
   if (disputes === null) {
     return (
-      <p data-testid="dispute-queue-loading" className="text-[12px] text-ink-faint">
+      <p data-testid="dispute-queue-loading" className="text-small text-ink-faint">
         Loading disputes…
       </p>
     );
@@ -68,7 +68,7 @@ export function GymDisputeQueue() {
     return (
       <p
         data-testid="dispute-queue-empty"
-        className="rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-3 text-[12px] text-ink-soft"
+        className="rounded-control border border-line bg-surface px-3 py-3 text-small text-ink-soft"
       >
         No open gym-information disputes.
       </p>
@@ -87,21 +87,21 @@ export function GymDisputeQueue() {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-ink">{dispute.gymName}</p>
-              <p className="font-mono text-[10px] text-ink-faint">
+              <p className="text-small font-bold text-ink">{dispute.gymName}</p>
+              <p className="font-mono text-caption text-ink-faint">
                 reporter {dispute.reporterUserId} ·{' '}
                 {new Date(dispute.createdAt).toLocaleString()}
               </p>
             </div>
           </div>
-          <p className="rounded-[8px] border border-line-soft bg-paper px-2.5 py-2 text-[12px] leading-relaxed text-ink-soft">
+          <p className="rounded-control border border-line-soft bg-paper px-2.5 py-2 text-small leading-relaxed text-ink-soft">
             {dispute.detail}
           </p>
           <div className="flex gap-2">
             <Link
               href={`/admin/stewardship/gym/${dispute.gymId}`}
               data-testid="dispute-edit-gym"
-              className="rounded-[8px] border-[1.5px] border-ink bg-ink px-3 py-1.5 text-[11.5px] font-semibold text-paper"
+              className="rounded-control border border-ink bg-ink px-3 py-1.5 text-small font-semibold text-paper"
             >
               Edit gym
             </Link>
@@ -110,7 +110,7 @@ export function GymDisputeQueue() {
               data-testid="dispute-resolve"
               disabled={resolving === dispute.id}
               onClick={() => onResolve(dispute.id)}
-              className="rounded-[8px] border-[1.5px] border-line-soft px-3 py-1.5 text-[11.5px] font-semibold text-ink-soft disabled:opacity-45"
+              className="rounded-control border border-line-soft px-3 py-1.5 text-small font-semibold text-ink-soft disabled:opacity-45"
             >
               {resolving === dispute.id ? 'Resolving…' : 'Resolve / dismiss'}
             </button>

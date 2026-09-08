@@ -49,7 +49,7 @@ export function SubmitFab({ raised }: { raised: boolean }) {
       className="absolute right-3 z-[1000] flex flex-col items-end gap-2"
       // Lifts clear of the detail sheet when one is open, the same way the
       // recentre button does, so the two never stack on top of each other.
-      style={{ bottom: raised ? 'calc(72% + 64px)' : '68px' }}
+      style={{ bottom: raised ? 'calc(64% + 64px)' : '68px' }}
     >
       {open ? (
         <div className="flex flex-col gap-2">
@@ -74,12 +74,12 @@ export function SubmitFab({ raised }: { raised: boolean }) {
         aria-expanded={open}
         data-testid="submit-fab-button"
         onClick={() => setOpen((current) => !current)}
-        className="rounded-full border-[1.5px] border-clay-deep bg-clay-deep p-2.5 text-paper shadow-[2px_2px_0_var(--color-line)]"
+        className="press rounded-control bg-clay p-4 text-paper shadow-accent"
       >
         <PlusIcon
           className={[
-            'h-5 w-5 transition-transform',
-            open ? 'rotate-45' : '',
+            'h-6 w-6 transition-transform duration-(--dur-base) ease-spring',
+            open ? 'rotate-[135deg]' : '',
           ].join(' ')}
         />
       </button>
@@ -103,7 +103,7 @@ function FabLink({
       href={href}
       data-testid={testId}
       onClick={onNavigate}
-      className="rounded-full border-[1.5px] border-line bg-surface px-3.5 py-2 text-[12px] font-bold text-ink shadow-[2px_2px_0_var(--color-line)]"
+      className="glass press display rounded-control px-4 py-3 text-heading leading-none text-ink shadow-overlay"
     >
       {label}
     </Link>

@@ -26,18 +26,18 @@ export function FieldShell({
     <div className="space-y-1.5">
       <label
         htmlFor={htmlFor}
-        className="label-caps block text-[9.5px] text-ink-faint"
+        className="label-caps block text-caption text-ink-faint"
       >
         {label}
       </label>
       {children}
       {hint && !error ? (
-        <p className="text-[10.5px] leading-snug text-ink-faint">{hint}</p>
+        <p className="text-caption leading-snug text-ink-faint">{hint}</p>
       ) : null}
       {error ? (
         <p
           data-testid={`field-error-${htmlFor}`}
-          className="text-[10.5px] leading-snug text-clay-deep"
+          className="text-caption leading-snug text-clay-deep"
         >
           {error}
         </p>
@@ -75,7 +75,7 @@ export function TextField({
     <FieldShell label={label} htmlFor={name} hint={hint} error={error}>
       <div
         className={[
-          'flex items-center gap-2 rounded-[10px] border-[1.5px] bg-surface px-3',
+          'flex items-center gap-2.5 rounded-control border bg-surface px-3.5',
           error ? 'border-clay-deep' : 'border-line',
         ].join(' ')}
       >
@@ -90,7 +90,7 @@ export function TextField({
           placeholder={placeholder}
           aria-invalid={error ? true : undefined}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full bg-transparent py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-faint"
+          className="w-full bg-transparent py-2.5 text-small text-ink outline-none placeholder:text-ink-faint"
         />
       </div>
     </FieldShell>
@@ -123,7 +123,7 @@ export function PasswordField({
     <FieldShell label={label} htmlFor={name} hint={hint} error={error}>
       <div
         className={[
-          'flex items-center gap-2 rounded-[10px] border-[1.5px] bg-surface px-3',
+          'flex items-center gap-2.5 rounded-control border bg-surface px-3.5',
           error ? 'border-clay-deep' : 'border-line',
         ].join(' ')}
       >
@@ -136,7 +136,7 @@ export function PasswordField({
           placeholder="••••••••"
           aria-invalid={error ? true : undefined}
           onChange={(event) => onChange(event.target.value)}
-          className="w-full bg-transparent py-2.5 text-[13px] text-ink outline-none placeholder:text-ink-faint"
+          className="w-full bg-transparent py-2.5 text-small text-ink outline-none placeholder:text-ink-faint"
         />
         <button
           type="button"
@@ -168,7 +168,7 @@ export function FormError({ message }: { message: string | null }) {
     <p
       role="alert"
       data-testid="form-error"
-      className="rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] leading-snug text-clay-deep"
+      className="rounded-control border-l-4 border-clay bg-clay-wash px-3.5 py-3 text-small leading-snug text-clay-deep"
     >
       {message}
     </p>
@@ -183,7 +183,7 @@ export function FormNotice({ message }: { message: string | null }) {
     <p
       role="status"
       data-testid="form-notice"
-      className="rounded-[10px] border-[1.5px] border-line bg-moss-wash px-3 py-2.5 text-[12px] leading-snug text-moss-deep"
+      className="rounded-control border-l-4 border-moss bg-moss-wash px-3.5 py-3 text-small leading-snug text-moss-deep"
     >
       {message}
     </p>
@@ -210,7 +210,7 @@ export function PrimaryButton({
       type="submit"
       data-testid={testId}
       disabled={pending || disabled}
-      className="label-caps flex w-full items-center justify-center gap-2 rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[11.5px] text-paper transition-opacity disabled:opacity-45"
+      className="press display field-accent flex min-h-12 w-full items-center justify-center gap-2 rounded-control px-4 py-3.5 text-heading leading-none shadow-accent disabled:opacity-45"
     >
       {pending ? pendingLabel : label}
       {!pending && icon ? icon : null}

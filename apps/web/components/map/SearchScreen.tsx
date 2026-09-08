@@ -28,8 +28,8 @@ export function SearchScreen() {
 
   return (
     <AppShell>
-      <h1 className="text-2xl font-bold tracking-tight text-ink">Search</h1>
-      <p className="mt-1 mb-4 text-[12.5px] leading-relaxed text-ink-soft">
+      <h1 className="text-title font-bold tracking-tight text-ink">Search</h1>
+      <p className="mt-1 mb-4 text-small leading-relaxed text-ink-soft">
         Find a route, crag or gym by name and jump straight to it on the map.
         Results come from Climbing Companion&apos;s own database.
       </p>

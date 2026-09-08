@@ -92,7 +92,7 @@ export function VerifyGymSheet({
             type="button"
             data-testid="verify-done"
             onClick={onClose}
-            className="w-full rounded-[10px] border-[1.5px] border-ink bg-ink px-4 py-3 text-[13px] font-bold text-paper"
+            className="w-full rounded-control border border-ink bg-ink px-4 py-3 text-small font-bold text-paper"
           >
             Done
           </button>
@@ -100,7 +100,7 @@ export function VerifyGymSheet({
       ) : (
         <form noValidate onSubmit={onSubmit} className="space-y-4">
           <fieldset data-testid="gym-accuracy-choice" className="space-y-2">
-            <legend className="label-caps text-[9.5px] text-ink-faint">
+            <legend className="label-caps text-caption text-ink-faint">
               Is the submission information accurate? *
             </legend>
             <div className="grid grid-cols-2 gap-2">
@@ -117,7 +117,7 @@ export function VerifyGymSheet({
                     data-testid={`gym-accurate-${option.value ? 'yes' : 'no'}`}
                     onClick={() => setAccurate(option.value)}
                     className={[
-                      'rounded-[10px] border-[1.5px] px-2.5 py-2.5 text-[11.5px] font-bold',
+                      'rounded-control border px-2.5 py-2.5 text-small font-bold',
                       active
                         ? option.value
                           ? 'border-moss-deep bg-moss-wash text-moss-deep'
@@ -149,7 +149,7 @@ export function VerifyGymSheet({
             <div data-testid="gym-dispute-body" className="space-y-1.5">
               <label
                 htmlFor="dispute-detail"
-                className="label-caps block text-[9.5px] text-ink-faint"
+                className="label-caps block text-caption text-ink-faint"
               >
                 What is inaccurate? *
               </label>
@@ -161,9 +161,9 @@ export function VerifyGymSheet({
                 value={disputeDetail}
                 placeholder="e.g. The bouldering wall is closed, or the Friday hours are wrong…"
                 onChange={(event) => setDisputeDetail(event.target.value)}
-                className="w-full rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-2.5 text-[12.5px] leading-relaxed text-ink outline-none placeholder:text-ink-faint"
+                className="w-full rounded-control border border-line bg-surface px-3 py-2.5 text-small leading-relaxed text-ink outline-none placeholder:text-ink-faint"
               />
-              <p className="text-[10.5px] text-ink-faint">
+              <p className="text-caption text-ink-faint">
                 {MODERATION_REASON_MAX_LENGTH - disputeDetail.length} left · an
                 admin reviews this, it does not count toward the four.
               </p>

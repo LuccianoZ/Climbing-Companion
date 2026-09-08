@@ -78,7 +78,7 @@ export function AdminShell({
       <header className="flex shrink-0 items-center justify-between gap-4 border-b-[1.5px] border-line bg-surface px-5 py-3">
         <div className="flex items-center gap-2.5">
           <ShieldIcon className="h-5 w-5 text-clay-deep" />
-          <span className="label-caps text-[13px] text-ink">
+          <span className="label-caps text-small text-ink">
             Climbing Companion — Admin
           </span>
         </div>
@@ -86,14 +86,14 @@ export function AdminShell({
           <Link
             href="/"
             data-testid="admin-back-to-app"
-            className="text-[11.5px] text-ink-soft underline decoration-line-soft underline-offset-4"
+            className="text-small text-ink-soft underline decoration-line-soft underline-offset-4"
           >
             Back to the map
           </Link>
           {user ? (
             <span
               data-testid="admin-identity"
-              className="text-[11.5px] text-ink-faint"
+              className="text-small text-ink-faint"
             >
               {user.displayName}
             </span>
@@ -102,7 +102,7 @@ export function AdminShell({
             type="button"
             data-testid="admin-logout"
             onClick={onSignOut}
-            className="flex items-center gap-1.5 rounded-[8px] border border-line-soft px-2.5 py-1.5 text-[11.5px] text-ink-soft"
+            className="flex items-center gap-1.5 rounded-control border border-line-soft px-2.5 py-1.5 text-small text-ink-soft"
           >
             <SignOutIcon className="h-3.5 w-3.5" />
             Log out
@@ -127,7 +127,7 @@ export function AdminShell({
                       data-testid={`admin-nav-${section.label.toLowerCase().replace(/\s+/g, '-')}`}
                       aria-current={active ? 'page' : undefined}
                       className={[
-                        'block rounded-[8px] px-3 py-2 text-[12.5px]',
+                        'block rounded-control px-3 py-2 text-small',
                         active
                           ? 'bg-ink font-semibold text-paper'
                           : 'text-ink hover:bg-paper',
@@ -141,11 +141,11 @@ export function AdminShell({
                     // the queue exists and is scheduled, rather than wonder
                     // whether this build is missing it.
                     <span
-                      className="block cursor-not-allowed rounded-[8px] px-3 py-2 text-[12.5px] text-ink-faint"
+                      className="block cursor-not-allowed rounded-control px-3 py-2 text-small text-ink-faint"
                       title={section.story}
                     >
                       {section.label}
-                      <span className="block text-[9.5px]">{section.story}</span>
+                      <span className="block text-caption">{section.story}</span>
                     </span>
                   )}
                 </li>
@@ -155,10 +155,10 @@ export function AdminShell({
         </nav>
 
         <main className="min-w-0 flex-1 overflow-y-auto p-5">
-          <h1 className="text-[22px] font-bold tracking-tight text-ink">
+          <h1 className="text-title font-bold tracking-tight text-ink">
             {title}
           </h1>
-          <p className="mt-1 max-w-2xl text-[12.5px] leading-relaxed text-ink-soft">
+          <p className="mt-1 max-w-2xl text-small leading-relaxed text-ink-soft">
             {description}
           </p>
           <div className="mt-5">{children}</div>

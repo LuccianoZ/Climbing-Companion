@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/shell/AppShell';
 import { fetchNotifications } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { StaggerItem, StaggerList } from '@/components/ui/motion';
 import type { AppNotification, NotificationType } from '@/lib/types';
 
 // The Alerts tab (6-screen mockup's Notifications panel). Foundation §12: it
@@ -154,7 +155,7 @@ export function AlertsScreen() {
           data-testid={
             status === 'loading' ? 'session-loading' : 'session-redirecting'
           }
-          className="py-10 text-center text-[11px] text-ink-faint"
+          className="py-10 text-center text-caption text-ink-faint"
         >
           {status === 'loading' ? 'Checking your session…' : 'Taking you to login…'}
         </p>
@@ -168,13 +169,13 @@ export function AlertsScreen() {
   return (
     <AppShell>
       <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-bold tracking-tight text-ink">Alerts</h1>
+        <h1 className="text-title font-bold tracking-tight text-ink">Alerts</h1>
         <button
           type="button"
           data-testid="alerts-mark-read"
           onClick={markAllRead}
           disabled={unreadCount === 0}
-          className="rounded-[8px] border-[1.5px] border-line bg-surface px-2.5 py-1.5 text-[11px] font-semibold text-ink-soft disabled:opacity-40"
+          className="rounded-control border border-line bg-surface px-2.5 py-1.5 text-caption font-semibold text-ink-soft disabled:opacity-40"
         >
           Mark all read
         </button>
@@ -183,7 +184,7 @@ export function AlertsScreen() {
       {failed && items === null ? (
         <p
           data-testid="alerts-error"
-          className="mt-4 rounded-[10px] border-[1.5px] border-clay-deep bg-clay-wash px-3 py-2.5 text-[12px] text-clay-deep"
+          className="mt-4 rounded-control border border-clay-deep bg-clay-wash px-3 py-2.5 text-small text-clay-deep"
         >
           Couldn&apos;t load your alerts. Check your connection.
         </p>
@@ -192,48 +193,53 @@ export function AlertsScreen() {
       {items !== null && items.length === 0 ? (
         <p
           data-testid="alerts-empty"
-          className="mt-6 rounded-[10px] border-[1.5px] border-line bg-surface px-3 py-4 text-center text-[12px] text-ink-soft"
+          className="mt-6 rounded-control border border-line bg-surface px-4 py-6 text-center text-small text-ink-soft"
         >
           Nothing here yet. New friends and moderation notices land on this
           tab.
         </p>
       ) : null}
 
-      <ul data-testid="alerts-list" className="mt-4 space-y-2.5">
+      {/* Rows arrive in sequence rather than all at once. A notifications tab
+          that materialises fully formed gives no sense of what just landed;
+          a 40ms cascade reads as "these came in". */}
+      <StaggerList role="list" testId="alerts-list" className="mt-4 space-y-1.5">
         {(items ?? []).map((n) => {
           const copy = COPY[n.type];
           const unread = !lastSeen || n.createdAt > lastSeen;
           return (
-            <li
-              key={n.id}
-              data-testid={`alert-${n.type}`}
-              data-unread={unread ? 'true' : 'false'}
-              className={[
-                'rounded-[12px] border-[1.5px] px-3.5 py-3',
-                copy.tone === 'warn'
-                  ? 'border-clay-deep/50 bg-clay-wash'
-                  : 'border-line bg-surface',
-              ].join(' ')}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[13px] font-bold text-ink">{copy.title}</p>
-                {unread ? (
-                  <span
-                    aria-label="Unread"
-                    className="mt-1 h-2 w-2 shrink-0 rounded-full bg-clay-deep"
-                  />
-                ) : null}
+            <StaggerItem role="listitem" key={n.id}>
+              <div
+                data-testid={`alert-${n.type}`}
+                data-unread={unread ? 'true' : 'false'}
+                className={[
+                  // Left rule, not a full border: the tone is carried by a
+                  // 4px accent edge, which lets a stack of these read as one
+                  // list instead of as a pile of separate cards.
+                  'rounded-control border-l-4 bg-surface px-4 py-3.5',
+                  copy.tone === 'warn' ? 'border-clay' : 'border-line',
+                ].join(' ')}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="display text-heading text-ink">{copy.title}</p>
+                  {unread ? (
+                    <span
+                      aria-label="Unread"
+                      className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-clay"
+                    />
+                  ) : null}
+                </div>
+                <p className="mt-1 text-small leading-relaxed text-ink-soft">
+                  {copy.body}
+                </p>
+                <p className="label-caps mt-2 text-ink-faint">
+                  {new Date(n.createdAt).toLocaleString()}
+                </p>
               </div>
-              <p className="mt-1 text-[12px] leading-relaxed text-ink-soft">
-                {copy.body}
-              </p>
-              <p className="mt-1.5 font-mono text-[10px] text-ink-faint">
-                {new Date(n.createdAt).toLocaleString()}
-              </p>
-            </li>
+            </StaggerItem>
           );
         })}
-      </ul>
+      </StaggerList>
     </AppShell>
   );
 }

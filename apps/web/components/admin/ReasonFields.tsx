@@ -32,7 +32,7 @@ export function ReasonFields({
   return (
     <div className="space-y-2">
       <label className="block">
-        <span className="label-caps text-[9px] text-ink-faint">
+        <span className="label-caps text-caption text-ink-faint">
           Reason preset
         </span>
         <select
@@ -48,7 +48,7 @@ export function ReasonFields({
               onText(MODERATION_REASON_PRESET_LABELS[next]);
             }
           }}
-          className="mt-1 w-full rounded-[8px] border-[1.5px] border-line-soft bg-surface px-2.5 py-2 text-[12px] text-ink"
+          className="mt-1 w-full rounded-control border border-line-soft bg-surface px-2.5 py-2 text-small text-ink"
         >
           <option value="">— none —</option>
           {PRESETS.map((p) => (
@@ -60,7 +60,7 @@ export function ReasonFields({
       </label>
 
       <label className="block">
-        <span className="label-caps text-[9px] text-ink-faint">
+        <span className="label-caps text-caption text-ink-faint">
           Reason text {preset === 'OTHER' ? '*' : '(emailed to the user)'}
         </span>
         <textarea
@@ -70,9 +70,9 @@ export function ReasonFields({
           onChange={(e) => onText(e.target.value)}
           maxLength={MODERATION_REASON_MAX_LENGTH}
           rows={2}
-          className="mt-1 w-full rounded-[8px] border-[1.5px] border-line-soft bg-surface px-2.5 py-2 text-[12px] text-ink"
+          className="mt-1 w-full rounded-control border border-line-soft bg-surface px-2.5 py-2 text-small text-ink"
         />
-        <span className="text-[10px] text-ink-faint">
+        <span className="text-caption text-ink-faint">
           {text.length}/{MODERATION_REASON_MAX_LENGTH}
         </span>
       </label>

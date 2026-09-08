@@ -15,7 +15,21 @@ const BASE_URL = process.env.WEB_BASE_URL ?? 'http://localhost:3000';
 // (--color-dormant: #9b968f). Asserted as a resolved rgb() string so the
 // test fails if the token is quietly repointed at something that is no
 // longer grey.
-const DORMANT_RGB = 'rgb(155, 150, 143)';
+// Resolved from the live --color-dormant token rather than pinned to a literal.
+// This previously hardcoded rgb(155, 150, 143), the warm-paper palette's grey;
+// the Sept 8 2026 dark revamp moved the token and the scenario failed on a
+// colour change that was intentional. The assertion's intent is "the pin uses
+// the dormant token as its fill", so read the token and compare that.
+async function dormantRgb(page: MapUiWorld['page']): Promise<string> {
+  return page!.evaluate(() => {
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--color-dormant)';
+    document.body.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    probe.remove();
+    return resolved;
+  });
+}
 
 function pin(world: MapUiWorld, name: string): Locator {
   return world.page.locator(`[data-testid="map-pin"][data-pin-name="${name}"]`);
@@ -195,7 +209,11 @@ Then('the pin for {string} is translucent grey', async function (this: MapUiWorl
     Number(opacity) < 1,
     `expected an UNVERIFIED pin to be translucent, got opacity ${opacity}`,
   );
-  assert.equal(background, DORMANT_RGB, 'expected the dormant grey fill');
+  assert.equal(
+    background,
+    await dormantRgb(this.page),
+    'expected the dormant grey fill (--color-dormant)',
+  );
 });
 
 // BL-x01: every pin now carries an *italicised* two-state pill -- muted

@@ -7,6 +7,13 @@ import type { ReactNode } from "react";
 // may be offline (and, in CI, behind a proxy that does not allowlist
 // Google Fonts). It also drops a third-party request from every page load.
 import "@fontsource-variable/space-grotesk";
+// The display face (Sept 8 2026 revamp). Condensed grotesques are the athletic
+// register -- they are what route cards, bib numbers and gym signage are set
+// in -- and the narrow width buys roughly a third more characters per line,
+// which is what lets headings and grade numerals get *bigger* on a phone
+// rather than smaller. Two weights only; the body face carries everything else.
+import "@fontsource/barlow-condensed/600.css";
+import "@fontsource/barlow-condensed/700.css";
 import "./globals.css";
 import { SessionProvider } from "@/lib/session";
 import { SuspendedGate } from "@/components/auth/SuspendedGate";
@@ -20,7 +27,10 @@ export const metadata: Metadata = {
 // fills the viewport between a fixed header and tab bar, so the page itself
 // must never rubber-band or zoom under a pinch meant for the map.
 export const viewport: Viewport = {
-  themeColor: "#f5f1e8",
+  // Matches --color-paper in globals.css. Also drives the mobile browser
+  // chrome, so a stale value here leaves a light bar above a dark app.
+  themeColor: "#0b1220",
+  colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
