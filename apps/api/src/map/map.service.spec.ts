@@ -186,6 +186,9 @@ describe('MapService.findMapPins', () => {
         latitude: 37.7338,
         longitude: -119.5676,
         status: LifecycleStatus.VERIFIED,
+        // BL-x13. Zero because this test stages no routes; the crag itself
+        // still renders, which is the point -- the route tier is additive.
+        routeCount: 0,
       },
       {
         id: UNVERIFIED_GYM.id,
@@ -196,6 +199,84 @@ describe('MapService.findMapPins', () => {
         status: LifecycleStatus.UNVERIFIED,
       },
     ]);
+  });
+
+  // --- BL-x13: the route tier -----------------------------------------
+
+  it('emits a ROUTE pin per non-archived route, carrying its parent cragId', async () => {
+    const { service } = makeService({ crags: [CRAG], routes: [ROUTE] });
+
+    const pins = await service.findMapPins();
+    const routePin = pins.find((p) => p.kind === 'ROUTE');
+
+    expect(routePin).toEqual({
+      id: ROUTE.id,
+      kind: 'ROUTE',
+      name: 'Solar Power',
+      // The route's OWN coordinates, not its crag's -- the whole point of the
+      // tier is that a route sits where it actually is.
+      latitude: 37.734,
+      longitude: -119.5679,
+      status: LifecycleStatus.UNVERIFIED,
+      // There is no per-route panel; clicking opens the crag's, anchored.
+      cragId: CRAG.id,
+    });
+  });
+
+  it('counts non-archived routes onto their crag pin', async () => {
+    const second = { ...ROUTE, id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' };
+    const { service } = makeService({ crags: [CRAG], routes: [ROUTE, second] });
+
+    const pins = await service.findMapPins();
+    const cragPin = pins.find((p) => p.kind === 'CRAG');
+
+    expect(cragPin?.routeCount).toBe(2);
+  });
+
+  it('orders crags before gyms before routes so a name lookup finds the crag (AR-14)', async () => {
+    // AR-14 has an auto-created crag borrow its founding route's name, so the
+    // two share a string routinely. A caller resolving by name must land on
+    // the coarser tier, which is the one rendered at every zoom.
+    const sameName = { ...CRAG, name: 'Solar Power' };
+    const { service } = makeService({
+      crags: [sameName],
+      gyms: [UNVERIFIED_GYM],
+      routes: [ROUTE],
+    });
+
+    const pins = await service.findMapPins();
+
+    expect(pins.map((p) => p.kind)).toEqual(['CRAG', 'GYM', 'ROUTE']);
+    expect(pins.find((p) => p.name === 'Solar Power')?.kind).toBe('CRAG');
+  });
+
+  it('scopes the route query to visible crags and excludes ARCHIVED routes', async () => {
+    const { service, routeQb } = makeService({
+      crags: [CRAG],
+      routes: [ROUTE],
+    });
+
+    await service.findMapPins();
+
+    const clauses = routeQb.calls.map(([clause]) => clause);
+    expect(clauses.some((c) => c.includes('"route"."crag_id" IN'))).toBe(true);
+    expect(
+      clauses.some((c) => c.includes('"route"."status" <> :archived')),
+    ).toBe(true);
+    const scoped = routeQb.calls.find(([c]) => c.includes('crag_id" IN'));
+    expect((scoped?.[1] as { cragIds: string[] }).cragIds).toEqual([CRAG.id]);
+  });
+
+  it('skips the route query entirely when no crag is visible -- IN () is a SQL error', async () => {
+    const { service, routeQb } = makeService({
+      crags: [],
+      gyms: [UNVERIFIED_GYM],
+    });
+
+    const pins = await service.findMapPins();
+
+    expect(routeQb.getMany).not.toHaveBeenCalled();
+    expect(pins.every((p) => p.kind !== 'ROUTE')).toBe(true);
   });
 
   it('flips GeoJSON [lng, lat] back into named latitude/longitude fields', async () => {

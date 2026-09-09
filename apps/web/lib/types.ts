@@ -220,7 +220,10 @@ export type ModerationReasonPreset =
 // photo (Foundation §10.2); the other two are Admin-Dashboard actions.
 export type PairableAccountabilityAction = 'ISSUE_STRIKE' | 'BAN_OUTRIGHT';
 
-export type MapPinKind = 'CRAG' | 'GYM';
+// BL-x13 (Sept 9, 2026): a third tier. See map.service.ts for why adding
+// route pins does not reopen Foundation §4 -- the crag remains the lifecycle
+// entity, it just stops being the only drawable thing.
+export type MapPinKind = 'CRAG' | 'GYM' | 'ROUTE';
 
 // --- map read surface (AR-19) ----------------------------------------------
 
@@ -231,6 +234,13 @@ export interface MapPin {
   latitude: number;
   longitude: number;
   status: LifecycleStatus;
+  // ROUTE pins only: the parent whose detail panel a click should open, since
+  // no per-route panel exists (routes are rows inside the crag's).
+  cragId?: string;
+  // CRAG pins only: non-archived children. Drives the pin's "n routes" line
+  // and, more importantly, the cluster count -- clusters total ROUTES, never
+  // crags, so the number keeps one meaning as tiers swap under a zoom.
+  routeCount?: number;
 }
 
 export interface GradeDistributionEntry {

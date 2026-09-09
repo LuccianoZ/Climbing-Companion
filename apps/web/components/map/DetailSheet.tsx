@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { CloseIcon } from '@/components/shell/icons';
 import { ExpandableSheet, Pop, StaggerItem, StaggerList } from '@/components/ui/motion';
 import { formatGrade, type GradeScale } from '@/lib/grades';
@@ -43,6 +43,7 @@ export function DetailSheet({
   onScaleChange,
   onAction,
   onClose,
+  focusRouteId = null,
 }: {
   state: DetailSheetState;
   viewer: { latitude: number; longitude: number } | null;
@@ -54,6 +55,11 @@ export function DetailSheet({
   onScaleChange: (next: GradeScale) => void;
   onAction: (action: InRangeAction) => void;
   onClose: () => void;
+  // BL-x13. Set when the panel was opened by clicking a ROUTE pin: there is
+  // no per-route panel, so a route pin opens its CRAG's panel anchored to the
+  // row the climber actually tapped. Without this the tap appears to open the
+  // wrong thing -- a list headed by a different name, scrolled to the top.
+  focusRouteId?: string | null;
 }) {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -236,6 +242,7 @@ export function DetailSheet({
                 routes={detail.routes}
                 scale={scale}
                 viewerUserId={viewerUserId}
+                focusRouteId={focusRouteId}
               />
             )}
 
@@ -491,10 +498,12 @@ function CragBody({
   routes,
   scale,
   viewerUserId,
+  focusRouteId,
 }: {
   routes: MapRouteSummary[];
   scale: GradeScale;
   viewerUserId: string | null;
+  focusRouteId: string | null;
 }) {
   if (routes.length === 0) {
     return (
@@ -521,6 +530,7 @@ function CragBody({
               route={route}
               scale={scale}
               viewerUserId={viewerUserId}
+              focused={route.id === focusRouteId}
             />
           </StaggerItem>
         ))}
@@ -533,11 +543,26 @@ function RouteCard({
   route,
   scale,
   viewerUserId,
+  focused = false,
 }: {
   route: MapRouteSummary;
   scale: GradeScale;
   viewerUserId: string | null;
+  focused?: boolean;
 }) {
+  const anchor = useRef<HTMLElement>(null);
+
+  // Scrolls the tapped row into view once, on the render that first marks it
+  // focused. Not a dependency on `focused` alone: reopening the same panel
+  // for the same route should re-anchor, which is why the route id is in the
+  // list too.
+  useEffect(() => {
+    if (!focused) {
+      return;
+    }
+    anchor.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [focused, route.id]);
+
   const progress = Math.min(
     1,
     route.verificationCount / route.verificationsRequired,
@@ -545,13 +570,18 @@ function RouteCard({
 
   return (
     <article
+      ref={anchor}
       data-testid="route-card"
       data-route-name={route.name}
       data-route-status={route.status}
+      data-route-focused={focused ? 'true' : 'false'}
       // No card box. A bordered card per route inside a bordered panel inside
       // a sheet was three frames around one row; a left rule and a divider do
       // the same grouping and let the grade breathe.
-      className="space-y-3 border-l-2 border-line-soft py-2 pl-3"
+      className={[
+        'space-y-3 border-l-2 py-2 pl-3',
+        focused ? 'border-clay bg-clay-wash/40' : 'border-line-soft',
+      ].join(' ')}
     >
       <header className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">

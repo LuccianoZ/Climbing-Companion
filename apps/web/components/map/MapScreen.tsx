@@ -15,6 +15,7 @@ import { useViewerLocation } from '@/lib/use-viewer-location';
 import type { MapPin, MapSearchResult } from '@/lib/types';
 import { DetailSheet, type DetailSheetState } from './DetailSheet';
 import type { InRangeAction } from './InRangeActions';
+import { ROUTE_TIER_MIN_ZOOM } from './clustering';
 import type { FlyToTarget } from './MapCanvas';
 import { MapView } from './MapView';
 import { SearchBar } from './SearchBar';
@@ -33,8 +34,15 @@ import { SubmitFab } from './SubmitFab';
 
 interface DetailTarget {
   kind: 'CRAG' | 'GYM';
+  // The entity whose panel opens. For a ROUTE pin this is the parent CRAG --
+  // routes have no panel of their own, they are rows inside their crag's.
   id: string;
   name: string;
+  // BL-x13: which pin on the map is the selected one. Usually the same as
+  // `id`, but a ROUTE pin selects itself while opening its parent's panel.
+  pinId?: string;
+  // BL-x13: the row to anchor and highlight when the panel opens.
+  focusRouteId?: string;
 }
 
 // The Search tab hands a chosen result over as query params rather than
@@ -153,8 +161,33 @@ export function MapScreen() {
   }, []);
 
   // BL-021: clicking a pin opens the panel for that pin's own type.
+  // BL-x13 adds the third case: a ROUTE pin has no panel of its own, so it
+  // opens its parent crag's, anchored to its row.
   const handleSelectPin = useCallback(
     (pin: MapPin) => {
+      if (pin.kind === 'ROUTE') {
+        if (!pin.cragId) {
+          return;
+        }
+        // Stay at the route tier's own zoom. Dropping to 15 the way a crag
+        // tap does would collapse these pins back into the crag pin, so the
+        // route a climber just tapped would vanish under the panel it opened.
+        setFlyTo({
+          latitude: pin.latitude,
+          longitude: pin.longitude,
+          zoom: ROUTE_TIER_MIN_ZOOM,
+          nonce: Date.now(),
+        });
+        openDetail({
+          kind: 'CRAG',
+          id: pin.cragId,
+          name: pin.name,
+          pinId: pin.id,
+          focusRouteId: pin.id,
+        });
+        return;
+      }
+
       setFlyTo({
         latitude: pin.latitude,
         longitude: pin.longitude,
@@ -227,7 +260,7 @@ export function MapScreen() {
     <>
       <MapView
         pins={pins}
-        selectedPinId={target?.id ?? null}
+        selectedPinId={target?.pinId ?? target?.id ?? null}
         onSelectPin={handleSelectPin}
         flyTo={flyTo}
         viewer={viewer}
@@ -280,6 +313,7 @@ export function MapScreen() {
           onScaleChange={setScale}
           onAction={handleAction}
           onClose={closeSheet}
+          focusRouteId={target?.focusRouteId ?? null}
         />
       ) : null}
 

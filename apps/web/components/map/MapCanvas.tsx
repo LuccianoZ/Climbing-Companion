@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import {
   AttributionControl,
   MapContainer,
@@ -10,7 +10,8 @@ import {
 } from 'react-leaflet';
 import L from 'leaflet';
 import type { MapPin } from '@/lib/types';
-import { buildPinIcon } from './pin-icons';
+import { buildClusterIcon, buildPinIcon } from './pin-icons';
+import { clusterPins, selectTier, zoomToBreak } from './clustering';
 
 // BL-019. This module imports `leaflet`, which reads `window` at import
 // time -- so it must never be evaluated on the server. It is not imported
@@ -174,6 +175,110 @@ const viewerIcon = () =>
     iconAnchor: [14, 14],
   });
 
+// BL-x13. Everything zoom-dependent lives here rather than in MapCanvas
+// because it needs `useMap()`, which is only available to a DESCENDANT of
+// MapContainer -- MapCanvas itself renders the container and so sits outside
+// its own context.
+//
+// The live zoom is read with useSyncExternalStore rather than mirrored into
+// useState from an effect. Leaflet's zoom is external mutable state and this
+// is precisely the hook React 19 provides for subscribing to it; the effect +
+// setState shape is the one AR-32 already documents React 19 as rejecting.
+//
+// It subscribes to `zoomend`, not `zoom`. Leaflet fires `zoom` continuously
+// through an animation, and re-clustering every frame would rebuild every
+// marker's DOM mid-flight -- visibly, and out from under any Playwright
+// locator that had already resolved.
+function PinLayer({
+  pins,
+  selectedPinId,
+  onSelectPin,
+}: {
+  pins: MapPin[];
+  selectedPinId: string | null;
+  onSelectPin: (pin: MapPin) => void;
+}) {
+  const map = useMap();
+
+  const subscribe = useCallback(
+    (onChange: () => void) => {
+      map.on('zoomend', onChange);
+      return () => {
+        map.off('zoomend', onChange);
+      };
+    },
+    [map],
+  );
+
+  const zoom = useSyncExternalStore(
+    subscribe,
+    () => map.getZoom(),
+    () => DEFAULT_ZOOM,
+  );
+
+  // Tier first, then clustering over whatever that tier produced -- the two
+  // never group the same pins at the same moment.
+  const entries = useMemo(
+    () => clusterPins(selectTier(pins, zoom), zoom),
+    [pins, zoom],
+  );
+
+  // Rebuilding a divIcon on every render would recreate every marker's DOM
+  // on every geolocation tick, which throws away the badge nodes the UI
+  // suite queries mid-assertion. Icons depend only on the entry set and on
+  // which pin is selected -- both of which change on tap or zoom, not on
+  // every GPS fix, so the memo still holds across location ticks.
+  const icons = useMemo(() => {
+    const byKey = new Map<string, L.DivIcon>();
+    for (const entry of entries) {
+      if (entry.type === 'PIN') {
+        byKey.set(entry.pin.id, buildPinIcon(entry.pin, entry.pin.id === selectedPinId));
+      } else {
+        byKey.set(entry.cluster.id, buildClusterIcon(entry.cluster));
+      }
+    }
+    return byKey;
+  }, [entries, selectedPinId]);
+
+  return (
+    <>
+      {entries.map((entry) =>
+        entry.type === 'PIN' ? (
+          <Marker
+            key={entry.pin.id}
+            position={[entry.pin.latitude, entry.pin.longitude]}
+            icon={icons.get(entry.pin.id) ?? buildPinIcon(entry.pin)}
+            // Selected pin rides above its neighbours so a badge from an
+            // adjacent UNVERIFIED pin cannot cover the one being read.
+            zIndexOffset={entry.pin.id === selectedPinId ? 1000 : 0}
+            eventHandlers={{ click: () => onSelectPin(entry.pin) }}
+            alt={entry.pin.name}
+          />
+        ) : (
+          <Marker
+            key={entry.cluster.id}
+            position={[entry.cluster.latitude, entry.cluster.longitude]}
+            icon={icons.get(entry.cluster.id) ?? buildClusterIcon(entry.cluster)}
+            eventHandlers={{
+              // Zoom INTO the cluster rather than opening a list of its
+              // members: the cluster is a rendering artefact, not an entity,
+              // and it has no detail panel of its own to show. Two zoom
+              // levels is enough to separate all but co-located pins.
+              click: () =>
+                map.flyTo(
+                  [entry.cluster.latitude, entry.cluster.longitude],
+                  zoomToBreak(zoom),
+                  { duration: 0.6 },
+                ),
+            }}
+            alt={`${entry.cluster.pins.length} nearby locations`}
+          />
+        ),
+      )}
+    </>
+  );
+}
+
 export default function MapCanvas({
   pins,
   selectedPinId,
@@ -181,20 +286,6 @@ export default function MapCanvas({
   flyTo,
   viewer,
 }: MapCanvasProps) {
-  // Rebuilding a divIcon on every render would recreate every marker's DOM
-  // on every geolocation tick, which throws away the badge nodes the UI
-  // suite queries mid-assertion. Icons only depend on id/kind/status -- and,
-  // since the Sept 8 revamp, on whether the pin is the selected one, which is
-  // why `selectedPinId` joins the dependency list. It changes on tap, not on
-  // every GPS fix, so the memo still holds across location ticks.
-  const icons = useMemo(() => {
-    const byId = new Map<string, L.DivIcon>();
-    for (const pin of pins) {
-      byId.set(pin.id, buildPinIcon(pin, pin.id === selectedPinId));
-    }
-    return byId;
-  }, [pins, selectedPinId]);
-
   return (
     <MapContainer
       center={DEFAULT_CENTER}
@@ -236,18 +327,11 @@ export default function MapCanvas({
       <ResizeObserverBridge />
       <MapStatePublisher />
 
-      {pins.map((pin) => (
-        <Marker
-          key={pin.id}
-          position={[pin.latitude, pin.longitude]}
-          icon={icons.get(pin.id) ?? buildPinIcon(pin)}
-          // Selected pin rides above its neighbours so a badge from an
-          // adjacent UNVERIFIED pin cannot cover the one being read.
-          zIndexOffset={pin.id === selectedPinId ? 1000 : 0}
-          eventHandlers={{ click: () => onSelectPin(pin) }}
-          alt={pin.name}
-        />
-      ))}
+      <PinLayer
+        pins={pins}
+        selectedPinId={selectedPinId}
+        onSelectPin={onSelectPin}
+      />
 
       {viewer ? (
         <Marker

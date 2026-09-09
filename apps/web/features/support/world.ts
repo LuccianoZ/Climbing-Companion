@@ -40,6 +40,9 @@ import {
   SUBMIT_ROUTE_RESULT,
   UNVERIFIED_GYM_DETAIL,
   UNVERIFIED_GYM_ID,
+  NEIGHBOUR_CRAG_PIN,
+  ROUTE_PIN_A,
+  ROUTE_PIN_B,
   UNVERIFIED_GYM_PIN,
   UNVERIFIED_CRAG_PIN,
   VERIFIED_GYM_PIN,
@@ -144,6 +147,16 @@ export class MapUiWorld extends World {
   // There were briefly two mechanisms for the same job and only one of them
   // reached the browser reliably.
   includeUnverifiedGym = false;
+
+  // BL-x13. Both default to false so the map-pins payload every pre-existing
+  // scenario sees is unchanged: two pins, ~184px apart at zoom 12, neither
+  // clustered and neither expandable.
+  includeRoutePins = false;
+  includeNeighbourCrag = false;
+
+  // Captured by the cluster-tap step so the zoom assertion afterwards compares
+  // against where the map actually was, not against a hardcoded default.
+  zoomBeforeClick: number | null = null;
 
   // Per-endpoint overrides, keyed by the names in `defaultResponse` below.
   // This is how a scenario says "the server refuses this one with a 409".
@@ -302,9 +315,18 @@ export class MapUiWorld extends World {
         return {
           status: 200,
           body: [
-            { ...UNVERIFIED_CRAG_PIN, status: this.cragStatus },
+            {
+              ...UNVERIFIED_CRAG_PIN,
+              status: this.cragStatus,
+              // BL-x13: a crag pin now reports how many climbs it holds, and
+              // the count is what a cluster totals. Two, matching
+              // MULTI_ROUTE_CRAG_DETAIL, whenever the route tier is in play.
+              ...(this.includeRoutePins ? { routeCount: 2 } : {}),
+            },
             VERIFIED_GYM_PIN,
             ...(this.includeUnverifiedGym ? [UNVERIFIED_GYM_PIN] : []),
+            ...(this.includeNeighbourCrag ? [NEIGHBOUR_CRAG_PIN] : []),
+            ...(this.includeRoutePins ? [ROUTE_PIN_A, ROUTE_PIN_B] : []),
           ],
         };
       case 'map-crag':
@@ -465,6 +487,9 @@ Before(function (this: MapUiWorld) {
   this.mediaUploadCount = 0;
   this.session = 'ANONYMOUS';
   this.includeUnverifiedGym = false;
+  this.includeRoutePins = false;
+  this.includeNeighbourCrag = false;
+  this.zoomBeforeClick = null;
   this.overrides = new Map();
 });
 

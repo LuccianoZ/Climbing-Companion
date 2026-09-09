@@ -31,7 +31,20 @@ export const VERIFICATIONS_REQUIRED_TO_VERIFY = 4;
 // query cheap and the mobile-first dropdown scrollable rather than endless.
 const SEARCH_RESULT_LIMIT = 20;
 
-export type MapPinKind = 'CRAG' | 'GYM';
+// BL-x13 (Sept 9, 2026). A third pin tier joins the two BL-020 shipped.
+// Foundation §4 renders ONE pin per crag because "rendering one pin per route
+// would make a popular area an unreadable marker cluster" -- that argument is
+// about density, and BL-x13 answers density with real clustering instead. So
+// routes may now carry their own pins at close zoom without reopening §4: the
+// crag stays the LIFECYCLE entity (§4/§5's founding-route cascade is
+// untouched), it simply stops being the only thing the map can draw.
+//
+// The client picks which tier to render from the live zoom (see
+// clustering.ts); the server returns all three in one payload because the
+// whole set is small at MVP scale (§20.2, ~20-25 users) and a viewport-bounded
+// query would be a second source of truth for the visibility rules AR-14/AR-17
+// settled once.
+export type MapPinKind = 'CRAG' | 'GYM' | 'ROUTE';
 export type MapSearchKind = 'ROUTE' | 'CRAG' | 'GYM';
 
 export interface MapPin {
@@ -41,6 +54,18 @@ export interface MapPin {
   latitude: number;
   longitude: number;
   status: LifecycleStatus;
+  // ROUTE pins only. There is no per-route detail panel -- a route is a ROW
+  // INSIDE its crag's panel (getCragDetail), and search already resolves a
+  // route hit to its parent the same way (MapSearchResult.cragId). Clicking a
+  // route pin therefore opens the crag panel anchored to that row, and this
+  // is the id it opens.
+  cragId?: string;
+  // CRAG pins only: how many non-archived routes hang underneath. Two uses,
+  // both about keeping ONE stable meaning for a number the climber watches
+  // change as they zoom -- the pin's own "6 routes" line, and the cluster
+  // label, which counts ROUTES rather than crags so the total does not leap
+  // when a crag expands into its children.
+  routeCount?: number;
 }
 
 export interface MapRouteSummary {
@@ -183,9 +208,49 @@ export class MapService {
         .getMany(),
     ]);
 
+    // BL-x13's route tier. Scoped to the crags that already passed the
+    // visibility rules above rather than re-deriving them: a route under an
+    // ARCHIVED crag must not surface, and expressing that as "belongs to a
+    // crag we are already rendering" keeps AR-14/AR-17's conditions in exactly
+    // one place. Skipped entirely when there are no visible crags -- an empty
+    // IN () list is a SQL error, not an empty result.
+    const routes = crags.length
+      ? await this.dataSource
+          .getRepository(Route)
+          .createQueryBuilder('route')
+          .where('"route"."crag_id" IN (:...cragIds)', {
+            cragIds: crags.map((crag) => crag.id),
+          })
+          .andWhere('"route"."status" <> :archived', {
+            archived: LifecycleStatus.ARCHIVED,
+          })
+          .orderBy('"route"."name"', 'ASC')
+          .getMany()
+      : [];
+
+    const routeCountByCrag = new Map<string, number>();
+    for (const route of routes) {
+      routeCountByCrag.set(
+        route.cragId,
+        (routeCountByCrag.get(route.cragId) ?? 0) + 1,
+      );
+    }
+
+    // Crags first, then gyms, then routes. The order is load-bearing for
+    // callers that resolve a pin by NAME: AR-14 has an auto-created crag
+    // borrow its founding route's name, so a crag and its founding route are
+    // routinely the same string, and a name lookup should find the crag --
+    // the coarser, always-rendered tier.
     return [
-      ...crags.map((crag) => this.toPin(crag, 'CRAG')),
+      ...crags.map((crag) => ({
+        ...this.toPin(crag, 'CRAG'),
+        routeCount: routeCountByCrag.get(crag.id) ?? 0,
+      })),
       ...gyms.map((gym) => this.toPin(gym, 'GYM')),
+      ...routes.map((route) => ({
+        ...this.toPin(route, 'ROUTE'),
+        cragId: route.cragId,
+      })),
     ];
   }
 

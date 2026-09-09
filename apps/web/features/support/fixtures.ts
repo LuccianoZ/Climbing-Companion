@@ -236,6 +236,69 @@ export const MULTI_ROUTE_CRAG_DETAIL: CragDetail = {
   ],
 };
 
+// --- BL-x13 (Sept 9, 2026): tiered pins + clustering -----------------------
+//
+// All three fixtures below are OPT-IN (world.ts's includeRoutePins /
+// includeNeighbourCrag flags, off by default). The default map-pins payload is
+// left byte-for-byte as Epic 4 left it, because ninety-one green scenarios
+// depend on exactly two pins being on screen and on their ~184px separation --
+// see the note on GYM_LOCATION.
+//
+// Geometry, worked at latitude 37.73 where 1 degree of longitude is ~88km and
+// Leaflet's projection gives 256 * 2^zoom pixels per 360 degrees:
+//
+//   zoom 12 -> ~2,913 px per degree
+//   zoom 16 -> ~46,603 px per degree
+//
+// The two route pins sit 0.00228 degrees either side of the crag, ~200m each
+// way. That is ~212px apart at zoom 16 -- clear of CLUSTER_RADIUS_PX (70) so
+// they render as two pins, and clear of the 150px icon width so Playwright can
+// click either without the other obstructing it.
+export const ROUTE_PIN_A_LOCATION = {
+  latitude: CRAG_LOCATION.latitude,
+  longitude: CRAG_LOCATION.longitude - 0.00228,
+};
+
+export const ROUTE_PIN_B_LOCATION = {
+  latitude: CRAG_LOCATION.latitude,
+  longitude: CRAG_LOCATION.longitude + 0.00228,
+};
+
+export const ROUTE_PIN_A: MapPin = {
+  id: ROUTE_ID,
+  kind: 'ROUTE',
+  name: 'Solar Power',
+  ...ROUTE_PIN_A_LOCATION,
+  status: 'UNVERIFIED',
+  cragId: CRAG_ID,
+};
+
+export const ROUTE_PIN_B: MapPin = {
+  id: SECOND_ROUTE_ID,
+  kind: 'ROUTE',
+  name: 'Sun Salutation',
+  ...ROUTE_PIN_B_LOCATION,
+  status: 'VERIFIED',
+  cragId: CRAG_ID,
+};
+
+// ~890m north of the crag: ~23px at zoom 12, comfortably inside
+// CLUSTER_RADIUS_PX, so the two crags collapse into one cluster at the map's
+// default zoom and separate again on the way in. Deliberately NOT near enough
+// to the gym to drag it into the same cluster -- the breakdown label's whole
+// job is to count the two kinds separately, which needs them apart.
+export const NEIGHBOUR_CRAG_ID = '55555555-5555-4555-8555-555555555555';
+
+export const NEIGHBOUR_CRAG_PIN: MapPin = {
+  id: NEIGHBOUR_CRAG_ID,
+  kind: 'CRAG',
+  name: 'Shadow Buttress',
+  latitude: CRAG_LOCATION.latitude + 0.008,
+  longitude: CRAG_LOCATION.longitude,
+  status: 'VERIFIED',
+  routeCount: 5,
+};
+
 // An unverified gym, so the admin queue has something in it and the gym
 // verify sheet has something to act on. VERIFIED_GYM_PIN above is deliberately
 // verified, and BL-020's "a verified pin looks different" scenario depends on

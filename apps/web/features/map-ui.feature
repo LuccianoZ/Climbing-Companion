@@ -108,3 +108,84 @@ Feature: The map, its pins, its detail panel and its search box
     When the climber searches for "Vertical"
     Then results are shown
     And every request the page made went to our own app or its tile provider
+
+  # BL-x13 (Sept 9, 2026): tiered pins and density clustering.
+  #
+  # Foundation §4 draws one pin per CRAG and says why: "rendering one pin per
+  # route would make a popular area an unreadable marker cluster." That is an
+  # argument about density, so BL-x13 answers density directly -- clusters at
+  # regional zoom, individual routes at street zoom -- and lets routes carry
+  # their own pins without touching the founding-route lifecycle §4/§5 owns.
+  # These scenarios cover all three tiers and the seam between them.
+
+  Scenario: Nearby pins collapse into a single cluster at regional zoom
+    Given the map also carries a neighbouring crag
+    And the climber opens the map
+    Then the map shows a cluster
+    And no pin is shown for "Shadow Buttress"
+    And no pin is shown for "The Great Wall"
+
+  Scenario: A cluster totals climbs, not crags, so its number survives expansion
+    Given the map also carries a neighbouring crag
+    And the climber opens the map
+    # Two crags, holding one and five routes. A cluster counting PINS would say
+    # 2; counting climbs says 6, and still says 6 once those crags expand into
+    # six route pins on the way in. That stability is the whole point.
+    Then the cluster shows a breakdown of "6 climbs"
+
+  Scenario: The distant gym is not swept into the crags' cluster
+    Given the map also carries a neighbouring crag
+    And the climber opens the map
+    Then a pin for "Vertical Edge Climbing Gym" is rendered as a "GYM"
+
+  Scenario: Clicking a cluster zooms in and breaks it apart
+    Given the map also carries a neighbouring crag
+    And the climber opens the map
+    When the climber clicks the cluster
+    Then the map has zoomed in
+    And a pin for "Shadow Buttress" is rendered as a "CRAG"
+    And a pin for "The Great Wall" is rendered as a "CRAG"
+
+  Scenario: A crag pin reports how many climbs it holds
+    Given the map also carries a neighbouring crag
+    And the climber opens the map
+    When the climber clicks the cluster
+    Then the pin for "Shadow Buttress" reports 5 routes
+
+  Scenario: At street zoom a crag expands into one pin per route
+    Given the crag has a second route that is already verified
+    And the map carries a pin for each of the crag's routes
+    And the climber opens the map
+    Then a pin for "The Great Wall" is rendered as a "CRAG"
+    When the climber zooms in to street level
+    Then a pin for "Solar Power" is rendered as a "ROUTE"
+    And a pin for "Sun Salutation" is rendered as a "ROUTE"
+    And no pin is shown for "The Great Wall"
+
+  Scenario: Each route pin carries its own verification status, not its crag's
+    Given the crag has a second route that is already verified
+    And the map carries a pin for each of the crag's routes
+    And the climber opens the map
+    When the climber zooms in to street level
+    Then the pin for "Solar Power" carries an italic "Unverified" pill
+    And the pin for "Sun Salutation" carries an italic "Verified" pill
+
+  Scenario: Clicking a route pin opens its crag's panel, anchored to that route
+    Given the crag has a second route that is already verified
+    And the map carries a pin for each of the crag's routes
+    And the climber opens the map
+    When the climber zooms in to street level
+    And the climber clicks the pin for "Sun Salutation"
+    # There is no per-route panel -- a route is a row inside its crag's -- so
+    # the tap has to land the climber on the row they aimed at rather than at
+    # the top of a list headed by a different name.
+    Then a detail panel for a "CRAG" opens
+    And the route "Sun Salutation" row is highlighted as the one that was tapped
+    And the route "Solar Power" row is not highlighted
+
+  Scenario: A crag with no route pins in the payload still renders at street zoom
+    Given the climber opens the map
+    When the climber zooms in to street level
+    # Degradation, not a special case: if the payload carries no children for a
+    # crag, replacing its pin with nothing would erase it from the map.
+    Then a pin for "The Great Wall" is rendered as a "CRAG"

@@ -481,3 +481,123 @@ Then(
     );
   },
 );
+
+// --- BL-x13: tiered pins and density clustering ---------------------------
+
+function cluster(world: MapUiWorld): Locator {
+  return world.page.locator('[data-testid="map-cluster"]');
+}
+
+Given('the map also carries a neighbouring crag', function (this: MapUiWorld) {
+  this.includeNeighbourCrag = true;
+});
+
+Given(
+  "the map carries a pin for each of the crag's routes",
+  function (this: MapUiWorld) {
+    this.includeRoutePins = true;
+  },
+);
+
+Then('the map shows a cluster', async function (this: MapUiWorld) {
+  await cluster(this).first().waitFor({ timeout: 20_000 });
+});
+
+Then(
+  'no pin is shown for {string}',
+  async function (this: MapUiWorld, name: string) {
+    // Not a bare count check: Leaflet does not virtualize markers, so a pin
+    // that is merely off-screen is still in the DOM. Absence here therefore
+    // means the tier genuinely did not render it, which is the claim.
+    await cluster(this).first().waitFor({ timeout: 20_000 }).catch(() => {});
+    assert.equal(
+      await pin(this, name).count(),
+      0,
+      `expected no individual pin for "${name}" at this zoom`,
+    );
+  },
+);
+
+Then(
+  'the cluster shows a breakdown of {string}',
+  async function (this: MapUiWorld, expected: string) {
+    const breakdown = cluster(this)
+      .first()
+      .locator('[data-testid="cluster-breakdown"]');
+    await breakdown.waitFor({ timeout: 20_000 });
+    assert.equal((await breakdown.textContent())?.trim(), expected);
+  },
+);
+
+When('the climber clicks the cluster', async function (this: MapUiWorld) {
+  this.zoomBeforeClick = await mapZoom(this);
+  await cluster(this).first().click();
+  // flyTo animates over 0.6s and only then fires zoomend, which is what the
+  // tier and the cluster layer both key off.
+  await this.page.waitForFunction(
+    (before) => {
+      const container = document.querySelector('.leaflet-container');
+      return Number(
+        (container as HTMLElement | null)?.dataset.mapZoom ?? '0',
+      ) > before;
+    },
+    this.zoomBeforeClick,
+    { timeout: 20_000 },
+  );
+});
+
+Then('the map has zoomed in', async function (this: MapUiWorld) {
+  const after = await mapZoom(this);
+  assert.ok(
+    after > (this.zoomBeforeClick ?? 0),
+    `expected the cluster tap to zoom in (${this.zoomBeforeClick} -> ${after})`,
+  );
+});
+
+Then(
+  'the pin for {string} reports {int} routes',
+  async function (this: MapUiWorld, name: string, count: number) {
+    const line = pin(this, name).locator('[data-testid="pin-route-count"]');
+    await line.waitFor({ timeout: 20_000 });
+    assert.equal(await line.getAttribute('data-route-count'), String(count));
+  },
+);
+
+When('the climber zooms in to street level', async function (this: MapUiWorld) {
+  const box = await this.page.locator('.leaflet-container').boundingBox();
+  assert.ok(box, 'expected the map to have a bounding box');
+
+  // A real wheel gesture at the map's centre, not a programmatic setView: the
+  // tier swap has to happen under an ordinary zoom, and the map is centred on
+  // the crag by default so zooming toward the cursor keeps it in frame.
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    if ((await mapZoom(this)) >= 16) {
+      return;
+    }
+    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await this.page.mouse.wheel(0, -400);
+    await this.page.waitForTimeout(320);
+  }
+
+  assert.fail(
+    `expected to reach zoom 16, stopped at ${await mapZoom(this)}`,
+  );
+});
+
+Then(
+  'the route {string} row is highlighted as the one that was tapped',
+  async function (this: MapUiWorld, name: string) {
+    const card = routeCard(this, name);
+    await card.waitFor({ timeout: 20_000 });
+    assert.equal(await card.getAttribute('data-route-focused'), 'true');
+  },
+);
+
+Then(
+  'the route {string} row is not highlighted',
+  async function (this: MapUiWorld, name: string) {
+    const card = routeCard(this, name);
+    await card.waitFor({ timeout: 20_000 });
+    assert.equal(await card.getAttribute('data-route-focused'), 'false');
+  },
+);

@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import type { MapPin } from '@/lib/types';
+import type { PinCluster } from './clustering';
 
 // BL-020 + Sept 3 revision (AR-51, BL-x01): crags and gyms are visually
 // distinct (two silhouettes, not just two colours), and every pin carries the
@@ -37,6 +38,13 @@ const GYM_GLYPH =
   '<circle cx="15" cy="12.5" r="1.3" fill="currentColor"/>' +
   '<circle cx="9.5" cy="15.5" r="1.3" fill="currentColor"/>';
 
+// BL-x13. A single climb line, deliberately quieter than the crag's massif:
+// a route pin is a CHILD of the shape it replaced, and only ever renders at
+// zoom 16+, where its parent crag is not on screen to be confused with it.
+const ROUTE_GLYPH =
+  '<path d="M12 20V7m0 0-3.5 3.5M12 7l3.5 3.5" fill="none" stroke="currentColor" ' +
+  'stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>';
+
 export const VERIFIED_BADGE_TEXT = 'Verified';
 export const UNVERIFIED_BADGE_TEXT = 'Unverified';
 
@@ -50,7 +58,13 @@ function escapeHtml(value: string): string {
 
 export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
   const unverified = pin.status === 'UNVERIFIED';
-  const glyph = pin.kind === 'CRAG' ? CRAG_GLYPH : GYM_GLYPH;
+  const isRoute = pin.kind === 'ROUTE';
+  const glyph =
+    pin.kind === 'CRAG'
+      ? CRAG_GLYPH
+      : pin.kind === 'GYM'
+        ? GYM_GLYPH
+        : ROUTE_GLYPH;
 
   // Crags are a solid accent disc; gyms are a dark square outlined in accent.
   // Fill, shape and glyph all differ, so the distinction survives colour-blind
@@ -63,9 +77,9 @@ export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
   const fill = unverified
     ? 'background:var(--color-dormant);opacity:0.6;' +
       'border-color:rgba(255,255,255,0.5);'
-    : pin.kind === 'CRAG'
-      ? 'background:var(--color-clay);border-color:rgba(255,255,255,0.92);'
-      : 'background:var(--color-surface-high);border-color:var(--color-clay-deep);';
+    : pin.kind === 'GYM'
+      ? 'background:var(--color-surface-high);border-color:var(--color-clay-deep);'
+      : 'background:var(--color-clay);border-color:rgba(255,255,255,0.92);';
 
   // A tight contact shadow only. The old pin carried a 14px coloured glow,
   // which on a dark basemap bled into its neighbours and made a cluster look
@@ -78,12 +92,16 @@ export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
 
   const glyphColor = unverified
     ? 'var(--color-dormant)'
-    : pin.kind === 'CRAG'
-      ? 'var(--color-paper)'
-      : 'var(--color-clay-deep)';
+    : pin.kind === 'GYM'
+      ? 'var(--color-clay-deep)'
+      : 'var(--color-paper)';
 
-  const bodySize = selected ? 28 : 22;
-  const glyphSize = selected ? 16 : 13;
+  // A route reads as subordinate to the crag disc by SIZE, which is the one
+  // channel still free -- shape already carries crag-vs-gym, and colour is
+  // spoken for by the verified/unverified state.
+  const baseSize = isRoute ? 16 : 22;
+  const bodySize = selected ? baseSize + 6 : baseSize;
+  const glyphSize = selected ? Math.round(bodySize * 0.57) : Math.round(baseSize * 0.59);
 
   // SHAPE is the primary crag/gym distinction, not the glyph. At 22px a
   // 12px line icon collapses into a smudge -- checked against a real render --
@@ -91,7 +109,7 @@ export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
   // glyph stays for the selected/zoomed case and for anyone reading the DOM,
   // and colour is the third, redundant channel. Foundation section 9's "two
   // silhouettes, not just two colours" is satisfied more literally this way.
-  const shape = pin.kind === 'CRAG' ? 'border-radius:50%;' : 'border-radius:3px;';
+  const shape = pin.kind === 'GYM' ? 'border-radius:3px;' : 'border-radius:50%;';
 
   const body =
     `<span data-testid="pin-body" ` +
@@ -124,12 +142,23 @@ export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
   // This is the minimum that keeps overlapping labels individually readable
   // while staying far from the three-stacked-boxes design it replaced -- no
   // border, no hard edge, just enough ground to sit on.
+  // BL-x13: a crag says how many climbs it holds, so the number the cluster
+  // above it was quoting stays traceable all the way down to the pin. Omitted
+  // for a single-route crag, where "1 route" is noise -- the crag and the
+  // route share a name in that case anyway (AR-14).
+  const routeLine =
+    pin.kind === 'CRAG' && (pin.routeCount ?? 0) > 1
+      ? `<span data-testid="pin-route-count" data-route-count="${pin.routeCount}" ` +
+        `class="text-[9px] font-medium" style="color:var(--color-ink-soft)">${pin.routeCount} routes</span>`
+      : '';
+
   const label =
     `<span class="climb-pin__label mt-1 flex max-w-[140px] flex-col items-center rounded-[2px] px-1.5 py-0.5 leading-tight" ` +
     `style="background:color-mix(in srgb, var(--color-paper) 72%, transparent)">` +
     `<span data-testid="pin-name" class="max-w-full truncate text-[11px] font-semibold" style="color:${nameColor}">${escapeHtml(pin.name)}</span>` +
     `<span data-testid="pin-status-pill" data-pin-verified="${unverified ? 'false' : 'true'}" ` +
     `class="text-[9px] font-medium italic" style="color:${statusColor}">${pillTextFor(unverified)}</span>` +
+    routeLine +
     `</span>`;
 
   const html =
@@ -153,4 +182,60 @@ export function buildPinIcon(pin: MapPin, selected = false): L.DivIcon {
 
 function pillTextFor(unverified: boolean): string {
   return unverified ? UNVERIFIED_BADGE_TEXT : VERIFIED_BADGE_TEXT;
+}
+
+
+// BL-x13. The cluster marker: one disc carrying the total, with the
+// composition spelled out underneath.
+//
+// The label counts CLIMBS and GYMS, never pins -- see clustering.ts. A
+// climber zooming in watches "23 climbs · 3 gyms" break into smaller clusters
+// and finally into individual pins, and at no point does the arithmetic stop
+// adding up. Quoting crags instead would make the total leap the moment the
+// route tier takes over, which reads as the map losing track.
+//
+// Sized by magnitude so a dense area is legible as dense before the text is
+// readable -- the one thing the Snapchat-style treatment does that a fixed
+// disc cannot.
+export function buildClusterIcon(cluster: PinCluster): L.DivIcon {
+  const total = cluster.climbCount + cluster.gymCount;
+  const size = total >= 100 ? 52 : total >= 25 ? 46 : total >= 10 ? 40 : 34;
+
+  const parts: string[] = [];
+  if (cluster.climbCount > 0) {
+    parts.push(`${cluster.climbCount} climb${cluster.climbCount === 1 ? '' : 's'}`);
+  }
+  if (cluster.gymCount > 0) {
+    parts.push(`${cluster.gymCount} gym${cluster.gymCount === 1 ? '' : 's'}`);
+  }
+
+  const body =
+    `<span data-testid="cluster-body" class="flex items-center justify-center rounded-full border-2 font-semibold" ` +
+    `style="width:${size}px;height:${size}px;` +
+    `background:color-mix(in srgb, var(--color-clay) 88%, transparent);` +
+    `border-color:rgba(255,255,255,0.92);color:var(--color-paper);` +
+    `font-size:${size >= 46 ? 15 : 13}px;` +
+    `box-shadow:0 2px 8px rgba(0,0,0,0.7);">${total}</span>`;
+
+  const label =
+    `<span class="climb-pin__label mt-1 flex max-w-[150px] flex-col items-center rounded-[2px] px-1.5 py-0.5 leading-tight" ` +
+    `style="background:color-mix(in srgb, var(--color-paper) 72%, transparent)">` +
+    `<span data-testid="cluster-breakdown" class="truncate text-[10px] font-semibold" ` +
+    `style="color:#fff">${parts.join(' \u00b7 ')}</span>` +
+    `</span>`;
+
+  const html =
+    `<div class="flex flex-col items-center" data-testid="map-cluster" ` +
+    `data-cluster-total="${total}" data-cluster-climbs="${cluster.climbCount}" ` +
+    `data-cluster-gyms="${cluster.gymCount}" data-cluster-size="${cluster.pins.length}">` +
+    body +
+    label +
+    `</div>`;
+
+  return L.divIcon({
+    html,
+    className: 'climb-pin',
+    iconSize: [150, 70],
+    iconAnchor: [75, size / 2],
+  });
 }
