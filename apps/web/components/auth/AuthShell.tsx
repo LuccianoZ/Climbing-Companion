@@ -40,7 +40,7 @@ export function AuthShell({
         <span className="flex-1" aria-hidden />
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-5 py-6">
+      <main className="relative min-h-0 flex-1 overflow-y-auto px-5 py-6">
         {children}
       </main>
     </div>

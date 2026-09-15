@@ -212,7 +212,7 @@ export function DetailSheet({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
+      <div className="relative min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-6">
         {state.status === 'loading' ? (
           <p data-testid="detail-loading" className="py-6 text-center text-small text-ink-faint">
             Loading details…

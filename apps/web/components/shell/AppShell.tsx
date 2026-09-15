@@ -105,7 +105,7 @@ export function AppShell({
         className={
           bleed
             ? 'relative min-h-0 flex-1 overflow-hidden'
-            : 'topo min-h-0 flex-1 overflow-y-auto px-4 py-6'
+            : 'topo relative min-h-0 flex-1 overflow-y-auto px-4 py-6'
         }
       >
         {/* The map is exempt: it owns its own viewport, holds a Leaflet

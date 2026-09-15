@@ -653,10 +653,25 @@ export interface UserAuditEntry {
 
 export interface UserAuditView {
   userId: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
   strikeCount: number;
   isBanned: boolean;
   bannedAt: string | null;
   history: UserAuditEntry[];
+}
+
+// One row of the admin audit view's account typeahead
+// (GET /api/admin/users/search). Admin-only, and not the §18 user directory
+// -- see the API's SearchUsersDto for why those are different surfaces.
+export interface AdminUserSearchResult {
+  userId: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
+  strikeCount: number;
+  isBanned: boolean;
 }
 
 // --- moderation payloads (Epic 6) ----------------------------------------

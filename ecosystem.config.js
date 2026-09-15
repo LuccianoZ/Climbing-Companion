@@ -15,7 +15,11 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 4000,
         ENABLE_TEST_BYPASS_HEADERS: 'false',
-        DATABASE_URL: 'postgres://climb:climbing_dev_password@127.0.0.1:5432/climbing_companion',
+        // @nestjs/config does not override vars already in process.env, so this
+        // wins over apps/api/.env when the API runs under pm2. Switch this line
+        // (and `pm2 restart climbing-api --update-env`) to change databases.
+        // DATABASE_URL: 'postgres://climb:climbing_dev_password@127.0.0.1:5432/climbing_companion',      // dev data
+        DATABASE_URL: 'postgres://climb:climbing_dev_password@127.0.0.1:5432/climbing_companion_demo', // demo data
       },
     },
   ],

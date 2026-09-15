@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { searchMap } from '@/lib/api';
 import { messageFor } from '@/lib/errors';
 import type { MapSearchResult } from '@/lib/types';
@@ -11,29 +11,82 @@ import type { MapSearchResult } from '@/lib/types';
 // name-search endpoint the map uses (/api/map/search, our own DB only) --
 // crag results are dropped here since a crag is not independently editable
 // (its state is its founding route's).
+//
+// Results load as the admin types, matching the map's SearchBar: same
+// debounce, same abort-the-superseded-request rule, and the same trick of
+// stamping each result set with the term it answers so relevance is derived
+// at render time rather than set synchronously from the effect.
+//
+// That stamp is also a bug fix. Results used to be replaced only on submit,
+// so typing a new term left the previous term's rows on screen -- searching
+// "Central", then typing "Mag" without pressing Search, showed "Central Rock
+// Buffalo" as though it matched "Mag". A list that cannot outlive its own
+// term cannot do that.
+
+const DEBOUNCE_MS = 250;
+const MIN_TERM_LENGTH = 2;
 
 export function StewardshipSearch() {
   const [term, setTerm] = useState('');
-  const [results, setResults] = useState<MapSearchResult[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<{
+    term: string;
+    items: MapSearchResult[];
+    error: string | null;
+  } | null>(null);
   const [searching, setSearching] = useState(false);
+  const trimmed = term.trim();
 
-  async function onSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const q = term.trim();
-    if (!q) return;
-    setSearching(true);
-    setError(null);
-    try {
-      const rows = await searchMap(q);
-      setResults(rows.filter((r) => r.kind === 'GYM' || r.kind === 'ROUTE'));
-    } catch (err) {
-      setError(messageFor('ADMIN_READ', err));
-      setResults(null);
-    } finally {
-      setSearching(false);
+  useEffect(() => {
+    const trimmed = term.trim();
+    if (trimmed.length < MIN_TERM_LENGTH) {
+      return;
     }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setSearching(true);
+      searchMap(trimmed, controller.signal)
+        .then((rows) => {
+          setResults({
+            term: trimmed,
+            // A crag is not independently editable, so it is not an option
+            // here even though the shared endpoint returns one.
+            items: rows.filter((r) => r.kind === 'GYM' || r.kind === 'ROUTE'),
+            error: null,
+          });
+          setSearching(false);
+        })
+        .catch((error: unknown) => {
+          // An aborted request was superseded by a newer keystroke -- it is
+          // not a failure, and its `finally` must not clear the spinner the
+          // request that replaced it just set.
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+          setResults({
+            term: trimmed,
+            items: [],
+            error: messageFor('ADMIN_READ', error),
+          });
+          setSearching(false);
+        });
+    }, DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [term]);
+
+  // Submitting is now a no-op beyond dismissing the keyboard: the list is
+  // already live. Kept so Enter does not reload the page.
+  function onSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
   }
+
+  // Only ever render a list that answers the term currently in the box.
+  const current = results !== null && results.term === trimmed ? results : null;
+  const tooShort = trimmed.length > 0 && trimmed.length < MIN_TERM_LENGTH;
 
   return (
     <div className="max-w-3xl space-y-4">
@@ -43,39 +96,45 @@ export function StewardshipSearch() {
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Search a gym or climb by name…"
           data-testid="stewardship-search-input"
+          autoComplete="off"
           className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 text-small text-ink"
         />
-        <button
-          type="submit"
-          disabled={searching}
-          className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
+        <span
+          data-testid="stewardship-search-status"
+          className="flex w-24 shrink-0 items-center justify-center text-caption text-ink-faint"
         >
-          {searching ? 'Searching…' : 'Search'}
-        </button>
+          {searching ? 'Searching…' : null}
+        </span>
       </form>
 
-      {error ? (
+      {tooShort ? (
+        <p className="text-caption text-ink-faint">
+          Keep typing — at least {MIN_TERM_LENGTH} characters.
+        </p>
+      ) : null}
+
+      {current?.error ? (
         <p
           data-testid="stewardship-search-error"
           className="rounded-control border border-clay-deep bg-clay-wash px-3 py-2 text-small text-clay-deep"
         >
-          {error}
+          {current.error}
         </p>
       ) : null}
 
-      {results && results.length === 0 ? (
+      {current && !current.error && current.items.length === 0 ? (
         <p
           data-testid="stewardship-search-empty"
           className="rounded-control border border-line bg-surface px-3 py-3 text-small text-ink-soft"
         >
-          No gym or climb matches &ldquo;{term.trim()}&rdquo;. Archived entities
-          do not appear in search — open one by its id if you know it.
+          No gym or climb matches &ldquo;{trimmed}&rdquo;. Archived entities do
+          not appear in search — open one by its id if you know it.
         </p>
       ) : null}
 
-      {results && results.length > 0 ? (
+      {current && current.items.length > 0 ? (
         <ul data-testid="stewardship-results" className="space-y-2">
-          {results.map((row) => (
+          {current.items.map((row) => (
             <li key={`${row.kind}-${row.id}`}>
               <Link
                 href={`/admin/stewardship/${row.kind.toLowerCase()}/${row.id}`}

@@ -1,11 +1,16 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
-import { applyAccountabilityAction, fetchUserAudit } from '@/lib/api';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  applyAccountabilityAction,
+  fetchUserAudit,
+  searchAdminUsers,
+} from '@/lib/api';
 import { messageFor } from '@/lib/errors';
 import {
   ACCOUNTABILITY_ACTION_LABELS,
   type AccountabilityAction,
+  type AdminUserSearchResult,
   type ApplyAccountabilityActionInput,
   type ModerationReasonPreset,
   type UserAuditView,
@@ -15,8 +20,18 @@ import { ReasonFields } from './ReasonFields';
 // BL-033 / Foundation §11 / §14: the User Account Audit view. Strike history
 // (0–3) plus the four standalone actions -- Issue Strike, Revoke Strike, Ban
 // Outright, Restore Account -- each with the mandatory preset-or-freetext
-// reason. There is no user directory in MVP scope, so an admin reaches an
-// account by its id (from the flag queue, a report, or an email thread).
+// reason.
+//
+// The box is a typeahead over display name / email, matching the map's
+// SearchBar (same debounce, same abort-the-superseded-request rule, same
+// stamped-results trick to avoid a setState in the effect body). A full
+// uuid pasted in still resolves in one hop, so the pre-existing "I already
+// have the id from the flag queue" path is unchanged.
+//
+// This is admin-only and is NOT the user directory Foundation §18 cuts:
+// that cut is about climbers discovering strangers to friend (§12 -- there
+// is no discovery surface by design). Reaching an account to moderate it is
+// §14's whole premise; only the lookup mechanism changed.
 
 const ACTIONS: AccountabilityAction[] = [
   'ISSUE_STRIKE',
@@ -25,11 +40,25 @@ const ACTIONS: AccountabilityAction[] = [
   'RESTORE_ACCOUNT',
 ];
 
+const DEBOUNCE_MS = 250;
+const MIN_TERM_LENGTH = 2;
+
 export function UserAudit() {
   const [idInput, setIdInput] = useState('');
   const [audit, setAudit] = useState<UserAuditView | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Stamped with the term they answer, so "is this list still relevant?" is
+  // derived at render time rather than synchronously set from the effect.
+  const [matches, setMatches] = useState<{
+    term: string;
+    items: AdminUserSearchResult[];
+    failed: boolean;
+  } | null>(null);
+  const [dismissed, setDismissed] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const trimmedTerm = idInput.trim();
 
   const [action, setAction] = useState<AccountabilityAction>('ISSUE_STRIKE');
   const [preset, setPreset] = useState<ModerationReasonPreset | ''>('');
@@ -46,17 +75,70 @@ export function UserAudit() {
       setAudit(await fetchUserAudit(userId));
     } catch (error) {
       setAudit(null);
-      setLoadError(messageFor('ACCOUNTABILITY', error));
+      // USER_AUDIT, not ACCOUNTABILITY: the two calls share a URL but not a
+      // failure mode. A 400 here is ParseUUIDPipe rejecting a non-uuid,
+      // which ACCOUNTABILITY's copy described as "a reason is required".
+      setLoadError(messageFor('USER_AUDIT', error));
     } finally {
       setLoading(false);
     }
   }
 
+  useEffect(() => {
+    const trimmed = idInput.trim();
+    if (trimmed.length < MIN_TERM_LENGTH) {
+      return;
+    }
+
+    // Every superseded request is aborted rather than left to resolve out of
+    // order -- typing "lu" then "lucci" must not end up showing "lu"'s rows
+    // because they landed second.
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      searchAdminUsers(trimmed, controller.signal)
+        .then((found) =>
+          setMatches({ term: trimmed, items: found, failed: false }),
+        )
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            return;
+          }
+          setMatches({ term: trimmed, items: [], failed: true });
+        });
+    }, DEBOUNCE_MS);
+
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [idInput]);
+
+  function pick(result: AdminUserSearchResult) {
+    setIdInput(result.displayName);
+    setDismissed(true);
+    inputRef.current?.blur();
+    void load(result.userId);
+  }
+
   async function onLookup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (idInput.trim()) {
-      void load(idInput.trim());
+    const trimmed = idInput.trim();
+    if (!trimmed) return;
+
+    // Enter with exactly one suggestion showing picks it -- otherwise the
+    // admin would have to click, and a name typed in full would be sent to
+    // an endpoint that only accepts a uuid.
+    const visibleItems =
+      matches && matches.term === trimmed && !matches.failed
+        ? matches.items
+        : [];
+    if (visibleItems.length === 1) {
+      pick(visibleItems[0]);
+      return;
     }
+
+    setDismissed(true);
+    void load(trimmed);
   }
 
   async function onApply(event: FormEvent<HTMLFormElement>) {
@@ -97,28 +179,109 @@ export function UserAudit() {
     }
   }
 
+  // Only ever show a list that answers the term currently in the box, and
+  // only until the admin picks something from it.
+  const suggestionsOpen =
+    matches !== null &&
+    matches.term === trimmedTerm &&
+    trimmedTerm.length >= MIN_TERM_LENGTH &&
+    !dismissed;
+
   return (
     <div className="max-w-3xl space-y-5">
-      <form
-        onSubmit={onLookup}
-        data-testid="user-audit-lookup"
-        className="flex gap-2"
-      >
-        <input
-          value={idInput}
-          onChange={(e) => setIdInput(e.target.value)}
-          placeholder="User ID (uuid)"
-          data-testid="user-audit-id"
-          className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 font-mono text-small text-ink"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
+      <div className="relative">
+        <form
+          onSubmit={onLookup}
+          data-testid="user-audit-lookup"
+          className="flex gap-2"
         >
-          {loading ? 'Loading…' : 'Look up'}
-        </button>
-      </form>
+          <input
+            ref={inputRef}
+            value={idInput}
+            onChange={(e) => {
+              setIdInput(e.target.value);
+              setDismissed(false);
+            }}
+            placeholder="Search by name or email, or paste a user id…"
+            data-testid="user-audit-id"
+            autoComplete="off"
+            role="combobox"
+            aria-expanded={suggestionsOpen}
+            aria-controls="user-audit-suggestions"
+            className="min-w-0 flex-1 rounded-control border border-line bg-surface px-3 py-2 text-small text-ink"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="rounded-control border border-ink bg-ink px-4 py-2 text-small font-bold text-paper disabled:opacity-45"
+          >
+            {loading ? 'Loading…' : 'Look up'}
+          </button>
+        </form>
+
+        {suggestionsOpen ? (
+          <ul
+            id="user-audit-suggestions"
+            role="listbox"
+            data-testid="user-audit-suggestions"
+            className="absolute inset-x-0 top-full z-20 mt-1 max-h-72 overflow-y-auto rounded-card border border-line bg-surface shadow-overlay"
+          >
+            {matches.items.length === 0 ? (
+              <li
+                data-testid="user-audit-suggestions-empty"
+                className="px-3 py-3 text-small text-ink-faint"
+              >
+                {matches.failed
+                  ? 'Account search is unavailable right now.'
+                  : `No account matches “${trimmedTerm}”.`}
+              </li>
+            ) : (
+              matches.items.map((result) => (
+                <li
+                  key={result.userId}
+                  className="border-b border-line-soft last:border-b-0"
+                >
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    data-testid="user-audit-suggestion"
+                    data-user-id={result.userId}
+                    onClick={() => pick(result)}
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-small font-semibold text-ink">
+                        {result.displayName}
+                      </span>
+                      <span className="block truncate font-mono text-caption text-ink-faint">
+                        {result.email}
+                      </span>
+                    </span>
+                    {/* The two things an admin is triaging on, visible
+                        before they commit to opening the account. */}
+                    {result.isBanned ? (
+                      <span className="shrink-0 rounded-control bg-clay-wash px-1.5 py-0.5 text-caption font-bold text-clay-deep">
+                        Suspended
+                      </span>
+                    ) : null}
+                    {result.strikeCount > 0 ? (
+                      <span className="shrink-0 font-mono text-caption text-ink-faint">
+                        {result.strikeCount}/3
+                      </span>
+                    ) : null}
+                    {result.role === 'SYSTEM_ADMIN' ? (
+                      <span className="label-caps shrink-0 text-caption text-ink-faint">
+                        Admin
+                      </span>
+                    ) : null}
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+        ) : null}
+      </div>
 
       {loadError ? (
         <p
@@ -135,6 +298,8 @@ export function UserAudit() {
             data-testid="user-audit-summary"
             className="card-raised grid grid-cols-2 gap-3 p-4 sm:grid-cols-3"
           >
+            <Stat label="Climber" value={audit.displayName} />
+            <Stat label="Email" value={audit.email} mono />
             <Stat label="User ID" value={audit.userId} mono />
             <Stat
               label="Strikes"
@@ -142,7 +307,7 @@ export function UserAudit() {
               tone={audit.strikeCount >= 3 ? 'bad' : 'neutral'}
             />
             <Stat
-              label="Account"
+              label="Status"
               value={audit.isBanned ? 'Suspended' : 'Active'}
               tone={audit.isBanned ? 'bad' : 'good'}
             />

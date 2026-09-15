@@ -73,26 +73,13 @@ export function LocationPicker({
   // when the device location is not yet known.
   constrainTo?: RadiusConstraint | null;
 }) {
-  // Bumped only when the point changes from somewhere *other* than the number
-  // fields, and used as their React key so they re-read the new value. The
-  // alternative -- syncing text state from a prop inside an effect -- is the
-  // pattern React 19's set-state-in-effect rule rejects, and the same
-  // constraint AR-27 and AR-32 already worked around elsewhere.
-  const [syncKey, setSyncKey] = useState(0);
-
   function constrain(next: LatLng): LatLng {
     if (!constrainTo) return next;
     return clampToRadius(constrainTo.centre, next, constrainTo.radiusMeters);
   }
 
   function pickFromMap(next: LatLng) {
-    setSyncKey((current) => current + 1);
     onPick(constrain(next));
-  }
-
-  function useMyLocation() {
-    setSyncKey((current) => current + 1);
-    onUseMyLocation();
   }
 
   return (
@@ -115,11 +102,12 @@ export function LocationPicker({
             longitude={point.longitude}
             onPick={pickFromMap}
             constrainTo={constrainTo}
+            placed={placed}
           />
 
           <button
             type="button"
-            onClick={useMyLocation}
+            onClick={onUseMyLocation}
             disabled={!locationAvailable}
             aria-label="Use my current location"
             data-testid="use-my-location"
@@ -131,7 +119,6 @@ export function LocationPicker({
 
         <div className="grid grid-cols-2 gap-2 border-t-[1.5px] border-line bg-paper p-2.5">
           <CoordinateField
-            key={`lat-${syncKey}`}
             label="Latitude"
             name="latitude"
             value={point.latitude}
@@ -140,7 +127,6 @@ export function LocationPicker({
             onCommit={(latitude) => onPick(constrain({ ...point, latitude }))}
           />
           <CoordinateField
-            key={`lng-${syncKey}`}
             label="Longitude"
             name="longitude"
             value={point.longitude}
@@ -196,10 +182,25 @@ function CoordinateField({
   max: number;
   onCommit: (next: number) => void;
 }) {
-  const [text, setText] = useState(() => value.toFixed(5));
+  // `draft` is non-null only while this field is being edited. Off-draft the
+  // input renders straight from the prop, so a point that changes from
+  // anywhere else -- the first GPS fix, the crosshair, a tap on the map, a
+  // clamp to the 300m circle -- is reflected immediately.
+  //
+  // This replaces a remount-on-a-key-counter scheme that only bumped for the
+  // map and the crosshair. The first GPS fix bumped nothing, so the fields
+  // kept their mount-time text: the map flew to your location while the
+  // numbers under it still read the Yosemite fallback, and those numbers are
+  // what the form submits. Deriving from the prop instead of copying it
+  // means there is no second source of truth left to drift.
+  //
+  // A draft still has to exist, because the value is parsed per keystroke and
+  // "-", "42." and "" are all unparseable states you must pass through to
+  // type a negative western longitude one digit at a time.
+  const [draft, setDraft] = useState<string | null>(null);
 
   function onChange(next: string) {
-    setText(next);
+    setDraft(next);
     const parsed = Number(next);
     if (next.trim() !== '' && Number.isFinite(parsed) && parsed >= min && parsed <= max) {
       onCommit(parsed);
@@ -214,9 +215,13 @@ function CoordinateField({
       <input
         name={name}
         inputMode="decimal"
-        value={text}
+        value={draft ?? value.toFixed(5)}
         data-testid={`coordinate-${name}`}
         onChange={(event) => onChange(event.target.value)}
+        // Dropping the draft on blur snaps the field back to the canonical
+        // value -- which matters when a clamp moved the pin to the circle's
+        // edge, or when what was typed never parsed at all.
+        onBlur={() => setDraft(null)}
         className="w-full bg-transparent py-1 text-small font-semibold text-ink outline-none"
       />
     </label>

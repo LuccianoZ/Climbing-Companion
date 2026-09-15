@@ -1,0 +1,66 @@
+# Photo attribution — demo seed route photos
+
+All images from Wikimedia Commons, used under the stated license.
+
+- **001.jpg** — "Gunks Trapps - 2.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_2.jpg
+- **002.jpg** — "Gunks Trapps - High Exposure Face.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_High_Exposure_Face.jpg
+- **003.jpg** — "Gunks Traps - Pitons on Shockley's Ceiling - 1.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Pitons_on_Shockley%27s_Ceiling_-_1.jpg
+- **004.jpg** — "Gunks Traps - Pitons on Shockley's Ceiling - 2.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Pitons_on_Shockley%27s_Ceiling_-_2.jpg
+- **005.jpg** — "Gunks Traps - Rappelling - 2.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Rappelling_-_2.jpg
+- **006.jpg** — "Shawangunks bouldering.jpg" by Mark Donoher. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Shawangunks_bouldering.jpg
+- **007.jpg** — "Shawangunks, New York State - April 1969.jpg" by Peter Stevens. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Shawangunks,_New_York_State_-_April_1969.jpg
+- **008.jpg** — "Shawangunks - climbing - 01.jpg" by Mike. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Shawangunks_-_climbing_-_01.jpg
+- **011.jpg** — "Poke-O-Moonshine cliffs panorama.jpg" by Brendan Wiltse, Cropped and color-corrected slightly prior to upload by Daniel Case. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Poke-O-Moonshine_cliffs_panorama.jpg
+- **012.jpg** — "Ranger's Trail with informational marker at base of rock ledge, Poke-O-Moonshine Mountain.jpg" by Daniel Case. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Ranger%27s_Trail_with_informational_marker_at_base_of_rock_ledge,_Poke-O-Moonshine_Mountain.jpg
+- **013.jpg** — "View down the Ranger's Trail below ledge on Poke-O-Moonshine Mountain.jpg" by Daniel Case. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:View_down_the_Ranger%27s_Trail_below_ledge_on_Poke-O-Moonshine_Mountain.jpg
+- **014.jpg** — "Rat rock 1 011.jpg" by joshu from nyc, usa. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Rat_rock_1_011.jpg
+- **015.jpg** — "Rat rock 2 008.jpg" by joshu from nyc, usa. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Rat_rock_2_008.jpg
+- **016.jpg** — "Rat Rock Central Park NYC.jpg" by benssss. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Rat_Rock_Central_Park_NYC.jpg
+- **022.jpg** — "Texture of the Rat Rock (Umpire Rock).png" by Central Park Tours. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Texture_of_the_Rat_Rock_(Umpire_Rock).png
+- **030.jpg** — "Niagara Gorge at Niagara Glen.jpg" by The Cosmonaut. CC BY-SA 2.5 ca. https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen.jpg
+- **031.jpg** — "Niagara Gorge at Niagara Glen1.jpg" by The Cosmonaut. CC BY-SA 2.5 ca. https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen1.jpg
+- **033.jpg** — "Niagara Gorge at Niagara Glen3.jpg" by The Cosmonaut. CC BY-SA 2.5 ca. https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen3.jpg
+- **037.jpg** — "Coyne Crack 5.11+ - Supercrack Buttress - Indian Creek.jpg" by Fabien Quétier. CC BY-SA 2.0 fr. https://commons.wikimedia.org/wiki/File:Coyne_Crack_5.11%2B_-_Supercrack_Buttress_-_Indian_Creek.jpg
+- **038.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 3.jpg" by Jonathan Fox. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_3.jpg
+- **039.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 10.jpg" by jfdervin. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_10.jpg
+- **040.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 15.jpg" by jfdervin. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_15.jpg
+- **041.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 23.jpg" by jfdervin. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_23.jpg
+- **042.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 31.jpg" by jfdervin. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_31.jpg
+- **043.jpg** — "Creeks Giving - Climbing in Indian Creek, Utah - 34.jpg" by jfdervin. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_34.jpg
+- **044.jpg** — "Climbing in Yosemite Valley - 01.jpg" by tpuyol. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Climbing_in_Yosemite_Valley_-_01.jpg
+- **045.jpg** — "Cobra Crack 1.jpg" by Laurel F. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Cobra_Crack_1.jpg
+- **046.jpg** — "Laurel pokes Cobra Crack 2.jpg" by Laurel F. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Laurel_pokes_Cobra_Crack_2.jpg
+- **048.jpg** — "Under a roof.jpg" by Chris. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Under_a_roof.jpg
+- **052.jpg** — "Climbing Bolt Quickdraw.jpg" by Cristian Bortes. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Climbing_Bolt_Quickdraw.jpg
+- **053.jpg** — "Sport Climbing.jpg" by Ram Sripracha (Rsriprac). CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Sport_Climbing.jpg
+- **054.jpg** — "Große zinne.jpg" by Lisi steurer. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Gro%C3%9Fe_zinne.jpg
+- **055.jpg** — "Sport Climb Shipley Upper 1.jpg" by Adam Kubalica. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Sport_Climb_Shipley_Upper_1.jpg
+- **056.jpg** — "Sport Climb Shipley Upper 2.jpg" by Adam Kubalica. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Sport_Climb_Shipley_Upper_2.jpg
+- **061.jpg** — "Crash Pad Bouldering Mat Joshua Tree 3.jpg" by Joshua Tree National Park. Public domain. https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_3.jpg
+- **062.jpg** — "Crash Pad Bouldering Mat Joshua Tree 2.jpg" by Joshua Tree National Park. Public domain. https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_2.jpg
+- **063.jpg** — "Crash Pad Bouldering Mat Joshua Tree 1.jpg" by Joshua Tree National Park. Public domain. https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_1.jpg
+- **065.jpg** — "Crash Pad Bouldering Mat Joshua Tree 4.jpg" by Joshua Tree National Park. Public domain. https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_4.jpg
+- **066.jpg** — "Crash Pad Bouldering Mat Joshua Tree 5.jpg" by Joshua Tree National Park. Public domain. https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_5.jpg
+- **068.jpg** — "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 02.jpg" by Kgbo. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_02.jpg
+- **069.jpg** — "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 03.jpg" by Kgbo. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_03.jpg
+- **070.jpg** — "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 01.jpg" by Kgbo. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_01.jpg
+- **071.jpg** — "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 04.jpg" by Kgbo. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_04.jpg
+- **073.jpg** — "Low-angle view of rock climber climbing on cliff at Longdong Rocks.jpg" by Freddie Ablazed. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Low-angle_view_of_rock_climber_climbing_on_cliff_at_Longdong_Rocks.jpg
+- **074.jpg** — "Smile woman rock climbing on cliff at Longdong Rocks.jpg" by Freddie Ablazed. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Smile_woman_rock_climbing_on_cliff_at_Longdong_Rocks.jpg
+- **075.jpg** — "Rock Climbing Orkney Islands.jpg" by Masa Sakano. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Rock_Climbing_Orkney_Islands.jpg
+- **077.jpg** — "Gunks Trapps - 1.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_1.jpg
+- **080.jpg** — "Gunks Traps - Rappelling - 1.jpg" by Jarek Tuszyński. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Rappelling_-_1.jpg
+- **081.jpg** — "Rock climbing in Mohonk Preserve.jpg" by Grendelkhan. CC BY-SA 3.0. https://commons.wikimedia.org/wiki/File:Rock_climbing_in_Mohonk_Preserve.jpg
+- **083.jpg** — "Bouldering at Niagara Glen (21560690423).jpg" by Larry Koester. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Bouldering_at_Niagara_Glen_(21560690423).jpg
+- **084.jpg** — "Bouldering at Niagara Glen (22181703525).jpg" by Larry Koester. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Bouldering_at_Niagara_Glen_(22181703525).jpg
+- **085.jpg** — "Boulders deposited by the erosion caused by Niagara Falls.jpg" by Gogerr. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Boulders_deposited_by_the_erosion_caused_by_Niagara_Falls.jpg
+- **086.jpg** — "Erratic Boulders deposited by Niagara Falls.jpg" by Gogerr. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Erratic_Boulders_deposited_by_Niagara_Falls.jpg
+- **087.jpg** — "Erratic Boulders deposited by erosion caused by Niagara Falls.jpg" by Gogerr. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Erratic_Boulders_deposited_by_erosion_caused_by_Niagara_Falls.jpg
+- **088.jpg** — "Boulders deposited by Niagara Falls in Niagara Glen.jpg" by Gogerr. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Boulders_deposited_by_Niagara_Falls_in_Niagara_Glen.jpg
+- **104.jpg** — "Red River Gorge - Chocolate Factory - Loompa 1.jpg" by Jarek Tuszyński (user:Jarekt). CC BY 3.0. https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Chocolate_Factory_-_Loompa_1.jpg
+- **107.jpg** — "Red River Gorge - Long Wall - Autum 2.jpg" by Jarek Tuszyński (user:Jarekt). CC BY 3.0. https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Long_Wall_-_Autum_2.jpg
+- **111.jpg** — "Red River Gorge - Motherlode - Convicted 2.jpg" by Jarek Tuszyński (user:Jarekt). CC BY 3.0. https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Motherlode_-_Convicted_2.jpg
+- **115.jpg** — "Red River Gorge - Solarium.jpg" by Jarek Tuszyński (user:Jarekt). CC BY 3.0. https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Solarium.jpg
+- **116.jpg** — "Traditional rock climbing red river gorge.jpg" by Laurel F. CC BY-SA 2.0. https://commons.wikimedia.org/wiki/File:Traditional_rock_climbing_red_river_gorge.jpg
+- **119.jpg** — "Coopers Rock - Esten on Humpy (V4).jpg" by ruhtraush. CC BY 2.0. https://commons.wikimedia.org/wiki/File:Coopers_Rock_-_Esten_on_Humpy_(V4).jpg
+- **120.jpg** — "Sass Fendù climbing boulder - Foppiano di Crodo (Verbano-Cusio-Ossola) - 2017-04-24.jpg" by Mænsard vokser. CC BY-SA 4.0. https://commons.wikimedia.org/wiki/File:Sass_Fend%C3%B9_climbing_boulder_-_Foppiano_di_Crodo_(Verbano-Cusio-Ossola)_-_2017-04-24.jpg

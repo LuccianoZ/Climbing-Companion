@@ -102,5 +102,39 @@ describe('MailService', () => {
       expect(call.text).toContain('token=abc123');
       expect(service.getSentEmails()).toHaveLength(0);
     });
+
+    // Regression: an unreachable SMTP host (no Mailpit in dev, bad Gmail
+    // credentials in prod) used to surface as a 500 from
+    // POST /auth/password-reset/request -- which also leaked account
+    // existence, since an unknown email short-circuits before the send and
+    // still returned 200. Delivery is best-effort; the caller never sees it.
+    it('swallows and logs a transport failure instead of rethrowing', async () => {
+      const service = await buildService('development');
+      sendMail.mockRejectedValueOnce(
+        Object.assign(new Error('connect ECONNREFUSED 127.0.0.1:1025'), {
+          code: 'ECONNREFUSED',
+        }),
+      );
+
+      await expect(
+        service.sendPasswordResetEmail(
+          'climber@example.com',
+          'http://localhost:3000/reset-password?token=abc123',
+        ),
+      ).resolves.toBeUndefined();
+    });
+
+    it('swallows a transport failure on a moderation email too', async () => {
+      const service = await buildService('development');
+      sendMail.mockRejectedValueOnce(new Error('535 auth failed'));
+
+      await expect(
+        service.sendModerationEmail(
+          'owner@example.com',
+          'STRIKE_ISSUED',
+          'Off-topic content',
+        ),
+      ).resolves.toBeUndefined();
+    });
   });
 });

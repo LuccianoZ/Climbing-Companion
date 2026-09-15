@@ -1,0 +1,656 @@
+{
+  "pools": {
+    "gunks": [
+      "001.jpg",
+      "002.jpg",
+      "003.jpg",
+      "005.jpg",
+      "006.jpg",
+      "007.jpg",
+      "008.jpg",
+      "077.jpg",
+      "080.jpg",
+      "081.jpg"
+    ],
+    "adirondacks": [
+      "011.jpg",
+      "012.jpg",
+      "013.jpg",
+      "070.jpg",
+      "071.jpg"
+    ],
+    "central park": [
+      "014.jpg",
+      "015.jpg",
+      "016.jpg",
+      "022.jpg"
+    ],
+    "little falls": [
+      "107.jpg",
+      "111.jpg",
+      "119.jpg"
+    ],
+    "niagara glen": [
+      "083.jpg",
+      "084.jpg",
+      "085.jpg",
+      "086.jpg",
+      "087.jpg",
+      "088.jpg",
+      "030.jpg",
+      "031.jpg",
+      "033.jpg"
+    ],
+    "powerlinez": [
+      "119.jpg",
+      "120.jpg",
+      "065.jpg",
+      "066.jpg",
+      "061.jpg"
+    ],
+    "disc:TRADITIONAL_CLIMBING": [
+      "037.jpg",
+      "038.jpg",
+      "039.jpg",
+      "040.jpg",
+      "041.jpg",
+      "042.jpg",
+      "043.jpg",
+      "044.jpg",
+      "045.jpg",
+      "046.jpg",
+      "107.jpg"
+    ],
+    "disc:SPORT_CLIMBING": [
+      "048.jpg",
+      "053.jpg",
+      "054.jpg",
+      "055.jpg",
+      "056.jpg",
+      "104.jpg",
+      "111.jpg",
+      "115.jpg",
+      "116.jpg"
+    ],
+    "disc:BOULDERING": [
+      "061.jpg",
+      "062.jpg",
+      "063.jpg",
+      "065.jpg",
+      "066.jpg",
+      "119.jpg",
+      "120.jpg"
+    ],
+    "generic": [
+      "068.jpg",
+      "069.jpg",
+      "070.jpg",
+      "071.jpg",
+      "073.jpg",
+      "074.jpg",
+      "075.jpg",
+      "004.jpg",
+      "052.jpg"
+    ]
+  },
+  "images": {
+    "104": {
+      "file": "104.jpg",
+      "bytes": 253524,
+      "title": "Red River Gorge - Chocolate Factory - Loompa 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Chocolate_Factory_-_Loompa_1.jpg",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Jarek Tuszyński (user:Jarekt)"
+    },
+    "107": {
+      "file": "107.jpg",
+      "bytes": 159040,
+      "title": "Red River Gorge - Long Wall - Autum 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Long_Wall_-_Autum_2.jpg",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Jarek Tuszyński (user:Jarekt)"
+    },
+    "111": {
+      "file": "111.jpg",
+      "bytes": 168833,
+      "title": "Red River Gorge - Motherlode - Convicted 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Motherlode_-_Convicted_2.jpg",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Jarek Tuszyński (user:Jarekt)"
+    },
+    "115": {
+      "file": "115.jpg",
+      "bytes": 139167,
+      "title": "Red River Gorge - Solarium.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Red_River_Gorge_-_Solarium.jpg",
+      "license": "CC BY 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+      "artist": "Jarek Tuszyński (user:Jarekt)"
+    },
+    "116": {
+      "file": "116.jpg",
+      "bytes": 110438,
+      "title": "Traditional rock climbing red river gorge.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Traditional_rock_climbing_red_river_gorge.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Laurel F"
+    },
+    "119": {
+      "file": "119.jpg",
+      "bytes": 83950,
+      "title": "Coopers Rock - Esten on Humpy (V4).jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Coopers_Rock_-_Esten_on_Humpy_(V4).jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "ruhtraush"
+    },
+    "120": {
+      "file": "120.jpg",
+      "bytes": 135313,
+      "title": "Sass Fendù climbing boulder - Foppiano di Crodo (Verbano-Cusio-Ossola) - 2017-04-24.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Sass_Fend%C3%B9_climbing_boulder_-_Foppiano_di_Crodo_(Verbano-Cusio-Ossola)_-_2017-04-24.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Mænsard vokser"
+    },
+    "001": {
+      "file": "001.jpg",
+      "bytes": 168553,
+      "title": "Gunks Trapps - 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_2.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "002": {
+      "file": "002.jpg",
+      "bytes": 243232,
+      "title": "Gunks Trapps - High Exposure Face.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_High_Exposure_Face.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "003": {
+      "file": "003.jpg",
+      "bytes": 88553,
+      "title": "Gunks Traps - Pitons on Shockley's Ceiling - 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Pitons_on_Shockley%27s_Ceiling_-_1.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "005": {
+      "file": "005.jpg",
+      "bytes": 120030,
+      "title": "Gunks Traps - Rappelling - 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Rappelling_-_2.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "006": {
+      "file": "006.jpg",
+      "bytes": 133935,
+      "title": "Shawangunks bouldering.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Shawangunks_bouldering.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Mark Donoher"
+    },
+    "007": {
+      "file": "007.jpg",
+      "bytes": 133062,
+      "title": "Shawangunks, New York State - April 1969.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Shawangunks,_New_York_State_-_April_1969.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Peter Stevens"
+    },
+    "008": {
+      "file": "008.jpg",
+      "bytes": 175574,
+      "title": "Shawangunks - climbing - 01.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Shawangunks_-_climbing_-_01.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Mike"
+    },
+    "077": {
+      "file": "077.jpg",
+      "bytes": 113515,
+      "title": "Gunks Trapps - 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Trapps_-_1.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "080": {
+      "file": "080.jpg",
+      "bytes": 241562,
+      "title": "Gunks Traps - Rappelling - 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Rappelling_-_1.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "081": {
+      "file": "081.jpg",
+      "bytes": 228060,
+      "title": "Rock climbing in Mohonk Preserve.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_climbing_in_Mohonk_Preserve.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Grendelkhan"
+    },
+    "011": {
+      "file": "011.jpg",
+      "bytes": 56171,
+      "title": "Poke-O-Moonshine cliffs panorama.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Poke-O-Moonshine_cliffs_panorama.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Brendan Wiltse, Cropped and color-corrected slightly prior to upload by Daniel Case"
+    },
+    "012": {
+      "file": "012.jpg",
+      "bytes": 243050,
+      "title": "Ranger's Trail with informational marker at base of rock ledge, Poke-O-Moonshine Mountain.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Ranger%27s_Trail_with_informational_marker_at_base_of_rock_ledge,_Poke-O-Moonshine_Mountain.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Daniel Case"
+    },
+    "013": {
+      "file": "013.jpg",
+      "bytes": 344474,
+      "title": "View down the Ranger's Trail below ledge on Poke-O-Moonshine Mountain.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:View_down_the_Ranger%27s_Trail_below_ledge_on_Poke-O-Moonshine_Mountain.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Daniel Case"
+    },
+    "070": {
+      "file": "070.jpg",
+      "bytes": 246063,
+      "title": "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 01.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_01.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Kgbo"
+    },
+    "071": {
+      "file": "071.jpg",
+      "bytes": 284620,
+      "title": "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 04.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_04.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Kgbo"
+    },
+    "014": {
+      "file": "014.jpg",
+      "bytes": 116329,
+      "title": "Rat rock 1 011.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rat_rock_1_011.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "joshu from nyc, usa"
+    },
+    "015": {
+      "file": "015.jpg",
+      "bytes": 124995,
+      "title": "Rat rock 2 008.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rat_rock_2_008.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "joshu from nyc, usa"
+    },
+    "016": {
+      "file": "016.jpg",
+      "bytes": 140653,
+      "title": "Rat Rock Central Park NYC.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rat_Rock_Central_Park_NYC.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "benssss"
+    },
+    "022": {
+      "file": "022.jpg",
+      "bytes": 84073,
+      "title": "Texture of the Rat Rock (Umpire Rock).png",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Texture_of_the_Rat_Rock_(Umpire_Rock).png",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Central Park Tours"
+    },
+    "083": {
+      "file": "083.jpg",
+      "bytes": 162754,
+      "title": "Bouldering at Niagara Glen (21560690423).jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Bouldering_at_Niagara_Glen_(21560690423).jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Larry Koester"
+    },
+    "084": {
+      "file": "084.jpg",
+      "bytes": 182437,
+      "title": "Bouldering at Niagara Glen (22181703525).jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Bouldering_at_Niagara_Glen_(22181703525).jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Larry Koester"
+    },
+    "085": {
+      "file": "085.jpg",
+      "bytes": 171425,
+      "title": "Boulders deposited by the erosion caused by Niagara Falls.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Boulders_deposited_by_the_erosion_caused_by_Niagara_Falls.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Gogerr"
+    },
+    "086": {
+      "file": "086.jpg",
+      "bytes": 128677,
+      "title": "Erratic Boulders deposited by Niagara Falls.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Erratic_Boulders_deposited_by_Niagara_Falls.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Gogerr"
+    },
+    "087": {
+      "file": "087.jpg",
+      "bytes": 286813,
+      "title": "Erratic Boulders deposited by erosion caused by Niagara Falls.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Erratic_Boulders_deposited_by_erosion_caused_by_Niagara_Falls.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Gogerr"
+    },
+    "088": {
+      "file": "088.jpg",
+      "bytes": 143970,
+      "title": "Boulders deposited by Niagara Falls in Niagara Glen.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Boulders_deposited_by_Niagara_Falls_in_Niagara_Glen.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Gogerr"
+    },
+    "030": {
+      "file": "030.jpg",
+      "bytes": 113854,
+      "title": "Niagara Gorge at Niagara Glen.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen.jpg",
+      "license": "CC BY-SA 2.5 ca",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5/ca/deed.en",
+      "artist": "The Cosmonaut"
+    },
+    "031": {
+      "file": "031.jpg",
+      "bytes": 86054,
+      "title": "Niagara Gorge at Niagara Glen1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen1.jpg",
+      "license": "CC BY-SA 2.5 ca",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5/ca/deed.en",
+      "artist": "The Cosmonaut"
+    },
+    "033": {
+      "file": "033.jpg",
+      "bytes": 44050,
+      "title": "Niagara Gorge at Niagara Glen3.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Niagara_Gorge_at_Niagara_Glen3.jpg",
+      "license": "CC BY-SA 2.5 ca",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5/ca/deed.en",
+      "artist": "The Cosmonaut"
+    },
+    "065": {
+      "file": "065.jpg",
+      "bytes": 90714,
+      "title": "Crash Pad Bouldering Mat Joshua Tree 4.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_4.jpg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Joshua Tree National Park"
+    },
+    "066": {
+      "file": "066.jpg",
+      "bytes": 89938,
+      "title": "Crash Pad Bouldering Mat Joshua Tree 5.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_5.jpg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Joshua Tree National Park"
+    },
+    "061": {
+      "file": "061.jpg",
+      "bytes": 100315,
+      "title": "Crash Pad Bouldering Mat Joshua Tree 3.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_3.jpg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Joshua Tree National Park"
+    },
+    "037": {
+      "file": "037.jpg",
+      "bytes": 113500,
+      "title": "Coyne Crack 5.11+ - Supercrack Buttress - Indian Creek.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Coyne_Crack_5.11%2B_-_Supercrack_Buttress_-_Indian_Creek.jpg",
+      "license": "CC BY-SA 2.0 fr",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/fr/deed.en",
+      "artist": "Fabien Quétier"
+    },
+    "038": {
+      "file": "038.jpg",
+      "bytes": 114343,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 3.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_3.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Jonathan Fox"
+    },
+    "039": {
+      "file": "039.jpg",
+      "bytes": 124558,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 10.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_10.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "jfdervin"
+    },
+    "040": {
+      "file": "040.jpg",
+      "bytes": 121565,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 15.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_15.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "jfdervin"
+    },
+    "041": {
+      "file": "041.jpg",
+      "bytes": 66008,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 23.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_23.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "jfdervin"
+    },
+    "042": {
+      "file": "042.jpg",
+      "bytes": 111443,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 31.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_31.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "jfdervin"
+    },
+    "043": {
+      "file": "043.jpg",
+      "bytes": 140763,
+      "title": "Creeks Giving - Climbing in Indian Creek, Utah - 34.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Creeks_Giving_-_Climbing_in_Indian_Creek,_Utah_-_34.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "jfdervin"
+    },
+    "044": {
+      "file": "044.jpg",
+      "bytes": 53768,
+      "title": "Climbing in Yosemite Valley - 01.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Climbing_in_Yosemite_Valley_-_01.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "tpuyol"
+    },
+    "045": {
+      "file": "045.jpg",
+      "bytes": 107533,
+      "title": "Cobra Crack 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Cobra_Crack_1.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Laurel F"
+    },
+    "046": {
+      "file": "046.jpg",
+      "bytes": 142574,
+      "title": "Laurel pokes Cobra Crack 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Laurel_pokes_Cobra_Crack_2.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Laurel F"
+    },
+    "048": {
+      "file": "048.jpg",
+      "bytes": 228755,
+      "title": "Under a roof.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Under_a_roof.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Chris"
+    },
+    "053": {
+      "file": "053.jpg",
+      "bytes": 164020,
+      "title": "Sport Climbing.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Sport_Climbing.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Ram Sripracha (Rsriprac)"
+    },
+    "054": {
+      "file": "054.jpg",
+      "bytes": 82008,
+      "title": "Große zinne.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gro%C3%9Fe_zinne.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Lisi steurer"
+    },
+    "055": {
+      "file": "055.jpg",
+      "bytes": 127148,
+      "title": "Sport Climb Shipley Upper 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Sport_Climb_Shipley_Upper_1.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Adam Kubalica"
+    },
+    "056": {
+      "file": "056.jpg",
+      "bytes": 131854,
+      "title": "Sport Climb Shipley Upper 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Sport_Climb_Shipley_Upper_2.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Adam Kubalica"
+    },
+    "062": {
+      "file": "062.jpg",
+      "bytes": 83775,
+      "title": "Crash Pad Bouldering Mat Joshua Tree 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_2.jpg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Joshua Tree National Park"
+    },
+    "063": {
+      "file": "063.jpg",
+      "bytes": 88015,
+      "title": "Crash Pad Bouldering Mat Joshua Tree 1.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Crash_Pad_Bouldering_Mat_Joshua_Tree_1.jpg",
+      "license": "Public domain",
+      "licenseUrl": null,
+      "artist": "Joshua Tree National Park"
+    },
+    "068": {
+      "file": "068.jpg",
+      "bytes": 244334,
+      "title": "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 02.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_02.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Kgbo"
+    },
+    "069": {
+      "file": "069.jpg",
+      "bytes": 272131,
+      "title": "Rock climbing at Kangaroo Point Cliffs, Australia, 2020, 03.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_climbing_at_Kangaroo_Point_Cliffs,_Australia,_2020,_03.jpg",
+      "license": "CC BY-SA 4.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+      "artist": "Kgbo"
+    },
+    "073": {
+      "file": "073.jpg",
+      "bytes": 124312,
+      "title": "Low-angle view of rock climber climbing on cliff at Longdong Rocks.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Low-angle_view_of_rock_climber_climbing_on_cliff_at_Longdong_Rocks.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Freddie Ablazed"
+    },
+    "074": {
+      "file": "074.jpg",
+      "bytes": 93279,
+      "title": "Smile woman rock climbing on cliff at Longdong Rocks.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Smile_woman_rock_climbing_on_cliff_at_Longdong_Rocks.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Freddie Ablazed"
+    },
+    "075": {
+      "file": "075.jpg",
+      "bytes": 236524,
+      "title": "Rock Climbing Orkney Islands.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Rock_Climbing_Orkney_Islands.jpg",
+      "license": "CC BY-SA 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+      "artist": "Masa Sakano"
+    },
+    "004": {
+      "file": "004.jpg",
+      "bytes": 139211,
+      "title": "Gunks Traps - Pitons on Shockley's Ceiling - 2.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Gunks_Traps_-_Pitons_on_Shockley%27s_Ceiling_-_2.jpg",
+      "license": "CC BY-SA 3.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+      "artist": "Jarek Tuszyński"
+    },
+    "052": {
+      "file": "052.jpg",
+      "bytes": 214000,
+      "title": "Climbing Bolt Quickdraw.jpg",
+      "descUrl": "https://commons.wikimedia.org/wiki/File:Climbing_Bolt_Quickdraw.jpg",
+      "license": "CC BY 2.0",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+      "artist": "Cristian Bortes"
+    }
+  }
+}

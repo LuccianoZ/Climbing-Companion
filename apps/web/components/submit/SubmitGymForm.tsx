@@ -58,7 +58,14 @@ export function SubmitGymForm() {
 
   // For a non-admin the pin starts at the device location and is clamped to
   // the 300m circle. For an admin there is no constraint and no auto-place.
-  const point: LatLng = pick ?? (isAdmin ? FALLBACK_POINT : viewer ?? FALLBACK_POINT);
+  // Centre on the device location as soon as there is one, admin or not.
+  // This used to read `isAdmin ? FALLBACK_POINT : viewer ?? FALLBACK_POINT`,
+  // which left an admin looking at Yosemite even with a perfectly good fix,
+  // because it conflated two separate questions: where the map is *pointed*
+  // and whether a point has been *chosen*. Only the second differs by role --
+  // `placed` below still requires an admin to tap deliberately, so nothing is
+  // auto-submitted, the camera just starts somewhere useful.
+  const point: LatLng = pick ?? viewer ?? FALLBACK_POINT;
   const placed = isAdmin
     ? pick !== null
     : pick !== null || (usedGpsFix && viewer !== null);

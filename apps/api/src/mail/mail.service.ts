@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import nodemailer, { Transporter } from 'nodemailer';
 
@@ -45,6 +45,7 @@ export type ModerationEmailKind = keyof typeof MODERATION_EMAIL_COPY;
 // step can pull the reset link straight out of `getSentEmails()`.
 @Injectable()
 export class MailService {
+  private readonly logger = new Logger(MailService.name);
   private readonly transporter: Transporter | null;
   private readonly sentEmails: SentEmail[] = [];
 
@@ -66,19 +67,7 @@ export class MailService {
       "If you didn't request this, you can safely ignore this email -- your password won't change.",
     ].join('\n');
 
-    if (this.isStubbed()) {
-      this.sentEmails.push({ to, subject, text });
-      return;
-    }
-
-    await this.transporter!.sendMail({
-      from:
-        this.config.get<string>('MAIL_FROM') ??
-        'no-reply@climbingcompanion.com',
-      to,
-      subject,
-      text,
-    });
+    await this.deliver({ to, subject, text });
   }
 
   // BL-028 / Foundation §11-§12: every moderation reason is "emailed to the
@@ -101,19 +90,7 @@ export class MailService {
       'If you believe this was a mistake, reply to this email or contact support (Settings → Help).',
     ].join('\n');
 
-    if (this.isStubbed()) {
-      this.sentEmails.push({ to, subject, text });
-      return;
-    }
-
-    await this.transporter!.sendMail({
-      from:
-        this.config.get<string>('MAIL_FROM') ??
-        'no-reply@climbingcompanion.com',
-      to,
-      subject,
-      text,
-    });
+    await this.deliver({ to, subject, text });
   }
 
   // Test-only introspection point: Cucumber's world resolves this service
@@ -121,6 +98,43 @@ export class MailService {
   // rather than the app ever making a real network call.
   getSentEmails(): readonly SentEmail[] {
     return this.sentEmails;
+  }
+
+  // Delivery is deliberately BEST-EFFORT: a transport failure is logged and
+  // swallowed, never rethrown. Every caller reaches this point *after* its
+  // state change has already committed, so letting an SMTP error escape
+  // turns a succeeded action into a 500:
+  //   - AuthService.requestPasswordReset (Foundation §15 / AR-12) has already
+  //     written the reset token, and is contractually required to answer
+  //     identically for a known and an unknown address. Throwing here made
+  //     the endpoint an account-enumeration oracle -- a registered email got
+  //     500, an unregistered one got 200.
+  //   - ModerationService / AccountabilityService (Foundation §11) have
+  //     already committed the strike, ban, or rejection. A 500 there invites
+  //     the admin to retry and apply the action twice.
+  // The email is an out-of-band notification, not part of either invariant.
+  private async deliver(message: SentEmail): Promise<void> {
+    if (this.isStubbed()) {
+      this.sentEmails.push(message);
+      return;
+    }
+
+    try {
+      await this.transporter!.sendMail({
+        from:
+          this.config.get<string>('MAIL_FROM') ??
+          'no-reply@climbingcompanion.com',
+        ...message,
+      });
+    } catch (error) {
+      // Logged loudly: a misconfigured or unreachable SMTP host is a real
+      // deployment fault (Foundation §20.2), it just isn't the caller's.
+      this.logger.error(
+        `Failed to deliver "${message.subject}" to ${message.to}: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
   }
 
   private isStubbed(): boolean {
@@ -133,9 +147,13 @@ export class MailService {
     const user = this.config.get<string>('SMTP_USER');
     const pass = this.config.get<string>('SMTP_PASS');
 
+    // ConfigService hands back the raw string from .env, so the port has to
+    // be coerced -- nodemailer silently mis-negotiates TLS on a string port.
+    const port = Number(this.config.get<string>('SMTP_PORT') ?? 1025);
+
     return nodemailer.createTransport({
       host: this.config.get<string>('SMTP_HOST') ?? '127.0.0.1',
-      port: this.config.get<number>('SMTP_PORT') ?? 1025,
+      port: Number.isFinite(port) ? port : 1025,
       secure: this.config.get<string>('SMTP_SECURE') === 'true',
       auth: user ? { user, pass } : undefined,
     });

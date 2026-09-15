@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { MailService, ModerationEmailKind } from '../mail/mail.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/entities/notification.entity';
@@ -23,7 +23,19 @@ import { ApplyAccountabilityActionDto } from './dto/apply-accountability-action.
 // threshold ModerationService's photo-rejection path uses, kept as its own
 // local constant here for the same reason (they are conceptually the same
 // rule reached from two entry points, not one shared piece of state).
+// Matches ParseUUIDPipe's default (v4) plus the other RFC-4122 versions, so
+// "is this a pasted id or a name fragment?" is decided the same way the
+// route param is validated one layer up.
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 const STRIKE_BAN_THRESHOLD = 3;
+
+// Same cap and reasoning as MapService's SEARCH_RESULT_LIMIT: this is a
+// "narrow your term until you see the one you want" box, not a paginated
+// browse surface -- and capping it is also what stops a two-character term
+// from streaming the whole users table to the client.
+const USER_SEARCH_RESULT_LIMIT = 10;
 
 export interface AccountabilityResult {
   action: AccountabilityAction;
@@ -46,8 +58,23 @@ export interface UserAuditEntry {
   createdAt: string;
 }
 
+// BL-033 / §14: one row of the audit view's account typeahead. Deliberately
+// narrow -- the admin needs enough to tell two accounts apart and nothing
+// more; no hash, no session state, no location.
+export interface AdminUserSearchResult {
+  userId: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
+  strikeCount: number;
+  isBanned: boolean;
+}
+
 export interface UserAuditView {
   userId: string;
+  displayName: string;
+  email: string;
+  role: UserRole;
   strikeCount: number;
   isBanned: boolean;
   bannedAt: string | null;
@@ -227,6 +254,47 @@ export class AccountabilityService {
     return result;
   }
 
+  // BL-033 / §14. Backs the audit view's typeahead. Matches display name or
+  // email, and also accepts a full uuid pasted straight into the box so the
+  // existing "I already have the id" path (from the flag queue or an email
+  // thread) still resolves in one hop.
+  //
+  // Admin-only by the controller's RolesGuard. This is not the §18 user
+  // directory -- see SearchUsersDto for why the two are different surfaces.
+  async searchUsers(term: string): Promise<AdminUserSearchResult[]> {
+    const trimmed = term.trim();
+    if (trimmed.length === 0) {
+      return [];
+    }
+
+    const repo = this.dataSource.getRepository(User);
+
+    // A pasted uuid is an exact-id lookup, not a substring match: the id is
+    // never a substring of a display name or email, so ILIKE would always
+    // come back empty and the paste would look broken.
+    if (UUID_PATTERN.test(trimmed)) {
+      const byId = await repo.findOne({ where: { id: trimmed } });
+      return byId ? [toSearchResult(byId)] : [];
+    }
+
+    // Escape LIKE metacharacters so a term containing _ or % is matched
+    // literally rather than as a wildcard (same rule as MapService).
+    const pattern = `%${trimmed.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+
+    const rows = await repo
+      .createQueryBuilder('user')
+      .where('user.display_name ILIKE :pattern', { pattern })
+      // `email` is citext, so ILIKE is redundant on it but harmless, and
+      // keeping both sides identical avoids a subtle "name is
+      // case-insensitive but email is not" difference in behaviour.
+      .orWhere('user.email ILIKE :pattern', { pattern })
+      .orderBy('user.display_name', 'ASC')
+      .limit(USER_SEARCH_RESULT_LIMIT)
+      .getMany();
+
+    return rows.map(toSearchResult);
+  }
+
   async getUserAudit(userId: string): Promise<UserAuditView> {
     const user = await this.dataSource
       .getRepository(User)
@@ -244,6 +312,9 @@ export class AccountabilityService {
 
     return {
       userId: user.id,
+      displayName: user.displayName,
+      email: user.email,
+      role: user.role,
       strikeCount: user.strikeCount,
       isBanned: user.isBanned,
       bannedAt: user.bannedAt ? user.bannedAt.toISOString() : null,
@@ -306,4 +377,15 @@ export class AccountabilityService {
       }),
     );
   }
+}
+
+function toSearchResult(user: User): AdminUserSearchResult {
+  return {
+    userId: user.id,
+    displayName: user.displayName,
+    email: user.email,
+    role: user.role,
+    strikeCount: user.strikeCount,
+    isBanned: user.isBanned,
+  };
 }

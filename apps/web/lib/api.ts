@@ -47,6 +47,7 @@ import type {
   SubmitRouteResult,
   SubmitRouteVerificationInput,
   SubmitRouteVerificationResult,
+  AdminUserSearchResult,
   UserAuditView,
   VoteOnGradeInput,
 } from './types';
@@ -460,6 +461,18 @@ export function resolveGymDispute(
 }
 
 // BL-033: the User Account Audit view + its four standalone actions.
+// BL-033 / §14: the audit view's account typeahead. Admin-only server-side
+// (RolesGuard), so this never resolves for a non-admin.
+export function searchAdminUsers(
+  term: string,
+  signal?: AbortSignal,
+): Promise<AdminUserSearchResult[]> {
+  return getJson<AdminUserSearchResult[]>(
+    `/api/admin/users/search?q=${encodeURIComponent(term)}`,
+    signal,
+  );
+}
+
 export function fetchUserAudit(
   userId: string,
   signal?: AbortSignal,

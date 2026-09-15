@@ -43,6 +43,7 @@ export type ApiAction =
   | 'DELETE_ENTITY'
   | 'GYM_DISPUTE'
   | 'ACCOUNTABILITY'
+  | 'USER_AUDIT'
   | 'MODERATE_MEDIA'
   | 'REPORT_MEDIA'
   | 'NOTIFICATIONS'
@@ -181,11 +182,24 @@ const TABLE: Record<ApiAction, Record<number, string>> = {
     404: 'That dispute no longer exists.',
     401: SESSION_EXPIRED,
   },
+  // Applying an action. Its 400 is always a missing/invalid reason -- the
+  // userId in the path was already proven good by the lookup that had to
+  // succeed before this form could render.
   ACCOUNTABILITY: {
     400: 'A reason is required — pick a preset, or write one (required for “Other”).',
     403: 'Only a system administrator can strike or ban accounts.',
     404: 'That account no longer exists.',
     409: 'That action does not apply to this account right now (already banned, no strikes to revoke, or nothing to restore).',
+    401: SESSION_EXPIRED,
+  },
+  // Looking an account up. Kept separate from ACCOUNTABILITY above because
+  // the two share a URL but not a failure mode: this 400 is ParseUUIDPipe
+  // rejecting a non-uuid path param, which the reason-required copy
+  // described nonsensically ("a reason is required" for a search).
+  USER_AUDIT: {
+    400: 'That is not a valid account id. Pick an account from the suggestions, or paste a full user id (uuid).',
+    403: 'Only a system administrator can view account audits.',
+    404: 'No account exists with that id.',
     401: SESSION_EXPIRED,
   },
   MODERATE_MEDIA: {

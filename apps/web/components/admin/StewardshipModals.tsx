@@ -27,7 +27,7 @@ function ModalShell({
       data-testid={testId}
       className="fixed inset-0 z-[2000] flex items-center justify-center bg-ink/40 p-4"
     >
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-surface p-5 shadow-overlay">
+      <div className="relative max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-card border border-line bg-surface p-5 shadow-overlay">
         <div className="mb-3 flex items-start justify-between gap-3">
           <h2 className="text-heading font-bold text-ink">{title}</h2>
           <button

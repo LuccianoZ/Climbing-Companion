@@ -154,7 +154,7 @@ export function AdminShell({
           </ul>
         </nav>
 
-        <main className="min-w-0 flex-1 overflow-y-auto p-5">
+        <main className="relative min-w-0 flex-1 overflow-y-auto p-5">
           <h1 className="text-title font-bold tracking-tight text-ink">
             {title}
           </h1>

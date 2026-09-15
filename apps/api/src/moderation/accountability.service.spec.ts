@@ -8,7 +8,7 @@ import { validate } from 'class-validator';
 import type { DataSource } from 'typeorm';
 import { AccountabilityService } from './accountability.service';
 import { ApplyAccountabilityActionDto } from './dto/apply-accountability-action.dto';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import {
   UserAccountabilityAction,
   AccountabilityAction,
@@ -49,6 +49,14 @@ describe('AccountabilityService', () => {
   let userRepo: {
     findOne: ReturnType<typeof vi.fn>;
     save: ReturnType<typeof vi.fn>;
+    createQueryBuilder: ReturnType<typeof vi.fn>;
+  };
+  let queryBuilder: {
+    where: ReturnType<typeof vi.fn>;
+    orWhere: ReturnType<typeof vi.fn>;
+    orderBy: ReturnType<typeof vi.fn>;
+    limit: ReturnType<typeof vi.fn>;
+    getMany: ReturnType<typeof vi.fn>;
   };
   let actionRepo: {
     create: ReturnType<typeof vi.fn>;
@@ -71,6 +79,8 @@ describe('AccountabilityService', () => {
     return {
       id: targetId,
       email: 'climber@example.com',
+      displayName: 'Lucci Z',
+      role: UserRole.VERIFIED_USER,
       strikeCount: 0,
       isBanned: false,
       bannedAt: null,
@@ -90,7 +100,18 @@ describe('AccountabilityService', () => {
   }
 
   beforeEach(() => {
-    userRepo = { findOne: vi.fn(), save: vi.fn((u: User) => u) };
+    queryBuilder = {
+      where: vi.fn().mockReturnThis(),
+      orWhere: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
+      getMany: vi.fn().mockResolvedValue([]),
+    };
+    userRepo = {
+      findOne: vi.fn(),
+      save: vi.fn((u: User) => u),
+      createQueryBuilder: vi.fn(() => queryBuilder),
+    };
     let seq = 0;
     actionRepo = {
       create: vi.fn((d: Partial<UserAccountabilityAction>) => ({ ...d })),
@@ -357,12 +378,82 @@ describe('AccountabilityService', () => {
 
       expect(view.strikeCount).toBe(1);
       expect(view.isBanned).toBe(false);
+      // The panel headlines the account by name, not by bare uuid.
+      expect(view.displayName).toBe('Lucci Z');
+      expect(view.email).toBe('climber@example.com');
       expect(view.history).toHaveLength(1);
       expect(view.history[0].id).toBe('a2');
       expect(actionRepo.find).toHaveBeenCalledWith({
         where: { targetUserId: targetId },
         order: { createdAt: 'DESC' },
       });
+    });
+  });
+
+  // BL-033 / §14. Backs the audit view's typeahead. Before this existed the
+  // box took a uuid only, so typing a name hit ParseUUIDPipe and came back
+  // 400 -- which the web client then rendered as "A reason is required",
+  // copy belonging to the apply-an-action call that shares the URL.
+  describe('searchUsers', () => {
+    it('matches a name fragment against display name and email', async () => {
+      queryBuilder.getMany.mockResolvedValue([baseUser()]);
+
+      const results = await service.searchUsers('luc');
+
+      expect(results).toEqual([
+        {
+          userId: targetId,
+          displayName: 'Lucci Z',
+          email: 'climber@example.com',
+          role: UserRole.VERIFIED_USER,
+          strikeCount: 0,
+          isBanned: false,
+        },
+      ]);
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'user.display_name ILIKE :pattern',
+        { pattern: '%luc%' },
+      );
+      expect(queryBuilder.orWhere).toHaveBeenCalledWith(
+        'user.email ILIKE :pattern',
+        { pattern: '%luc%' },
+      );
+    });
+
+    it('caps the result count so a 2-char term cannot stream the whole table', async () => {
+      await service.searchUsers('lu');
+      expect(queryBuilder.limit).toHaveBeenCalledWith(10);
+    });
+
+    it('escapes LIKE metacharacters so "100%" is a literal term', async () => {
+      await service.searchUsers('100%');
+      expect(queryBuilder.where).toHaveBeenCalledWith(
+        'user.display_name ILIKE :pattern',
+        { pattern: '%100\\%%' },
+      );
+    });
+
+    it('treats a pasted uuid as an exact id lookup, not a substring match', async () => {
+      const uuid = '4a40d472-ec47-4019-a180-96908e796c5d';
+      userRepo.findOne.mockResolvedValue(baseUser({ id: uuid }));
+
+      const results = await service.searchUsers(uuid);
+
+      expect(userRepo.findOne).toHaveBeenCalledWith({ where: { id: uuid } });
+      expect(userRepo.createQueryBuilder).not.toHaveBeenCalled();
+      expect(results[0].userId).toBe(uuid);
+    });
+
+    it('returns empty rather than throwing for a uuid with no account', async () => {
+      userRepo.findOne.mockResolvedValue(null);
+      await expect(
+        service.searchUsers('4a40d472-ec47-4019-a180-96908e796c5d'),
+      ).resolves.toEqual([]);
+    });
+
+    it('returns empty for a whitespace-only term without querying', async () => {
+      await expect(service.searchUsers('   ')).resolves.toEqual([]);
+      expect(userRepo.createQueryBuilder).not.toHaveBeenCalled();
     });
   });
 });

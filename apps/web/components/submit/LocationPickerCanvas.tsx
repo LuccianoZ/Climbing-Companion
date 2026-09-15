@@ -44,6 +44,9 @@ export interface LocationPickerCanvasProps {
   onPick: (next: LatLngLiteral) => void;
   // AR-51 BL-x02: draw the 300m circle and refuse a pin outside it.
   constrainTo?: RadiusConstraint | null;
+  // False while the pin is only showing the device's position rather than a
+  // location the submitter has chosen.
+  placed?: boolean;
 }
 
 const PICKER_ZOOM = 15;
@@ -79,10 +82,17 @@ function ClickToPlace({
 }
 
 // Keeps the viewport following the chosen point when it changes from outside
-// the map -- the "use my location" button, or a coordinate typed into the
-// numeric fields. setView rather than flyTo: a typed correction should land
-// immediately rather than animate, and animating on every keystroke of a
-// longitude is worse than useless.
+// the map -- the first GPS fix, the "use my location" button, or a coordinate
+// typed into the numeric fields.
+//
+// Which of those it is decides whether to animate, and the viewport answers
+// that better than a prop could: a point already on screen is a nudge (a
+// typed digit, a small correction), so it lands instantly -- animating every
+// keystroke of a longitude is worse than useless. A point off screen is a
+// jump to somewhere else entirely, overwhelmingly the first fix arriving and
+// replacing the fallback centre, so it flies, the same as the main map's
+// FirstFixController. Keeping your bearings matters exactly when the camera
+// travels far.
 function FollowPoint({
   latitude,
   longitude,
@@ -93,7 +103,12 @@ function FollowPoint({
   const map = useMap();
 
   useEffect(() => {
-    map.setView([latitude, longitude], map.getZoom(), { animate: false });
+    const target: [number, number] = [latitude, longitude];
+    if (map.getBounds().contains(target)) {
+      map.setView(target, map.getZoom(), { animate: false });
+      return;
+    }
+    map.flyTo(target, Math.max(map.getZoom(), PICKER_ZOOM), { duration: 0.9 });
   }, [map, latitude, longitude]);
 
   return null;
@@ -134,13 +149,39 @@ function ResizeObserverBridge() {
   return null;
 }
 
-const pickerIcon = () =>
+// A needle: round head on a tapered spike whose tip is the actual
+// coordinate. The old icon was a rotated rounded square anchored at [0,0],
+// which pointed at nothing in particular -- you could not tell which pixel
+// the latitude and longitude below the map referred to. The tip can, so
+// iconAnchor is the tip, exactly.
+//
+// The tail is the pair of tangents from the tip (11,36) to the head circle
+// (centre 11,11 / r 9), so the spike meets the head flush instead of
+// overlapping it.
+const PIN_SIZE: [number, number] = [22, 36];
+const PIN_PATH =
+  'M11 36 L2.6 14.24 A9 9 0 1 1 19.4 14.24 Z';
+
+// `placed` false means the pin is showing where the submission *would* go --
+// the device's position, before the submitter has actually chosen it. It is
+// drawn hollow and half-transparent so it cannot be mistaken for a committed
+// choice, which matters most for an admin: their pin now starts at a
+// plausible location rather than an obviously-wrong one, and the form still
+// refuses to submit until they tap.
+const pickerIcon = (placed: boolean) =>
   L.divIcon({
     className: 'climb-picker-pin',
     html:
-      '<span data-testid="picker-pin" class="block h-[26px] w-[26px] -translate-x-1/2 -translate-y-full rounded-full rounded-bl-none border border-[color:var(--color-line)] rotate-45" style="background:var(--color-clay-deep)"></span>',
-    iconSize: [26, 26],
-    iconAnchor: [0, 0],
+      `<svg data-testid="picker-pin" data-placed="${placed}" ` +
+      `width="${PIN_SIZE[0]}" height="${PIN_SIZE[1]}" viewBox="0 0 22 36" ` +
+      `style="display:block;opacity:${placed ? 1 : 0.65};` +
+      `filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))">` +
+      `<path d="${PIN_PATH}" fill="${placed ? 'var(--color-clay-deep)' : 'none'}" ` +
+      `stroke="var(--color-clay-deep)" stroke-width="2" stroke-linejoin="round"/>` +
+      `<circle cx="11" cy="11" r="3.5" fill="var(--color-surface)"/>` +
+      `</svg>`,
+    iconSize: PIN_SIZE,
+    iconAnchor: [PIN_SIZE[0] / 2, PIN_SIZE[1]],
   });
 
 export default function LocationPickerCanvas({
@@ -148,6 +189,7 @@ export default function LocationPickerCanvas({
   longitude,
   onPick,
   constrainTo = null,
+  placed = true,
 }: LocationPickerCanvasProps) {
   return (
     <MapContainer
@@ -186,7 +228,7 @@ export default function LocationPickerCanvas({
 
       <Marker
         position={[latitude, longitude]}
-        icon={pickerIcon()}
+        icon={pickerIcon(placed)}
         draggable
         eventHandlers={{
           dragend: (event) => {

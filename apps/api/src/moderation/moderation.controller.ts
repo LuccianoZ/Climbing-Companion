@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -20,6 +21,7 @@ import { AccountabilityService } from './accountability.service';
 import { ModerateMediaDto } from './dto/moderate-media.dto';
 import { ReportMediaDto } from './dto/report-media.dto';
 import { ApplyAccountabilityActionDto } from './dto/apply-accountability-action.dto';
+import { SearchUsersDto } from './dto/search-users.dto';
 
 // BL-027/028/030. One controller, explicit full paths per handler, because
 // the surface spans two audiences: `/admin/*` is SYSTEM_ADMIN-only (same
@@ -54,6 +56,18 @@ export class ModerationController {
     @Req() req: AuthenticatedRequest,
   ) {
     return this.moderationService.moderateMediaAsset(req.user.id, mediaId, dto);
+  }
+
+  // BL-033 / §14: the audit view's account typeahead. Declared BEFORE the
+  // `:userId` routes below -- Nest matches in declaration order, and while
+  // these particular paths differ in segment count, keeping the literal
+  // ahead of the parameterised one is the habit that stops a future
+  // `admin/users/:userId` from swallowing it.
+  @Get('admin/users/search')
+  @UseGuards(SessionGuard, RolesGuard)
+  @Roles(UserRole.SYSTEM_ADMIN)
+  searchUsers(@Query() query: SearchUsersDto) {
+    return this.accountabilityService.searchUsers(query.q);
   }
 
   // BL-033 / §14: the User Account Audit view. Strike history + current

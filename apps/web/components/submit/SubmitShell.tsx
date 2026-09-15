@@ -43,7 +43,19 @@ export function SubmitShell({
         <span className="h-5 w-5" aria-hidden />
       </header>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5">
+      {/* `relative` is load-bearing, not decoration. A scroll container that
+          is position:static is not a containing block, so an absolutely
+          positioned descendant is laid out against the *initial* containing
+          block (html) instead -- it neither scrolls with the content nor is
+          clipped by the overflow. The photo fields' file inputs are
+          `sr-only`, which is position:absolute, so all three were laid out
+          against html at their static positions (y≈1678/1828/1979 on this
+          form) and stretched the document to 1980px against a 1000px
+          viewport. Clicking a dropzone focuses its input, and the browser
+          then scrolled the *document* to reveal it -- the jump into a blank
+          void under the form. Every other scroll container in the app got
+          the same treatment for the same reason. */}
+      <main className="relative min-h-0 flex-1 overflow-y-auto px-4 py-5">
         <h1 className="display text-title text-ink">
           {title}
         </h1>
