@@ -14,12 +14,23 @@ export default function AdminHomePage() {
       >
         <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
           <Link
+            href="/admin/disputes"
+            data-testid="admin-card-disputes"
+            className="card-raised block p-4"
+          >
+            <p className="text-body font-bold text-ink">Gym disputes</p>
+            <p className="mt-1 text-small leading-relaxed text-ink-soft">
+              &ldquo;This gym&apos;s information is wrong&rdquo; reports from
+              verifiers on site. Fix the gym or dismiss the report.
+            </p>
+          </Link>
+
+          <Link
             href="/admin/gyms"
             data-testid="admin-card-gyms"
             className="card-raised block p-4"
           >
-            <p className="label-caps text-caption text-ink-faint">BL-012</p>
-            <p className="mt-1 text-body font-bold text-ink">
+            <p className="text-body font-bold text-ink">
               Gym verification
             </p>
             <p className="mt-1 text-small leading-relaxed text-ink-soft">
@@ -29,14 +40,25 @@ export default function AdminHomePage() {
           </Link>
 
           <Link
+            href="/admin/stewardship"
+            data-testid="admin-card-stewardship"
+            className="card-raised block p-4"
+          >
+            <p className="text-body font-bold text-ink">
+              Modify gyms &amp; climbs
+            </p>
+            <p className="mt-1 text-small leading-relaxed text-ink-soft">
+              Search any gym or climb, change any field or its photos with a
+              typed confirmation, or delete it outright.
+            </p>
+          </Link>
+
+          <Link
             href="/admin/media"
             data-testid="admin-card-media"
             className="card-raised block p-4"
           >
-            <p className="label-caps text-caption text-ink-faint">
-              BL-027 / BL-028 / BL-029 / BL-030
-            </p>
-            <p className="mt-1 text-body font-bold text-ink">
+            <p className="text-body font-bold text-ink">
               Photo flag queue
             </p>
             <p className="mt-1 text-small leading-relaxed text-ink-soft">
@@ -50,40 +72,11 @@ export default function AdminHomePage() {
             data-testid="admin-card-users"
             className="card-raised block p-4"
           >
-            <p className="label-caps text-caption text-ink-faint">BL-033</p>
-            <p className="mt-1 text-body font-bold text-ink">Strikes &amp; bans</p>
+            <p className="text-body font-bold text-ink">Strikes &amp; bans</p>
             <p className="mt-1 text-small leading-relaxed text-ink-soft">
               Look up an account&apos;s strike history and issue / revoke a
               strike, ban outright, or restore. Every action is reasoned and
               emailed.
-            </p>
-          </Link>
-
-          <Link
-            href="/admin/disputes"
-            data-testid="admin-card-disputes"
-            className="card-raised block p-4"
-          >
-            <p className="label-caps text-caption text-ink-faint">BL-x08</p>
-            <p className="mt-1 text-body font-bold text-ink">Gym disputes</p>
-            <p className="mt-1 text-small leading-relaxed text-ink-soft">
-              &ldquo;This gym&apos;s information is wrong&rdquo; reports from
-              verifiers on site. Fix the gym or dismiss the report.
-            </p>
-          </Link>
-
-          <Link
-            href="/admin/stewardship"
-            data-testid="admin-card-stewardship"
-            className="card-raised block p-4"
-          >
-            <p className="label-caps text-caption text-ink-faint">BL-x07</p>
-            <p className="mt-1 text-body font-bold text-ink">
-              Modify gyms &amp; climbs
-            </p>
-            <p className="mt-1 text-small leading-relaxed text-ink-soft">
-              Search any gym or climb, change any field or its photos with a
-              typed confirmation, or delete it outright.
             </p>
           </Link>
         </div>

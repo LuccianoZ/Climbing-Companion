@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useSession } from '@/lib/session';
 import { ScreenTransition } from '@/components/ui/motion';
-import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons';
+import { BellIcon, MapIcon, ProfileIcon, ShieldIcon } from './icons';
 
 // The chrome every climber-facing screen shares: a brand bar and a bottom tab
 // bar.
@@ -24,10 +24,13 @@ import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons'
 // nothing. The empty slot is reserved on both sides regardless of whether the
 // button is there, so the title stays optically centred for everyone.
 //
-// Four tabs, not the mockup's five. Direct messaging is cut from MVP scope
+// Three tabs, not the mockup's five. Direct messaging is cut from MVP scope
 // entirely -- Architecture section 7 marks `conversations` and
 // `direct_messages` as "CUT, not implemented" -- so the Chat slot is gone
-// rather than kept as a permanent dead placeholder.
+// rather than kept as a permanent dead placeholder. Search is gone too: the
+// map screen already carries its own search bar up top (SearchBar, reused
+// by /search), so a bottom-tab twin of it was a second way to do the exact
+// same lookup rather than a distinct destination.
 //
 // The last tab is the account slot: "Profile" for a signed-in climber,
 // "Log in" for a visitor (Owner request, Sept 3). Same position and icon --
@@ -36,7 +39,6 @@ import { BellIcon, MapIcon, ProfileIcon, SearchIcon, ShieldIcon } from './icons'
 
 const BASE_TABS = [
   { href: '/', label: 'Map', Icon: MapIcon },
-  { href: '/search', label: 'Search', Icon: SearchIcon },
   { href: '/alerts', label: 'Alerts', Icon: BellIcon },
 ] as const;
 

@@ -24,15 +24,15 @@ import { useSession } from '@/lib/session';
 
 const SECTIONS = [
   {
-    href: '/admin/gyms',
-    label: 'Gym verification',
-    story: 'BL-012',
+    href: '/admin/disputes',
+    label: 'Gym disputes',
+    story: 'BL-x08',
     available: true,
   },
   {
-    href: '/admin/media',
-    label: 'Photo flag queue',
-    story: 'BL-027 / BL-028 / BL-029 / BL-030',
+    href: '/admin/gyms',
+    label: 'Gym verification',
+    story: 'BL-012',
     available: true,
   },
   {
@@ -42,15 +42,15 @@ const SECTIONS = [
     available: true,
   },
   {
-    href: '/admin/users',
-    label: 'Strikes & bans',
-    story: 'BL-033',
+    href: '/admin/media',
+    label: 'Photo flag queue',
+    story: 'BL-027 / BL-028 / BL-029 / BL-030',
     available: true,
   },
   {
-    href: '/admin/disputes',
-    label: 'Gym disputes',
-    story: 'BL-x08',
+    href: '/admin/users',
+    label: 'Strikes & bans',
+    story: 'BL-033',
     available: true,
   },
 ] as const;
